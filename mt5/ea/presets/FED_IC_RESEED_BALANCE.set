@@ -1,0 +1,57 @@
+; FED_IC_RESEED_BALANCE — reseed A/B, arm B = BALANCE-BASIS (the targeted fix). Identical to
+; FED_IC_RESEED_POOLED except InpReseedBalance=true: reseed off the pooled BALANCE (realized
+; only, NO floating) instead of the floating-inclusive virtual equity. Removes ONLY the
+; floating double-count (E_v7 = B+2F -> B+F) while KEEPING the equal-capital joint compounding.
+; Expected: residual invariant E_v7+E_v34-initial-acct snaps to ~0 (like the INDEP arm) BUT
+; return retained near the pooled ~168% CAGR (unlike INDEP's crash to 63%) — i.e. the pooled
+; return minus only the artifact over-leverage. Governor OFF to isolate. DIAL s=1.6.
+; Tester: 1m-OHLC, 2020-2025, 10000 EUR, 1:30.
+InpRisk=8.96
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.48
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpSizingBase=0
+InpMinMarginLevel=0
+InpIndepReseed=false
+InpReseedBalance=true
+InpWv7=0.70
+InpScale=1.60
+InpV34SymbolMap=USA500=US500;DAX=DE40

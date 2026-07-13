@@ -1,0 +1,56 @@
+; FED_IC_RUN2_S060 — RUN 2 real-tick, SAFE FALLBACK dial s=0.60.
+; Run this if s=0.70 FAILS Gate 6 (true retail-1:30 peak deposit-load > 75%).
+; Extrapolated true load at s=0.6 ~56-75% -> expected to clear. See RECON2_SKELETON.md.
+;
+; DIAL MAPPING (InpRisk/InpV34Mult GOVERN; InpScale/InpWv7 informational):
+;   InpRisk    = 8 * 0.70 * 0.60 = 3.36
+;   InpV34Mult = 0.30 * 0.60      = 0.18
+;   InpScale   = 0.60
+; COMPOUNDING: InpSizingBase=0. Tester: real ticks, 2020.01.01-2025.12.31,
+; deposit 10000 EUR, leverage 1:30, stop_out 0.50. Hash 51a7541cc2aaa593 / f71bd67d.
+InpRisk=3.36
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.18
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpSizingBase=0
+InpWv7=0.70
+InpScale=0.60
+InpV34SymbolMap=USA500=US500;DAX=DE40

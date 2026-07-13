@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FMA3 V1.0 — Portfolio Scorecard</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#0a0e14; --panel:#111823; --panel-2:#0d131c; --line:#1f2836; --line-2:#2a3547;
+    --ink:#e8eef6; --muted:#83909f; --faint:#5a6576;
+    --accent:#57d7cc; --accent-soft:rgba(87,215,204,.12);
+    --good:#46c977; --good-soft:rgba(70,201,119,.10);
+    --warn:#e2a83c; --warn-soft:rgba(226,168,60,.10);
+    --crit:#ef5f5f; --crit-soft:rgba(239,95,95,.10);
+    --sans:-apple-system,"Segoe UI",Roboto,system-ui,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(87,215,204,.06), transparent 60%),
+      var(--bg);
+    color:var(--ink); font-family:var(--sans);
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding:clamp(16px,4vw,40px);
+  }
+  .dash{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:26px}
+  .mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
+
+  /* ---- header / hero ---- */
+  .top{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px}
+  .chip{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px;
+    letter-spacing:.06em; color:var(--accent); background:var(--accent-soft);
+    border:1px solid rgba(87,215,204,.25); padding:5px 11px; border-radius:999px;
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .hero-eq{font-family:var(--mono); font-weight:600; font-size:clamp(40px,8vw,72px);
+    line-height:.98; letter-spacing:-.02em; margin:14px 0 6px}
+  .hero-sub{color:var(--muted); font-size:14px; max-width:60ch}
+  .hero-sub b{color:var(--ink); font-weight:600}
+  .verdict{text-align:right}
+  .verdict .score{font-family:var(--mono); font-size:clamp(30px,6vw,44px); font-weight:600; letter-spacing:-.02em}
+  .verdict .score b{color:var(--good)}
+  .verdict .note{color:var(--muted); font-size:12.5px; max-width:22ch; margin-left:auto}
+
+  /* ---- gate tiles ---- */
+  .gates{display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
+  @media(max-width:900px){.gates{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:520px){.gates{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--panel); border:1px solid var(--line); border-top-width:2px;
+    border-radius:11px; padding:14px 14px 13px; display:flex; flex-direction:column; gap:3px; min-height:118px}
+  .tile.g{border-top-color:var(--good)} .tile.w{border-top-color:var(--warn)} .tile.c{border-top-color:var(--crit)} .tile.a{border-top-color:var(--accent)}
+  .tile .lab{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:6px}
+  .tile .val{font-family:var(--mono); font-size:27px; font-weight:600; letter-spacing:-.01em; margin-top:2px}
+  .tile.g .val{color:var(--good)} .tile.w .val{color:var(--warn)} .tile.c .val{color:var(--crit)} .tile.a .val{color:var(--accent)}
+  .tile .val.sm{font-size:17px; margin-top:9px}
+  .tile .gate{font-size:11.5px; color:var(--faint); margin-top:auto}
+  .tile .path{font-family:var(--mono); font-size:12px; line-height:1.55; color:var(--ink); margin-top:4px}
+  .mk{margin-left:auto; font-family:var(--mono); font-size:12px; font-weight:600}
+  .mk.g{color:var(--good)} .mk.w{color:var(--warn)} .mk.c{color:var(--crit)}
+
+  /* ---- charts ---- */
+  .charts{display:grid; grid-template-columns:1.55fr 1fr; gap:16px}
+  @media(max-width:820px){.charts{grid-template-columns:1fr}}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:16px 18px 12px}
+  .card h3{margin:0; font-size:13px; font-weight:600; letter-spacing:.01em}
+  .card .csub{color:var(--faint); font-size:11.5px; margin:2px 0 8px}
+  svg{display:block; width:100%; height:auto; max-height:320px; overflow:visible}
+  .ax{fill:var(--faint); font-family:var(--mono); font-size:10px}
+  .grid{stroke:var(--line); stroke-width:1}
+  .reflab{fill:var(--muted); font-family:var(--mono); font-size:9.5px}
+
+  /* ---- decision trail ---- */
+  .trail h2, .rej h2, .fwd h2{font-size:12px; letter-spacing:.11em; text-transform:uppercase; color:var(--muted); margin:0 0 12px; font-weight:600}
+  .fwd h2 b{color:var(--good)}
+  .levers{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+  @media(max-width:820px){.levers{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.levers{grid-template-columns:1fr}}
+  .lever{background:var(--panel-2); border:1px solid var(--line); border-radius:11px; padding:14px; display:flex; flex-direction:column; gap:7px}
+  .lever .st{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px; letter-spacing:.04em; font-weight:600}
+  .lever.ad .st{color:var(--good)} .lever.de .st{color:var(--crit)} .lever.no .st{color:var(--warn)}
+  .lever .st .ic{width:15px;height:15px;border-radius:4px;display:grid;place-items:center;font-size:10px;line-height:1}
+  .lever.ad .st .ic{background:var(--good-soft);color:var(--good)}
+  .lever.de .st .ic{background:var(--crit-soft);color:var(--crit)}
+  .lever.no .st .ic{background:var(--warn-soft);color:var(--warn)}
+  .lever .nm{font-size:14px; font-weight:600; letter-spacing:-.01em}
+  .lever .ds{font-size:12px; color:var(--muted); line-height:1.45}
+
+  /* ---- rejected strip ---- */
+  .rej-list{display:flex; flex-wrap:wrap; gap:8px}
+  .rej-item{font-family:var(--mono); font-size:11.5px; color:var(--muted); background:var(--panel-2);
+    border:1px solid var(--line); border-radius:7px; padding:6px 10px}
+  .rej-item s{color:var(--crit); text-decoration:none; opacity:.85; margin-right:7px}
+  .rej-item b{color:var(--ink); font-weight:600}
+
+  /* ---- forward strip ---- */
+  .fwd-note{color:var(--faint); font-size:11.5px; margin-top:10px; line-height:1.5}
+  .fwd-note b{color:var(--muted); font-weight:600}
+
+  footer{border-top:1px solid var(--line); padding-top:14px; color:var(--faint); font-size:11.5px;
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px}
+  footer .mono{color:var(--muted)}
+  a{color:var(--accent); text-decoration:none}
+</style>
+</head>
+<body>
+<main class="dash">
+
+  <div class="top">
+    <div>
+      <span class="chip"><span class="dot"></span>FMA3 V1.0 &middot; LATEST STABLE</span>
+      <div class="hero-eq">&euro;665,777</div>
+      <div class="hero-sub"><b>&euro;10,000 &rarr;</b> over 2020&ndash;2025 &middot; federation book &middot; w70/30 &middot; s=1.1 &middot; single account &middot; <b>1m worst-mark accounting</b>. Both shipped parents in one account &mdash; the pinned record, not a paper blend.</div>
+    </div>
+    <div class="verdict">
+      <div class="score"><b>6</b> / 6 gates</div>
+      <div class="note">clears every owner gate and dominates both parents on all 7 composite dimensions</div>
+    </div>
+  </div>
+
+  <section class="gates">
+    <div class="tile g"><div class="lab">CAGR &middot; &ge;96.1%<span class="mk g">&check;</span></div><div class="val">+101.4%</div><div class="gate">annualised, crash-inclusive &mdash; beats the best parent</div></div>
+    <div class="tile g"><div class="lab">Max DD &middot; &lt;20.9%<span class="mk g">&check;</span></div><div class="val">15.73%</div><div class="gate">worst-mark, 1m marks &mdash; below both parents</div></div>
+    <div class="tile g"><div class="lab">COVID tail &middot; &le;35.6%<span class="mk g">&check;</span></div><div class="val">5.36%</div><div class="gate">the 2020 event &mdash; the parent&rsquo;s &ldquo;accepted&rdquo; bar, cleared 6&times; over</div></div>
+    <div class="tile g"><div class="lab">Sharpe &middot; &gt;2.03<span class="mk g">&check;</span></div><div class="val">2.467</div><div class="gate">daily, annualised &mdash; the diversification dividend</div></div>
+    <div class="tile g"><div class="lab">Neg years &middot; 0<span class="mk g">&check;</span></div><div class="val">0 / 6</div><div class="gate">every year positive; worst +48.8% (2022)</div></div>
+    <div class="tile g"><div class="lab">Neg qtrs &middot; &le;1<span class="mk g">&check;</span></div><div class="val">0 / 24</div><div class="gate">every quarter positive; worst +2.9% (2022Q4)</div></div>
+  </section>
+
+  <section class="charts">
+    <div class="card">
+      <h3>Equity &mdash; &euro;10,000 account</h3>
+      <div class="csub">log scale &middot; federation book, close-mark weekly &middot; parents&rsquo; native curves faint (v7 band engine &euro;532k, v3.4 pin &euro;450k)</div>
+      <div id="eq"></div>
+    </div>
+    <div class="card">
+      <h3>Drawdown</h3>
+      <div class="csub">worst-mark at 1m marks, weekly max &middot; 15.73% floor and 20.9% owner gate marked</div>
+      <div id="dd"></div>
+    </div>
+  </section>
+
+  <section class="trail">
+    <h2>How V1.0 was reached &mdash; four levers, each tested against pre-committed bars</h2>
+    <div class="levers">
+      <div class="lever ad"><div class="st"><span class="ic">&check;</span>ADOPTED</div><div class="nm">Static federation, w = 0.70</div><div class="ds">Pre-registered grid w = .30&ndash;.70: w50/w60/w70 pass every H-FED-1 bar; winner by rule (max Sharpe among passers). Friction &minus;2.7pp, already in the pin.</div></div>
+      <div class="lever de"><div class="st"><span class="ic">&times;</span>DECLINED</div><div class="nm">Cross-book rebalance</div><div class="ds">All four cadences (quarterly + 3 band rules) miss the &le;+0.3pp DD bar &mdash; rebalancing couples the disjoint troughs it harvests. Static w70 stands.</div></div>
+      <div class="lever no"><div class="st"><span class="ic">&#9675;</span>NO-OP</div><div class="nm">Joint exposure caps</div><div class="ds">Verified, not assumed: overnight joint gold p99 1.97&times; / max 2.03&times; equity = exactly entitlement, 0 hours over. Per-book caps compose; no joint cap added.</div></div>
+      <div class="lever ad"><div class="st"><span class="ic">&check;</span>ADOPTED</div><div class="nm">Global scale s = 1.1</div><div class="ds">The ceiling rule alone said s=1.4; the w+20% probe broke it (DD +3.59pp). Probe-robust re-pick &rArr; s=1.1 &mdash; the only fully parent-dominant point (7/7).</div></div>
+    </div>
+  </section>
+
+  <section class="rej">
+    <h2>Stress-tested after V1.0 &mdash; every richer variant rejected with cause, so static w70 @ s=1.1 is the frontier</h2>
+    <div class="rej-list">
+      <span class="rej-item"><s>&times;</s><b>Quarterly rebalance (F2a)</b> &mdash; +1.1pp CAGR costs +0.43pp DD</span>
+      <span class="rej-item"><s>&times;</s><b>Band rebalance .60/.65 (F2b)</b> &mdash; degenerate at w70: 418 events &asymp; every 5d</span>
+      <span class="rej-item"><s>&times;</s><b>Band rebalance .70 (F2b)</b> &mdash; &minus;0.34pp CAGR, pays nothing</span>
+      <span class="rej-item"><s>&times;</s><b>s = 1.2&ndash;1.3 aggressive frontier</b> &mdash; DD fits at locked w, not probe-robust at w+20%</span>
+      <span class="rej-item"><s>&times;</s><b>s = 1.4 ceiling pick</b> &mdash; +141% CAGR mirage; perturbation FAIL (w+20% dDD +3.6pp)</span>
+      <span class="rej-item"><s>&times;</s><b>w &plusmn;20% probe surface</b> &mdash; w_up20 DD 17.97% binds the ceiling &rArr; s=1.1 (FMA3-RT)</span>
+      <span class="rej-item"><s>&times;</s><b>Off-grid w80</b> &mdash; Sharpe still rising at the grid edge; NOT tested, the grid is binding</span>
+    </div>
+  </section>
+
+  <section class="fwd">
+    <h2>Forward confirmation &mdash; 2026H1 one-shot, consumed 2026-07-10 &middot; <b>CONFIRM 4 / 4</b></h2>
+    <div class="gates">
+      <div class="tile g"><div class="lab">F1 &middot; DD &lt; 20.9%<span class="mk g">&check;</span></div><div class="val">17.67%</div><div class="gate">window worst-mark, fresh &euro;10k seed</div></div>
+      <div class="tile g"><div class="lab">F2 &middot; Return &gt; &minus;10%<span class="mk g">&check;</span></div><div class="val">+12.34%</div><div class="gate">Jan&ndash;Apr 2026, &euro;10,000 &rarr; &euro;11,234</div></div>
+      <div class="tile g"><div class="lab">F3 &middot; No stop-out<span class="mk g">&check;</span></div><div class="val">0 / 0</div><div class="gate">stop-outs / margin-cap binds in the window</div></div>
+      <div class="tile g"><div class="lab">F4 &middot; Sub-books &gt; &minus;20%<span class="mk g">&check;</span></div><div class="val sm">+15.99 / +13.59%</div><div class="gate">v7 / v3.4 native window return</div></div>
+      <div class="tile a"><div class="lab">Window Sharpe</div><div class="val">1.17</div><div class="gate">4 months, daily annualised &mdash; not a gate</div></div>
+      <div class="tile a"><div class="lab">Monthly path</div><div class="path">Jan&nbsp;+14.9%<br>Feb&nbsp;&minus;0.2%<br>Mar&nbsp;+0.4%<br>Apr&nbsp;&minus;2.4%</div><div class="gate">front-loaded, then flat</div></div>
+    </div>
+    <div class="fwd-note"><b>Margin envelope:</b> max margin/balance 32.4% vs the 90% cap &middot; min margin level 3.11 vs 0.50 stop-out. <b>Read honestly:</b> Duka feed (not IC, ~8pp documented divergence), USA500 proxied by USTEC (corr 0.89), 14-symbol coverage for v3.4 &mdash; four months is a breakdown detector, not proof.</div>
+  </section>
+
+  <footer>
+    <span>Portfolio scorecard &middot; regenerated at each stable version &middot; gates from <span class="mono">docs/v1.0/PERFORMANCE.md</span> &middot; all numbers in-sample (IC 2020&ndash;25); the 2026H1 one-shot is consumed; MT5 real-tick + live demo are the remaining falsification tests</span>
+    <span class="mono">FMA3 V1.0 &middot; strategy_fma3.py &middot; config 51a7541cc2aaa593</span>
+  </footer>
+</main>
+
+<script>
+const D = {"dates":["2020-01-05","2020-01-12","2020-01-19","2020-01-26","2020-02-02","2020-02-09","2020-02-16","2020-02-23","2020-03-01","2020-03-08","2020-03-15","2020-03-22","2020-03-29","2020-04-05","2020-04-12","2020-04-19","2020-04-26","2020-05-03","2020-05-10","2020-05-17","2020-05-24","2020-05-31","2020-06-07","2020-06-14","2020-06-21","2020-06-28","2020-07-05","2020-07-12","2020-07-19","2020-07-26","2020-08-02","2020-08-09","2020-08-16","2020-08-23","2020-08-30","2020-09-06","2020-09-13","2020-09-20","2020-09-27","2020-10-04","2020-10-11","2020-10-18","2020-10-25","2020-11-01","2020-11-08","2020-11-15","2020-11-22","2020-11-29","2020-12-06","2020-12-13","2020-12-20","2020-12-27","2021-01-03","2021-01-10","2021-01-17","2021-01-24","2021-01-31","2021-02-07","2021-02-14","2021-02-21","2021-02-28","2021-03-07","2021-03-14","2021-03-21","2021-03-28","2021-04-04","2021-04-11","2021-04-18","2021-04-25","2021-05-02","2021-05-09","2021-05-16","2021-05-23","2021-05-30","2021-06-06","2021-06-13","2021-06-20","2021-06-27","2021-07-04","2021-07-11","2021-07-18","2021-07-25","2021-08-01","2021-08-08","2021-08-15","2021-08-22","2021-08-29","2021-09-05","2021-09-12","2021-09-19","2021-09-26","2021-10-03","2021-10-10","2021-10-17","2021-10-24","2021-10-31","2021-11-07","2021-11-14","2021-11-21","2021-11-28","2021-12-05","2021-12-12","2021-12-19","2021-12-26","2022-01-02","2022-01-09","2022-01-16","2022-01-23","2022-01-30","2022-02-06","2022-02-13","2022-02-20","2022-02-27","2022-03-06","2022-03-13","2022-03-20","2022-03-27","2022-04-03","2022-04-10","2022-04-17","2022-04-24","2022-05-01","2022-05-08","2022-05-15","2022-05-22","2022-05-29","2022-06-05","2022-06-12","2022-06-19","2022-06-26","2022-07-03","2022-07-10","2022-07-17","2022-07-24","2022-07-31","2022-08-07","2022-08-14","2022-08-21","2022-08-28","2022-09-04","2022-09-11","2022-09-18","2022-09-25","2022-10-02","2022-10-09","2022-10-16","2022-10-23","2022-10-30","2022-11-06","2022-11-13","2022-11-20","2022-11-27","2022-12-04","2022-12-11","2022-12-18","2022-12-25","2023-01-01","2023-01-08","2023-01-15","2023-01-22","2023-01-29","2023-02-05","2023-02-12","2023-02-19","2023-02-26","2023-03-05","2023-03-12","2023-03-19","2023-03-26","2023-04-02","2023-04-09","2023-04-16","2023-04-23","2023-04-30","2023-05-07","2023-05-14","2023-05-21","2023-05-28","2023-06-04","2023-06-11","2023-06-18","2023-06-25","2023-07-02","2023-07-09","2023-07-16","2023-07-23","2023-07-30","2023-08-06","2023-08-13","2023-08-20","2023-08-27","2023-09-03","2023-09-10","2023-09-17","2023-09-24","2023-10-01","2023-10-08","2023-10-15","2023-10-22","2023-10-29","2023-11-05","2023-11-12","2023-11-19","2023-11-26","2023-12-03","2023-12-10","2023-12-17","2023-12-24","2023-12-31","2024-01-07","2024-01-14","2024-01-21","2024-01-28","2024-02-04","2024-02-11","2024-02-18","2024-02-25","2024-03-03","2024-03-10","2024-03-17","2024-03-24","2024-03-31","2024-04-07","2024-04-14","2024-04-21","2024-04-28","2024-05-05","2024-05-12","2024-05-19","2024-05-26","2024-06-02","2024-06-09","2024-06-16","2024-06-23","2024-06-30","2024-07-07","2024-07-14","2024-07-21","2024-07-28","2024-08-04","2024-08-11","2024-08-18","2024-08-25","2024-09-01","2024-09-08","2024-09-15","2024-09-22","2024-09-29","2024-10-06","2024-10-13","2024-10-20","2024-10-27","2024-11-03","2024-11-10","2024-11-17","2024-11-24","2024-12-01","2024-12-08","2024-12-15","2024-12-22","2024-12-29","2025-01-05","2025-01-12","2025-01-19","2025-01-26","2025-02-02","2025-02-09","2025-02-16","2025-02-23","2025-03-02","2025-03-09","2025-03-16","2025-03-23","2025-03-30","2025-04-06","2025-04-13","2025-04-20","2025-04-27","2025-05-04","2025-05-11","2025-05-18","2025-05-25","2025-06-01","2025-06-08","2025-06-15","2025-06-22","2025-06-29","2025-07-06","2025-07-13","2025-07-20","2025-07-27","2025-08-03","2025-08-10","2025-08-17","2025-08-24","2025-08-31","2025-09-07","2025-09-14","2025-09-21","2025-09-28","2025-10-05","2025-10-12","2025-10-19","2025-10-26","2025-11-02","2025-11-09","2025-11-16","2025-11-23","2025-11-30","2025-12-07","2025-12-14","2025-12-21","2025-12-28","2026-01-04"],"fma3":[10052.97,10161.37,10133.61,10130.44,10263.14,10246.53,10360.39,10461.68,10500.37,11008.72,10714.09,10829.04,11010.72,11168.43,11439.19,11548.5,11577.22,11566.67,11745.2,12021.17,12233.12,12232.71,12362.23,12079.04,12322.96,12730.87,12974.91,13451.1,13206.75,14260.54,15640.73,16612.6,15541.51,15668.0,15658.08,15741.27,16281.09,16918.46,16740.61,17049.65,17602.66,17848.75,18119.25,17956.72,19846.55,19722.49,19883.31,19675.03,20396.4,19846.14,21776.64,22011.9,23789.45,27940.24,27619.68,27793.92,28220.99,31989.6,33792.12,34764.1,31615.48,34423.84,35828.22,34868.15,35121.95,37292.58,38636.89,38547.8,38345.16,40802.91,42158.11,40452.0,38316.77,41308.32,41974.14,41786.82,41575.92,43850.53,44158.49,43524.21,44021.92,46172.36,46506.26,45835.95,45843.46,46931.05,48365.58,51255.72,48357.65,49242.34,47870.77,47770.8,48575.84,48850.23,50247.81,51223.45,52216.88,51661.61,51025.31,49520.17,50362.77,51254.94,50715.75,51157.12,52618.44,50949.69,49247.56,50344.26,45695.83,47867.12,49613.46,49999.73,51118.4,53460.23,57940.32,54960.38,58077.22,59470.91,61756.12,63096.06,65539.52,64707.27,63821.11,61510.18,60326.46,60944.96,61821.97,65299.6,65411.78,65767.84,65507.94,69288.74,71037.71,69334.82,67061.01,68888.93,68312.39,72010.99,71887.27,74127.38,75913.85,76879.61,75378.92,76265.5,78551.97,83153.13,83496.68,84097.42,82869.42,80595.68,79912.07,77511.82,76309.36,76223.39,78211.17,77297.5,78365.58,79456.38,84405.29,87546.57,90049.52,84811.21,84723.95,87041.03,85539.4,87728.55,83402.48,93274.93,93029.34,92631.37,93777.57,96913.81,92354.58,99722.29,102593.09,99495.09,99138.25,100684.05,96014.22,92145.13,97398.55,99527.48,100236.63,96205.32,96326.48,99887.02,102042.11,101237.59,102949.58,104169.71,109489.72,112520.34,116169.44,117414.7,114054.56,119507.19,120540.21,119991.79,119857.33,125956.4,127842.56,133741.22,130463.09,137724.09,140782.32,145912.42,145228.61,148085.05,147874.65,146691.79,154459.29,153786.95,149425.08,152025.58,154506.96,157983.11,163219.25,177550.76,185146.03,182932.85,187179.83,197208.43,206808.96,209896.41,213486.14,225073.98,207392.77,214455.55,217568.02,215046.83,213570.57,211016.77,208415.73,218962.19,218340.96,229046.45,219905.1,215915.95,217336.57,224934.35,220532.36,229016.69,229874.68,224073.76,226483.79,237041.36,237937.55,238882.27,236566.58,235551.18,244037.26,246284.94,246185.09,256803.8,258725.72,279833.22,277130.77,283506.65,290727.87,290103.43,297163.5,302517.8,306202.12,308545.03,320970.12,313742.91,318431.64,331766.81,336077.88,317880.5,319829.35,330066.41,340396.82,356010.76,353519.37,389660.12,409775.54,412029.01,399664.12,418475.84,405078.45,420200.75,411611.96,416537.55,428438.11,414468.43,408180.95,408418.13,413843.84,438463.3,423626.93,415980.16,457574.8,452476.73,452299.59,444138.65,447284.15,467931.63,472212.52,480536.88,501931.96,533926.73,597812.16,598714.43,589397.38,584042.42,629039.88,606394.04,646756.92,640896.5,651247.46,673838.35,712668.45,665776.69],"v7":[10000.0,10000.0,10000.0,10000.0,10009.56,10128.54,10241.51,10359.22,10075.04,10711.03,10114.75,9954.39,9981.43,10217.52,10553.8,10557.42,10521.03,10536.08,10841.53,11135.84,11471.73,11560.01,11971.47,11704.51,11970.85,12316.02,12681.71,13239.74,12802.84,13919.16,15185.32,15977.94,14717.09,14828.88,14813.37,14881.49,15110.35,15802.84,15547.08,15888.32,16439.96,16878.65,16967.01,16394.39,18177.24,17819.2,18079.24,17964.48,18405.74,17926.11,19580.52,19801.04,21646.37,25683.18,25440.12,25422.38,25279.33,28005.86,29580.67,30338.78,28148.72,31173.08,32459.64,32003.56,32724.81,34693.67,36160.05,35389.82,34977.46,37632.52,38362.82,35826.34,33585.02,36434.68,36982.77,36701.58,36657.08,37928.72,38253.87,36851.94,37190.85,39021.96,38658.86,38279.37,38363.35,39285.46,40156.69,42697.2,40791.14,40878.56,39431.46,38806.78,39758.78,40670.44,40918.68,42075.0,42796.72,43331.06,43028.62,41765.58,41714.24,42685.43,41305.7,41796.07,42900.69,40916.8,40586.54,40534.43,39557.69,42024.9,43734.21,44062.45,43855.76,45390.96,48492.22,47111.48,50802.74,51997.78,55211.34,56261.29,58688.56,59851.04,58217.38,55800.68,53560.76,53953.88,55791.81,59740.15,58976.84,59123.73,58683.37,62400.81,64952.55,61484.12,58640.91,59587.5,58232.06,62796.13,62151.52,63166.98,63942.06,64979.78,63681.83,66461.57,67987.35,71574.45,69971.31,70186.53,69229.81,66176.41,66061.69,64390.39,64042.51,63240.88,66664.9,65161.55,65376.57,68089.0,72019.0,75601.82,78566.31,73662.49,73714.06,76889.47,75154.39,77238.25,74604.58,83136.2,83399.79,82750.55,83275.78,86292.84,83048.59,90233.62,90305.32,88109.67,87679.22,89686.24,85589.92,81842.13,85629.35,89127.27,90036.69,85360.64,84262.77,88609.92,90007.31,89581.89,93963.37,94393.23,98853.91,99808.04,104244.66,105379.6,102650.97,109293.6,111354.16,108745.98,107554.83,111004.87,112889.6,115983.39,111414.17,116764.12,117869.94,117950.1,118281.23,122245.08,122536.06,121339.52,126987.74,127185.59,123377.03,125061.98,126204.39,129504.17,134007.41,144419.22,147600.65,146190.14,152043.77,160334.64,167456.34,170861.61,174714.79,187641.07,175269.06,181119.19,185190.38,182029.76,180169.68,175797.57,176990.49,186223.78,187104.37,191871.9,182213.23,179358.55,174435.66,181880.63,177370.51,186482.9,189061.63,183414.18,182076.26,192736.16,192671.65,195721.55,195684.8,195085.96,201731.87,205988.44,208786.72,212745.43,212790.76,230165.22,223693.79,229454.74,236014.35,237622.32,243453.47,245231.28,248017.57,244230.84,256878.21,253998.41,256719.04,266585.89,265774.62,249935.19,255756.8,253400.38,262547.73,272360.78,272125.12,291040.92,304376.19,307262.72,298499.43,307832.94,301837.25,311873.32,311660.77,317790.42,323364.91,312927.95,321238.6,321203.88,329548.61,352904.3,340362.46,333800.87,361945.75,363413.76,360493.3,352954.66,358263.58,374665.39,378536.98,386566.04,404814.96,439805.7,489624.9,495872.02,488756.8,479633.7,495120.24,499379.85,529683.96,522763.47,532223.52,547599.24,571820.94,532229.84],"v34":[10172.14,10576.62,10498.78,10492.08,10899.79,10781.88,10831.85,11002.17,11693.84,12029.09,12157.19,11955.65,11960.56,11938.45,12170.78,12136.43,12201.75,11988.27,12025.14,12340.84,12369.23,12281.74,11821.59,11844.63,11959.93,12399.68,12241.46,12511.19,12788.27,13562.58,14746.42,15821.45,15434.17,15654.83,15950.29,16058.73,16243.79,16677.4,16901.38,17164.54,17665.88,17446.93,17996.97,18625.89,19889.94,20370.6,20327.13,20043.88,20906.65,20345.18,21430.55,21695.5,22828.33,25993.08,25478.96,26024.3,27635.22,30632.8,31943.3,32323.85,29556.5,29485.59,30627.02,29070.83,28980.65,30086.44,30952.37,31850.48,32186.48,32955.3,35223.68,36851.46,38253.38,39873.19,40482.4,40755.13,40664.92,44457.68,44739.69,46068.63,46719.88,47922.73,49449.98,49281.52,49200.6,50162.17,52205.05,53797.01,50891.83,52747.54,52641.05,53526.18,53479.46,52090.42,55630.89,55507.64,56876.59,54294.46,53207.54,51387.63,54729.31,54826.77,56132.8,55293.66,56444.16,57039.29,53166.65,55659.87,46612.72,47210.38,48355.37,48724.19,51290.62,55943.75,60773.85,57214.94,58252.15,58952.09,57053.67,58874.51,59799.86,54355.38,55677.82,54096.74,56039.15,58408.56,56811.27,56742.93,58663.95,60035.35,59855.42,61413.89,61850.68,63946.62,64862.96,66878.46,67347.14,67123.15,68165.01,71562.05,73568.95,73226.61,72359.28,69293.83,71256.24,76240.13,79911.7,81520.29,80843.68,81262.08,79564.12,76846.36,73430.04,74799.81,70662.89,72371.14,74732.22,71616.99,76094.29,77363.1,77901.64,75225.69,74540.12,73622.61,73084.89,73925.43,68540.42,75016.73,72966.76,73405.68,74187.19,76322.8,71229.6,75382.18,82634.29,80300.77,81327.86,81785.54,79802.73,78504.89,83768.69,81855.93,81316.56,79688.58,82132.7,82444.05,83865.3,83655.12,79540.16,81625.88,87296.88,92980.35,93559.53,95153.09,91588.48,90213.46,89103.18,92606.72,96452.91,106952.75,108567.99,117096.42,117689.01,123808.72,128704.17,138616.2,136387.62,134079.4,132234.68,132944.1,141128.96,137684.37,134753.83,137671.63,139906.27,142188.16,146408.63,160807.67,170697.91,167262.07,163200.81,170607.79,181985.55,183811.45,186404.21,184324.83,167958.64,172892.64,172213.33,171447.75,173558.19,176909.57,167040.41,173561.87,170709.82,187563.5,182654.14,178288.78,191989.73,192421.31,194324.95,194154.23,188835.15,190329.33,199952.81,200665.61,201594.46,202781.12,198274.9,197301.94,200930.83,196826.96,189515.62,208950.41,213663.32,228650.47,233938.8,235425.64,239560.81,239304.35,246952.53,255950.95,254312.21,264914.68,266605.53,250844.06,252161.5,264644.71,277188.72,272821.45,265252.7,285242.62,288825.29,302653.09,299467.11,316165.09,338096.31,353650.29,331843.18,360852.64,340902.45,354337.52,341802.44,342104.08,356272.92,350849.77,321756.74,322032.94,316731.06,325516.21,314797.6,317529.05,351649.63,335379.53,340775.39,335343.18,336437.26,350658.0,358543.73,357286.45,362974.07,353012.17,406355.42,388149.06,378420.77,381690.94,444421.59,389973.54,416736.55,409918.49,406865.11,424350.98,453764.96,449707.75],"ddDates":["2020-01-05","2020-01-12","2020-01-19","2020-01-26","2020-02-02","2020-02-09","2020-02-16","2020-02-23","2020-03-01","2020-03-08","2020-03-15","2020-03-22","2020-03-29","2020-04-05","2020-04-12","2020-04-19","2020-04-26","2020-05-03","2020-05-10","2020-05-17","2020-05-24","2020-05-31","2020-06-07","2020-06-14","2020-06-21","2020-06-28","2020-07-05","2020-07-12","2020-07-19","2020-07-26","2020-08-02","2020-08-09","2020-08-16","2020-08-23","2020-08-30","2020-09-06","2020-09-13","2020-09-20","2020-09-27","2020-10-04","2020-10-11","2020-10-18","2020-10-25","2020-11-01","2020-11-08","2020-11-15","2020-11-22","2020-11-29","2020-12-06","2020-12-13","2020-12-20","2020-12-27","2021-01-03","2021-01-10","2021-01-17","2021-01-24","2021-01-31","2021-02-07","2021-02-14","2021-02-21","2021-02-28","2021-03-07","2021-03-14","2021-03-21","2021-03-28","2021-04-04","2021-04-11","2021-04-18","2021-04-25","2021-05-02","2021-05-09","2021-05-16","2021-05-23","2021-05-30","2021-06-06","2021-06-13","2021-06-20","2021-06-27","2021-07-04","2021-07-11","2021-07-18","2021-07-25","2021-08-01","2021-08-08","2021-08-15","2021-08-22","2021-08-29","2021-09-05","2021-09-12","2021-09-19","2021-09-26","2021-10-03","2021-10-10","2021-10-17","2021-10-24","2021-10-31","2021-11-07","2021-11-14","2021-11-21","2021-11-28","2021-12-05","2021-12-12","2021-12-19","2021-12-26","2022-01-02","2022-01-09","2022-01-16","2022-01-23","2022-01-30","2022-02-06","2022-02-13","2022-02-20","2022-02-27","2022-03-06","2022-03-13","2022-03-20","2022-03-27","2022-04-03","2022-04-10","2022-04-17","2022-04-24","2022-05-01","2022-05-08","2022-05-15","2022-05-22","2022-05-29","2022-06-05","2022-06-12","2022-06-19","2022-06-26","2022-07-03","2022-07-10","2022-07-17","2022-07-24","2022-07-31","2022-08-07","2022-08-14","2022-08-21","2022-08-28","2022-09-04","2022-09-11","2022-09-18","2022-09-25","2022-10-02","2022-10-09","2022-10-16","2022-10-23","2022-10-30","2022-11-06","2022-11-13","2022-11-20","2022-11-27","2022-12-04","2022-12-11","2022-12-18","2022-12-25","2023-01-01","2023-01-08","2023-01-15","2023-01-22","2023-01-29","2023-02-05","2023-02-12","2023-02-19","2023-02-26","2023-03-05","2023-03-12","2023-03-19","2023-03-26","2023-04-02","2023-04-09","2023-04-16","2023-04-23","2023-04-30","2023-05-07","2023-05-14","2023-05-21","2023-05-28","2023-06-04","2023-06-11","2023-06-18","2023-06-25","2023-07-02","2023-07-09","2023-07-16","2023-07-23","2023-07-30","2023-08-06","2023-08-13","2023-08-20","2023-08-27","2023-09-03","2023-09-10","2023-09-17","2023-09-24","2023-10-01","2023-10-08","2023-10-15","2023-10-22","2023-10-29","2023-11-05","2023-11-12","2023-11-19","2023-11-26","2023-12-03","2023-12-10","2023-12-17","2023-12-24","2023-12-31","2024-01-07","2024-01-14","2024-01-21","2024-01-28","2024-02-04","2024-02-11","2024-02-18","2024-02-25","2024-03-03","2024-03-10","2024-03-17","2024-03-24","2024-03-31","2024-04-07","2024-04-14","2024-04-21","2024-04-28","2024-05-05","2024-05-12","2024-05-19","2024-05-26","2024-06-02","2024-06-09","2024-06-16","2024-06-23","2024-06-30","2024-07-07","2024-07-14","2024-07-21","2024-07-28","2024-08-04","2024-08-11","2024-08-18","2024-08-25","2024-09-01","2024-09-08","2024-09-15","2024-09-22","2024-09-29","2024-10-06","2024-10-13","2024-10-20","2024-10-27","2024-11-03","2024-11-10","2024-11-17","2024-11-24","2024-12-01","2024-12-08","2024-12-15","2024-12-22","2024-12-29","2025-01-05","2025-01-12","2025-01-19","2025-01-26","2025-02-02","2025-02-09","2025-02-16","2025-02-23","2025-03-02","2025-03-09","2025-03-16","2025-03-23","2025-03-30","2025-04-06","2025-04-13","2025-04-20","2025-04-27","2025-05-04","2025-05-11","2025-05-18","2025-05-25","2025-06-01","2025-06-08","2025-06-15","2025-06-22","2025-06-29","2025-07-06","2025-07-13","2025-07-20","2025-07-27","2025-08-03","2025-08-10","2025-08-17","2025-08-24","2025-08-31","2025-09-07","2025-09-14","2025-09-21","2025-09-28","2025-10-05","2025-10-12","2025-10-19","2025-10-26","2025-11-02","2025-11-09","2025-11-16","2025-11-23","2025-11-30","2025-12-07","2025-12-14","2025-12-21","2025-12-28","2026-01-04"],"dd":[-0.14,-0.64,-0.96,-0.85,-1.15,-0.69,-0.65,-0.81,-3.53,-2.14,-5.36,-4.77,-3.09,-1.57,-1.26,-2.27,-3.73,-3.01,-2.77,-1.9,-1.74,-2.61,-2.4,-4.19,-6.18,-2.46,-2.97,-1.63,-4.92,-5.67,-4.42,-3.12,-11.28,-9.03,-8.22,-8.73,-7.09,-4.68,-5.14,-3.01,-2.26,-3.2,-4.39,-4.29,-3.62,-9.12,-5.05,-6.99,-4.3,-4.61,-2.91,-3.72,-2.02,-6.05,-9.91,-9.06,-7.27,-3.78,-2.87,-3.48,-15.6,-10.95,-4.02,-4.49,-5.72,-3.92,-2.17,-7.28,-6.3,-4.32,-2.81,-8.1,-15.39,-11.01,-4.58,-3.62,-4.75,-3.99,-1.91,-3.85,-3.78,-2.38,-1.37,-4.62,-6.99,-4.33,-3.78,-2.97,-7.92,-6.63,-12.33,-8.78,-9.34,-6.43,-5.82,-3.93,-3.09,-4.88,-6.22,-9.44,-9.95,-7.71,-8.16,-7.53,-4.92,-6.36,-9.02,-10.88,-15.47,-15.3,-11.37,-9.59,-8.26,-5.91,-4.09,-6.71,-5.94,-2.56,-1.19,-1.78,-2.12,-3.33,-6.45,-9.37,-10.91,-10.66,-9.43,-7.72,-5.03,-2.58,-3.62,-3.44,-2.2,-5.33,-8.64,-10.25,-6.65,-6.7,-3.44,-2.65,-4.8,-5.11,-5.63,-11.68,-4.84,-2.36,-8.38,-8.67,-8.1,-10.27,-11.52,-13.33,-14.88,-15.71,-15.73,-13.62,-14.62,-12.8,-11.82,-7.29,-3.53,-7.18,-7.71,-8.19,-7.18,-6.82,-11.1,-8.92,-3.11,-5.92,-4.97,-5.18,-7.7,-8.93,-2.42,-5.51,-5.83,-6.19,-9.29,-11.76,-11.32,-8.03,-6.27,-7.23,-8.95,-8.14,-4.83,-2.54,-2.58,-1.6,-2.02,-1.96,-2.05,-2.27,-3.78,-3.54,-5.35,-2.98,-3.96,-3.82,-3.23,-2.31,-5.2,-4.91,-2.56,-6.02,-4.91,-4.2,-2.97,-4.99,-6.0,-4.66,-7.15,-6.26,-5.36,-3.98,-2.6,-3.71,-6.2,-5.18,-5.71,-3.21,-3.86,-7.56,-6.93,-9.08,-10.61,-10.0,-7.28,-7.16,-8.81,-9.89,-12.06,-10.34,-7.46,-5.06,-5.37,-7.21,-9.01,-7.54,-12.94,-5.88,-2.19,-4.08,-5.14,-2.95,-3.58,-2.58,-5.23,-5.8,-3.88,-2.59,-3.59,-5.73,-4.05,-3.81,-5.36,-4.69,-4.39,-5.4,-3.54,-4.48,-1.76,-3.98,-2.37,-8.06,-4.58,-3.78,-2.84,-6.94,-8.56,-7.85,-3.9,-2.71,-7.57,-10.14,-2.54,-7.09,-8.55,-7.59,-7.17,-6.86,-5.21,-4.87,-4.47,-4.49,-6.07,-7.26,-7.52,-5.49,-7.0,-8.29,-7.65,-3.11,-5.24,-5.03,-4.86,-4.11,-3.9,-2.26,-3.34,-5.99,-5.91,-10.3,-8.77,-8.65,-6.8,-5.32,-4.98,-3.47,-2.51,-3.33,-2.56,-9.3],"worstDD":-15.73,"gateDD":-20.9};
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function yearTicks(dates){const out=[];let last=null;dates.forEach((d,i)=>{const y=d.slice(0,4);if(y!==last){out.push([i,y]);last=y;}});return out;}
+
+function equityChart(){
+  const W=560,H=250,pl=44,pr=40,pt=10,pb=22, iw=W-pl-pr, ih=H-pt-pb;
+  const eq=D.fma3, n=eq.length;
+  const lo=Math.log10(10000), hi=Math.log10(1000000);
+  const x=i=>pl+iw*i/(n-1);
+  const y=v=>pt+ih*(1-(Math.log10(v)-lo)/(hi-lo));
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Equity curve, ten thousand euros growing to over six hundred sixty-five thousand, above both parent curves"});
+  const defs=el("defs",{}); const g=el("linearGradient",{id:"eqg",x1:0,y1:0,x2:0,y2:1});
+  g.append(el("stop",{offset:0,"stop-color":"#57d7cc","stop-opacity":.28}),el("stop",{offset:1,"stop-color":"#57d7cc","stop-opacity":0}));
+  defs.append(g); svg.append(defs);
+  [10000,30000,100000,300000,900000].forEach(v=>{
+    const yy=y(v); svg.append(el("line",{class:"grid",x1:pl,y1:yy,x2:W-pr,y2:yy}));
+    const lab=el("text",{class:"ax",x:pl-7,y:yy+3,"text-anchor":"end"}); lab.textContent=(v>=1e6?"€1M":"€"+(v/1000)+"k"); svg.append(lab);
+  });
+  yearTicks(D.dates).forEach(([i,yr])=>{const t=el("text",{class:"ax",x:x(i),y:H-6,"text-anchor":"middle"});t.textContent=yr;svg.append(t);});
+  // parents' record curves, faint reference lines
+  [[D.v7,"v7","1.1",null],[D.v34,"v3.4","1.1","3 3"]].forEach(([ser,lab,wdt,dash])=>{
+    let pd=`M${x(0)},${y(ser[0])}`;
+    for(let i=1;i<n;i++)pd+=` L${x(i)},${y(ser[i])}`;
+    const attrs={d:pd,fill:"none",stroke:"#83909f","stroke-width":wdt,"stroke-opacity":.55,"stroke-linejoin":"round"};
+    if(dash)attrs["stroke-dasharray"]=dash;
+    svg.append(el("path",attrs));
+    const t=el("text",{class:"reflab",x:x(n-1)+5,y:y(ser[n-1])+3}); t.textContent=lab; svg.append(t);
+  });
+  let dline=`M${x(0)},${y(eq[0])}`, darea=`M${x(0)},${pt+ih} L${x(0)},${y(eq[0])}`;
+  for(let i=1;i<n;i++){dline+=` L${x(i)},${y(eq[i])}`;darea+=` L${x(i)},${y(eq[i])}`;}
+  darea+=` L${x(n-1)},${pt+ih} Z`;
+  svg.append(el("path",{d:darea,fill:"url(#eqg)"}));
+  const p=el("path",{d:dline,fill:"none",stroke:"#57d7cc","stroke-width":2,"stroke-linejoin":"round"}); svg.append(p);
+  svg.append(el("circle",{cx:x(n-1),cy:y(eq[n-1]),r:3.5,fill:"#57d7cc",stroke:"#0a0e14","stroke-width":1.5}));
+  if(!reduce){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:1400,easing:"ease-out",fill:"forwards"});}
+  document.getElementById("eq").append(svg);
+}
+
+function ddChart(){
+  const W=540,H=250,pl=34,pr=64,pt=10,pb=22, iw=W-pl-pr, ih=H-pt-pb;
+  const dd=D.dd, n=dd.length, lo=-25, hi=0;
+  const x=i=>pl+iw*i/(n-1);
+  const y=v=>pt+ih*(v-hi)/(lo-hi);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Drawdown, floor at minus fifteen point seven percent, inside the minus twenty point nine percent gate"});
+  const defs=el("defs",{}); const g=el("linearGradient",{id:"ddg",x1:0,y1:0,x2:0,y2:1});
+  g.append(el("stop",{offset:0,"stop-color":"#ef5f5f","stop-opacity":.30}),el("stop",{offset:1,"stop-color":"#ef5f5f","stop-opacity":.02}));
+  defs.append(g); svg.append(defs);
+  [0,-5,-10,-15,-20,-25].forEach(v=>{
+    const yy=y(v); svg.append(el("line",{class:"grid",x1:pl,y1:yy,x2:W-pr,y2:yy,"stroke-opacity":v===0?.9:.5}));
+    const lab=el("text",{class:"ax",x:pl-6,y:yy+3,"text-anchor":"end"}); lab.textContent=v+"%"; svg.append(lab);
+  });
+  yearTicks(D.ddDates).forEach(([i,yr])=>{const t=el("text",{class:"ax",x:x(i),y:H-6,"text-anchor":"middle"});t.textContent="'"+yr.slice(2);svg.append(t);});
+  let area=`M${x(0)},${y(0)}`;
+  for(let i=0;i<n;i++)area+=` L${x(i)},${y(dd[i])}`;
+  area+=` L${x(n-1)},${y(0)} Z`;
+  svg.append(el("path",{d:area,fill:"url(#ddg)",stroke:"#ef5f5f","stroke-width":1.2,"stroke-linejoin":"round"}));
+  // honest floor + pre-committed owner gate ceiling
+  [[D.worstDD,"Worst −15.73%","#e2a83c"],[D.gateDD,"Gate −20.9%","#ef5f5f"]].forEach(([v,txt,col])=>{
+    const yy=y(v);
+    svg.append(el("line",{x1:pl,y1:yy,x2:W-pr,y2:yy,stroke:col,"stroke-width":1,"stroke-dasharray":"3 3","stroke-opacity":.8}));
+    const t=el("text",{class:"reflab",x:W-pr+4,y:yy+3,fill:col}); t.textContent=txt.split(" ")[0]; svg.append(t);
+    const t2=el("text",{class:"reflab",x:W-pr+4,y:yy+13,fill:col,"fill-opacity":.75}); t2.textContent=txt.split(" ")[1]; svg.append(t2);
+  });
+  document.getElementById("dd").append(svg);
+}
+equityChart(); ddChart();
+</script>
+</body>
+</html>

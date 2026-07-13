@@ -1,0 +1,59 @@
+; FED_IC_RUN2_S080 — RUN 2 real-tick, UPSIDE PROBE dial s=0.80.
+; Run this ONLY if s=0.70 clears Gate 6 with room, to map where the real-tick
+; margin gate actually binds. Extrapolated true load at s=0.8 ~75-100% -> expected
+; to be AT/OVER the 75% ceiling (the record engine's "42% load" is a lower-bound
+; artifact of margin_cap=0.9). Do not ship 0.8 unless Gate 6 truly passes here.
+;
+; DIAL MAPPING (InpRisk/InpV34Mult GOVERN; InpScale/InpWv7 informational):
+;   InpRisk    = 8 * 0.70 * 0.80 = 4.48
+;   InpV34Mult = 0.30 * 0.80      = 0.24
+;   InpScale   = 0.80
+; COMPOUNDING: InpSizingBase=0. Tester: real ticks, 2020.01.01-2025.12.31,
+; deposit 10000 EUR, leverage 1:30, stop_out 0.50. Hash 51a7541cc2aaa593 / f71bd67d.
+InpRisk=4.48
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.24
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpSizingBase=0
+InpMinMarginLevel=110
+InpWv7=0.70
+InpScale=0.80
+InpV34SymbolMap=USA500=US500;DAX=DE40

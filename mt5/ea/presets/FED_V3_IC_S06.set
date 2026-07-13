@@ -1,0 +1,23 @@
+; FED_V3_IC - FableFederation_V3 IC dashboard preset (H-RISK-1).
+; One model, two dials: s=1.6, seed EUR10,000, breaker OFF. Reproduces
+; DASHBOARD_IC (EUR3,872,872 / +170.2% / MaxDD 22.58%) up to MT5-vs-record friction.
+; HONESTY FLAG (MODEL_SPEC par.7): s=1.6 is NOT live-deployable at retail 1:30
+; (margin gate binds first; deployable band ~ s0.6-0.8). This is an in-sample
+; RECORD read, not a shippable dial.
+InpScale=0.6
+InpInitial=10000.0
+InpDailyStopX=0.0
+InpFedFracFile=FMA3_fed_frac_v3.csv
+InpMagicBase=3900000
+InpV34SymbolMap=
+InpLog=true
+InpMarginCap=0.9
+InpRebalBand=0.25
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK

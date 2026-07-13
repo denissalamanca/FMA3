@@ -1,0 +1,228 @@
+{
+ "freeze_id": "FMA3-v34-freeze-1",
+ "freeze_hash": "fc14159f5352d685214d3a417b0d71117dda300a7c7be02919daa83fd06c1446",
+ "freeze_hash_recipe": "sha256 over concat, for each relpath in sorted(FROZEN): utf8(relpath) + b'\\x00' + raw_file_bytes",
+ "frozen_files": [
+  {
+   "relpath": "ea/brain/brain_config.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/ea/brain/brain_config.py",
+   "bytes": 16833,
+   "sha256": "30b077a2ed3eaa5b53dcabad5e550f0450af738129d4fab7f1cb1577dab518df"
+  },
+  {
+   "relpath": "ea/brain/target_engine.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/ea/brain/target_engine.py",
+   "bytes": 14462,
+   "sha256": "b4cb835b8b3c779af198cb91e79883a39f2d7b353794f14a789dde527612eba2"
+  },
+  {
+   "relpath": "ea/tests/reference/targets.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/ea/tests/reference/targets.py",
+   "bytes": 5720,
+   "sha256": "811cc5afab1f9e4d32c278c96b1de529cd8ac1f556b5c45fbeccd7e1e3dcb849"
+  },
+  {
+   "relpath": "research/account_engine_1m.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/account_engine_1m.py",
+   "bytes": 12470,
+   "sha256": "700ea91515b62cd4973d3afb1d507a5d6d602798cad56efc17e19a7dfe9f7240"
+  },
+  {
+   "relpath": "research/core.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/core.py",
+   "bytes": 13791,
+   "sha256": "a72794a6b86fb6adb3b53f24c7138f0dfbb03e25f7ebcbb169d4dadd362687f1"
+  },
+  {
+   "relpath": "research/ensemble.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/ensemble.py",
+   "bytes": 9824,
+   "sha256": "c0c6e4416157d4912de9930123ab4cb3aeaee5cf2172e2da6c491cb0757e0bfd"
+  },
+  {
+   "relpath": "research/eval_v34_pin_s10.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/eval_v34_pin_s10.py",
+   "bytes": 4305,
+   "sha256": "c5faab371b0c4bc0467ed2db571500b55564524da50a4fe9e8d3ed7983cbeb3c"
+  },
+  {
+   "relpath": "research/ext_import/mag_xau.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/ext_import/mag_xau.py",
+   "bytes": 3391,
+   "sha256": "d947240afdacccd0add2787f65b16f52f374a02dc7b4241283949df6b7c2f6b2"
+  },
+  {
+   "relpath": "research/sleeves/carry_breakout.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/carry_breakout.py",
+   "bytes": 11496,
+   "sha256": "55d0aeef1178c6d10816f748d3f043b71fbab386b2350e5e9858002342f406f7"
+  },
+  {
+   "relpath": "research/sleeves/crisis.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/crisis.py",
+   "bytes": 6115,
+   "sha256": "3c03e7f807601b69c00e33a8058a8a340446b315a1153b59d01deec6b8a20385"
+  },
+  {
+   "relpath": "research/sleeves/crypto_smart.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/crypto_smart.py",
+   "bytes": 8642,
+   "sha256": "8a587a698ce12a4219383f5715ad043d57df3764941eb7c0590d707ac26fca1a"
+  },
+  {
+   "relpath": "research/sleeves/intraday.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/intraday.py",
+   "bytes": 5604,
+   "sha256": "91f551bb63ed2d03944fc1f67e5fb58245eb0e149b2865ba2ee5ccc9f3c9de81"
+  },
+  {
+   "relpath": "research/sleeves/meanrev.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/meanrev.py",
+   "bytes": 10756,
+   "sha256": "b23cc5a92dd15c6f364a4e974826681bf947368456772885f54631c1514b5752"
+  },
+  {
+   "relpath": "research/sleeves/seasonal.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/seasonal.py",
+   "bytes": 7391,
+   "sha256": "a1fc0d3a409c16f7b4b19155c9037efcb18eb2a783e3c99e4d1b30f8cccfdae0"
+  },
+  {
+   "relpath": "research/sleeves/trend_v2.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/sleeves/trend_v2.py",
+   "bytes": 7738,
+   "sha256": "98e28b0ff1cc6c5b3d4a9374331d0c4ee8db7f5cc03ac55859ba27b12109010a"
+  },
+  {
+   "relpath": "strategy_fable.py",
+   "abspath": "/Users/dsalamanca/vs_env/FableMultiAssets2/strategy_fable.py",
+   "bytes": 8016,
+   "sha256": "9ff0d6d562885b538b52259fea8064859bf783bd24725d9741d70a44b742bf3e"
+  }
+ ],
+ "declared_files": [
+  "research/sleeves/seasonal.py",
+  "research/sleeves/intraday.py",
+  "research/sleeves/crypto_smart.py",
+  "research/sleeves/meanrev.py",
+  "research/sleeves/crisis.py",
+  "research/sleeves/carry_breakout.py",
+  "research/sleeves/trend_v2.py",
+  "research/ext_import/mag_xau.py",
+  "research/ensemble.py",
+  "research/core.py",
+  "research/eval_v34_pin_s10.py",
+  "research/account_engine_1m.py",
+  "strategy_fable.py",
+  "ea/brain/target_engine.py",
+  "ea/brain/brain_config.py"
+ ],
+ "added_transitive_deps": [
+  "ea/tests/reference/targets.py"
+ ],
+ "python_version": "3.13.12",
+ "pandas_version": "2.3.3",
+ "numpy_version": "2.4.2",
+ "source_of_truth": {
+  "sf_7_equal_v2caps": true,
+  "sf_mag_xau_weight": 0.05,
+  "v2caps": {
+   "meanrev": 0.11,
+   "carry_breakout": 0.046,
+   "seasonal": 0.18,
+   "intraday": 0.168,
+   "crisis": 0.1,
+   "trend_v2": 0.042,
+   "crypto_smart": 0.13
+  },
+  "strategy_fable_fable_weights_match_v2caps": true,
+  "global_scale": 10.0,
+  "build_c2_SCALE": 10.0,
+  "scale_match": true,
+  "gold_cap_derived": 1.7999999999999998,
+  "gold_cap_is_180": true,
+  "brain_structural_gold_cap": 1.7999999999999998,
+  "brain_effective_gold_cap": 1.7999999999999998,
+  "build_c2_calls_build_portfolio_positions": false,
+  "build_c2_renormalizes_by_sum_weights": false,
+  "renorm_helper_divides_by_sum_weights": true,
+  "renorm_helper_quarantined": true,
+  "weight_sum": 0.8260000000000001,
+  "renorm_hotness_factor": 1.2106537530266344,
+  "config_hash": "48c09199fbf83d82",
+  "stale_scale_comments": [
+   {
+    "file": "ea/brain/brain_config.py",
+    "line": 135,
+    "text": "# (seasonal_w x scale = 0.18*11 = 1.98xE at v3 scale 11) \u2014"
+   },
+   {
+    "file": "ea/brain/brain_config.py",
+    "line": 278,
+    "text": "exposure). Mirrors ensemble.structural_gold_cap(weights, scale) = 1.62.\"\"\""
+   },
+   {
+    "file": "ea/brain/brain_config.py",
+    "line": 284,
+    "text": "rule (1.62xE today), unless a tighter explicit override is configured."
+   },
+   {
+    "file": "strategy_fable.py",
+    "line": 78,
+    "text": "#     intended exposure = seasonal weight x scale = 0.18*9 = 1.62x equity"
+   }
+  ]
+ },
+ "pin_targets": {
+  "cagr": 0.8865880763,
+  "final_eur": 449707.7453,
+  "maxdd": 0.2167488591,
+  "sharpe": 1.854317299,
+  "negY": 0,
+  "negQ": 1
+ },
+ "pin_reproduced": {
+  "cagr": 0.8865880762592069,
+  "final_eur": 449707.7452664526,
+  "maxdd": 0.2167488591051508,
+  "sharpe": 1.8543172985943566,
+  "negY": 0,
+  "negQ": 1,
+  "d_cagr": 4.079314663840705e-11,
+  "d_final": 3.3547403290867805e-05,
+  "d_maxdd": 5.150796456021567e-12,
+  "match": true
+ },
+ "gold_cap_derived": 1.7999999999999998,
+ "config_hash": "48c09199fbf83d82",
+ "golden_parquets": [
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/meanrev_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/carry_breakout_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/seasonal_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/intraday_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/crisis_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/trend_v2_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/crypto_smart_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/mag_pos.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/book.parquet",
+  "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/curve.parquet"
+ ],
+ "external_framework_deps_snapshotted": [
+  {
+   "relpath": "NewStrategyFable5/config/settings.py",
+   "abspath": "/Users/dsalamanca/vs_env/NewStrategyFable5/config/settings.py",
+   "bytes": 9744,
+   "sha256": "0656f653af56354a00bd1bdf2b73358e3a98168601baed8b28d3e91c10c1ebab"
+  },
+  {
+   "relpath": "NewStrategyFable5/engine/costs.py",
+   "abspath": "/Users/dsalamanca/vs_env/NewStrategyFable5/engine/costs.py",
+   "bytes": 12821,
+   "sha256": "dc05a19d884c3dae2963878af083838af317d77e3097964620f0070b0a946be2"
+  }
+ ],
+ "external_framework_deps_snapshot_dir": "src/_external/",
+ "hermetic_freeze_hash": "5785937244cd48db4f2344de8ac9d55deabd00667556bc85df214dbfffc19f13",
+ "hermetic_freeze_hash_recipe": "same recipe as freeze_hash, over the 16 frozen files PLUS the 2 external framework deps (18 files total)",
+ "freeze_hash_note": "freeze_hash = the 16 FMA2-source files (positions layer, proven bit-identical). hermetic_freeze_hash additionally binds the 2 NewStrategyFable5 framework deps (settings.py, costs.py) that core.py imports and that affect the account/cost layer (b_h curve). Use hermetic_freeze_hash as the binding token going forward."
+}

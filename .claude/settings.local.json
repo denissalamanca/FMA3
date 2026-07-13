@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/dsalamanca/vs_env/NewStrategyFable5/**)",
+      "Read(//Users/dsalamanca/vs_env/NewStrategyFable5/docs/v7/**)",
+      "Bash(ls -la /Users/dsalamanca/vs_env/FableMultiAssets2/ 2>/dev/null)"
+    ]
+  }
+}

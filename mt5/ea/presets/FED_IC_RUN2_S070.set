@@ -1,0 +1,64 @@
+; FED_IC_RUN2_S070 — RUN 2 real-tick crisis/margin gate, CANDIDATE dial s=0.70.
+; Purpose: settle Gate 6 (retail-1:30 margin) on a COMPOUNDING real-tick run,
+; the one thing the record engine cannot measure (its margin_cap=0.9 soft-shrink
+; understates true 1:30 load ~2x). DD gate is already comfortable (COVID DD@s=0.7
+; ~18.6% x k0.96 = 17.8% < 30%). See RECON2_SKELETON.md.
+;
+; DIAL MAPPING (CRITICAL — InpScale/InpWv7 are INFORMATIONAL; InpRisk/InpV34Mult
+; GOVERN, per Federation.mqh:207-214):
+;   InpRisk    = 8 * InpWv7 * s = 8 * 0.70 * 0.70 = 3.92
+;   InpV34Mult = (1 - InpWv7) * s = 0.30 * 0.70     = 0.21
+;   InpScale   = 0.70   (informational echo; must match or the EA logs a dial-check note)
+; COMPOUNDING: InpSizingBase=0 (Gate 6 is a compounding-run gate; NOT the fixed-base
+; 10000 of G3B — that de-levers and hides the margin blowup we are testing).
+; Tester: "Every tick based on real ticks", 2020.01.01-2025.12.31 (MUST include
+; COVID), deposit 10000 EUR, leverage 1:30, stop_out 0.50 (do NOT poison).
+; Frozen federation hash 51a7541cc2aaa593; EA hash f71bd67d.
+; --- v7 core block (VERBATIM from FED_IC_G3B.set except InpRisk) ---
+InpRisk=3.92
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.21
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpSizingBase=0
+InpMinMarginLevel=110
+InpWv7=0.70
+InpScale=0.70
+InpV34SymbolMap=USA500=US500;DAX=DE40

@@ -1,0 +1,56 @@
+; FED_IC — the IC federation deploy candidate + gates G3/G4 preset.
+; Both books on: v7 @ InpRisk = 8 x 0.70 x 1.6 = 8.96 (run-54 operating point),
+; v3.4 @ InpV34Mult = 0.30 x 1.6 = 0.48 on the native scale-10 replay file.
+; Guardian OFF. Convention A (SPEC par.5.2): both virtual books seed at the full
+; InpInitial; w/s are carried in the dials.
+; *** PROVISIONAL DIALS: s=1.6 pending the k re-pick — tonight's v7-only leg
+;     (k_calibration_v7.json) projects tick tail ~33% > the 30% stomach under
+;     v7-only k_tail; the v3.4 tick leg (gate G2b) + the G3 combination are what
+;     complete the federation k. Re-pick rule: DEMO_PREREGISTRATION par.5.3
+;     (k can only cut the dial). ***
+; --- v7 core block (VERBATIM from V7_FMA3IC_R896.set) ---
+InpRisk=8.96
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.48
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpWv7=0.70
+InpScale=1.60
+InpV34SymbolMap=USA500=US500;DAX=DE40

@@ -1,0 +1,42 @@
+; V7_FMA3FTMO — v7 sub-book at the CURRENT FTMO dial: InpRisk = 8 x 0.70 x 0.4 = 2.24
+; (FMA3-005c ship, s=0.4 — research/protocol/PRESETS.md).
+; *** PROVISIONAL: the FTMO campaign is re-shipping the dial; check its ledger before use. ***
+; *** KNOWN DIVERGENCE at low dials: the EA's per-sleeve absolute clips (BTC 1.2, gold night
+;     6.0, S6 6.0 — FableMultiAsset1_V7.mq5 lines 457/387/366) do NOT rescale with InpRisk.
+;     At InpRisk=2.24 cap-pinned components size up to ~3.6x HEAVIER than the scaled-frac
+;     record validation (record = R8 frac x 0.28). The H-RISK-2 record numbers do NOT
+;     correspond to this preset where clips bind. See mt5/README.md "Dimensional check". ***
+; All non-risk inputs byte-identical to NSF5 mt5/presets/FableMultiAsset1_V7_CORE7BAND_R8_IC.set.
+InpRisk=2.24
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD

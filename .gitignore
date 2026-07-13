@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Compiled MQL5 binaries (regenerable from source)
+*.ex5
+
+# Generated data artifacts / backtest outputs — regenerable, excluded from the code repo
+research/outputs/
+research/fwd_cache_1m/
+research/fwd_cache_1h/
+research/baselines/
+*.parquet
+*.xlsx
+*.log
+*.tmp

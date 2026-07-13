@@ -1,0 +1,53 @@
+; FED_FTMO — FTMO 2-Step Swing deployment preset (FMA3-008 breaker ship, 2026-07-10).
+; Federation s=0.70 with the DAILY CIRCUIT BREAKER at x=3.0% (guardian ON).
+; Dials (convention A, w-in-dial): InpRisk=8*0.70*0.70=3.92, InpV34Mult=0.30*0.70=0.21,
+;   InpDailyStopX=3.0 (flatten all at day-anchor -3%, halt to next server day).
+; Backtest (record engine, model v3): CAGR +54.0% / maxDD 13.3% / P(breach 12mo) 0.000,
+;   both +-20% w drift probes clear (monthly floor 0.901/0.902 > FTMO 0.90).
+; PROVISIONAL: FMA3-010 (FTMO-specific w) + 011 (challenge dials) may refine; dial also
+;   pending MT5 real-tick k-calibration. Guardian requires InpV34Mode replay/live.
+;
+InpRisk=3.92
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.21
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=3.0
+InpWv7=0.70
+InpScale=0.70
+InpV34SymbolMap=USA500=US500;DAX=DE40

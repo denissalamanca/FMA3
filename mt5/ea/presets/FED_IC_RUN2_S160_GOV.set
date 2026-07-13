@@ -1,0 +1,61 @@
+; FED_IC_RUN2_S160_GOV — GOVERNED headline test at s=1.60 (the dial that BROKE G3).
+; Un-governed G3 at s=1.6 hit ML 90.29% / free margin -EUR4.5k / 61 'No money' rejects
+; in the 2022-2023 carry cluster. This run turns the governor ON (InpMinMarginLevel=110)
+; and must now hold account ML >= 110% with ZERO 'No money' rejects across the FULL run
+; (esp. Oct-2023 BoJ + the 2022 carry cluster). It also shows how much the margin haircut
+; trims the carry-cluster drawdowns and what CAGR the margin-safe full book delivers.
+; NOTE: the governor caps MARGIN, so it de-risks the margin-driven 2022-23 cluster; the
+; COVID drawdown is DIRECTIONAL (low-margin) so it is NOT capped by the governor and will
+; remain ~scaled — that is the recoverable-DD tolerance call, separate from the ML floor.
+;
+; DIAL: InpRisk=8*0.70*1.6=8.96, InpV34Mult=0.30*1.6=0.48, InpScale=1.60.
+; MODE: COMPOUNDING (InpSizingBase=0) — deployment sizing. GOVERNOR: InpMinMarginLevel=110.
+; Tester: real ticks, 2020.01.01-2025.12.31, deposit 10000 EUR, leverage 1:30, stop_out 0.50.
+; EA hash 1a36fcbf (governor build). Frozen federation hash 51a7541cc2aaa593.
+InpRisk=8.96
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=true
+InpV34Mode=1
+InpV34Mult=0.48
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpSizingBase=0
+InpMinMarginLevel=110
+InpWv7=0.70
+InpScale=1.60
+InpV34SymbolMap=USA500=US500;DAX=DE40
