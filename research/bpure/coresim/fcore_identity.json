@@ -1,0 +1,65 @@
+{
+ "generated": "2026-07-14T17:42:30.182345",
+ "frozen_target": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_book_frac_1h.parquet",
+ "producer": "engine/v7_bridge/extract_positions.py lines 850-860",
+ "formula": "f_core[inst] = net_lots(ffill union, seam-carry) * c_size * mid_c(ffill) * eurq(ffill) / book_eqc, hourly sample = last 1m union bar in [h,h+1), fillna 0",
+ "drift_gate_G_d": true,
+ "book_eqc_bit_equal": true,
+ "lots_bit_equal_G_e": {
+  "AUDUSD": true,
+  "BTCUSD": true,
+  "ETHUSD": true,
+  "EURGBP": true,
+  "NZDUSD": true,
+  "USDJPY": true,
+  "USTEC": true,
+  "XAUUSD": true
+ },
+ "lots_max_abs_diff": {
+  "AUDUSD": 0.0,
+  "BTCUSD": 0.0,
+  "ETHUSD": 0.0,
+  "EURGBP": 0.0,
+  "NZDUSD": 0.0,
+  "USDJPY": 0.0,
+  "USTEC": 0.0,
+  "XAUUSD": 0.0
+ },
+ "frac_index_equal": true,
+ "frac_bit_equal_G_f": {
+  "AUDUSD": true,
+  "BTCUSD": true,
+  "ETHUSD": true,
+  "EURGBP": true,
+  "NZDUSD": true,
+  "USDJPY": true,
+  "USTEC": true,
+  "XAUUSD": true
+ },
+ "frac_max_abs_diff": {
+  "AUDUSD": 0.0,
+  "BTCUSD": 0.0,
+  "ETHUSD": 0.0,
+  "EURGBP": 0.0,
+  "NZDUSD": 0.0,
+  "USDJPY": 0.0,
+  "USTEC": 0.0,
+  "XAUUSD": 0.0
+ },
+ "usdjpy_hypotheses_max_abs_diff": {
+  "H1_H2_notional_sum_over_leg_equity_sum": 17.20374793165518,
+  "H3_tgt_sum": 24.230597243898448,
+  "H4_net_notional_over_book_eqc": 0.0
+ },
+ "naive_tgt_passthrough_max_abs_diff": {
+  "AUDUSD": 5.834643884442049,
+  "BTCUSD": 1.0848125523445111,
+  "ETHUSD": 1.0927922594673962,
+  "EURGBP": 18.213935633761874,
+  "NZDUSD": 5.824696547589273,
+  "USTEC": 7.8044189406894935,
+  "XAUUSD": 8.11953858879075
+ },
+ "verdict": "(c)-VIABLE",
+ "runtime_s": 534.0
+}

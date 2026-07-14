@@ -295,3 +295,50 @@ per segment; raw JSON: `coresim_parity.json`):
 5. **a_h consumption seam**: the blend divides by `eqc.iloc[0]` = 10000.0
    exactly and asof-ffills hourly with fillna(1.0) — trivial, but belongs to
    the blend track, not CoreSim.
+
+## 10. f_core extension (TRACK B, FABLE REVISION v2 item 1 — option (c))
+
+**Identity (MEASURED, (c)-VIABLE).** The frozen
+`research/outputs/v7_book_frac_1h.parquet` [legacy name] — the Core book's
+held frac-of-own-equity per NET symbol, 8 alphabetical columns AUDUSD,
+BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD, 49,355 hourly rows —
+is EXACTLY reproducible from CoreSim state (fcore_identity.json,
+fcore_reference.py, 2026-07-14):
+
+    f_core[net] = net_lots * contract * mid_c * eurq / book_eqc
+
+* `net_lots` — sum of member-leg positions in LEG APPEND ORDER (USDJPY =
+  legs 1 and 5), position captured AFTER fills (the anchor's
+  `_run_core_pos` capture point), forward-filled on the union grid
+  INCLUDING segment seams (the previous segment's final position carries
+  until the leg's first bar of the new segment);
+* `mid_c` = (bid_c+ask_c)*0.5 and `eurq` — forward-filled from the
+  instrument's own bars (the carry triple at seams);
+* `book_eqc` — the combined close-mark book equity incl. flat legcap
+  (section 6), i.e. division by the BOOK, not by any leg-equity sum;
+* hourly row at hour start h = snapshot at the LAST 1m union bar in
+  [h, h+1); symbols before their first-ever bar contribute 0.
+* NORMATIVE grouping: `((net_lots * contract) * mid_c) * eurq / eqc`.
+
+Measured verdicts on the full grid (max |diff| vs the frozen parquet):
+H4 net-notional/book-eqc **0.0 on all 8 columns (bit-equal)**;
+equity-weighted / notional-sum-over-leg-equity-sum (USDJPY) 17.2 — DEAD;
+tgt-sum (USDJPY) 24.2 — DEAD; naive single-leg tgt passthrough 1.08–18.2
+per symbol — DEAD (lot rounding + 25% rebalance band + margin cap + the
+open-time leg-equity vs close-time book-equity denominators).
+
+**MQL5 implementation** (`Core/CoreSim.mqh`): `CCoreLegSim` captures the
+per-bar triple (pos, mid_c, eurq); `CCoreBookSim` adds `SetNets` /
+`AssignLegNet` / `ComputeFCore` (call after EVERY `FinishSegment` in chain
+order) with cross-segment carry per leg and last-bar-in-hour overwrite
+emission; accessors `FCoreRows/FCoreTs/FCoreAt`. Harness:
+`mt5/ea/scripts/CheckFCore.mq5` (same exporter inputs as TestCoreSim,
+writes `FMA3_fcore_actual.csv`), compiled 0 errors / 0 warnings
+(TestCoreSim regression also 0/0).
+
+**Gates.** The MQL5 ALGORITHM (cursor + carry + hourly overwrite) has a
+mechanical python twin: `validate_mql5_fcore.py --sim` — PASS, bit-equal
+0.0 on all 8 columns over the full grid (fcore_mqhsim.json). STAGED for the
+terminal: run CheckFCore.mq5 on the export_coresim_inputs.py inputs, then
+judge with `validate_mql5_fcore.py` (writes fcore_mql5_parity.json) — that
+run isolates only the MQL5 language layer, exactly the RECON-8d discipline.

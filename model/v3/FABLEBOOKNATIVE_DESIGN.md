@@ -19,13 +19,19 @@ doc: it specifies what to build and what the owner must decide. No MQL5 is writt
 This revision resolves the adversarial review's three blocking findings and corrects one
 stale claim. Where v2 conflicts with the original text below, **v2 wins**.
 
-1. **`f_core` source: DECIDED — option (a).** The identity-check gamble (§1.4 option b) is
-   dead: the review **measured** that CoreSim's 9 legs net to the 8 `f_core` columns with
-   USDJPY as TWO separate-equity legs — collapsing them is equity-weighted netting, not a
-   `tgt` passthrough, so (b) cannot be bit-exact. Build the **compute-only `CCoreSignal`**
-   refactor of CoreEngine (no `CTrade`, no order sends). Its gate: `f_core[8]` vs
-   `v7_book_frac_1h.parquet` on frozen bars (the G1-analog signal check) — a *verification*,
-   no longer a *decision-maker*.
+1. **`f_core` source: RESOLVED by measurement (S0, 2026-07-14) — better than either option.**
+   S0 found the frozen parquet's actual producer (`engine/v7_bridge/extract_positions.py`
+   L850–860): **`f_core[net] = net_lots(ffilled, seam-carry) × contract × mid_close × eurq
+   / book_eqc`** — every quantity CoreSim already tracks. Implemented as
+   `CCoreBookSim.ComputeFCore()` (CoreSim.mqh, compiled 0/0) + python reference:
+   **bit-equal 0.0 on ALL 8 columns over the full 49,355-row frozen grid**, and the
+   MQL5-algorithm python twin also 0.0 across all 32 chained segments. The earlier
+   hypotheses were both wrong and are measured dead: naive `tgt` passthrough 1.08–18.2
+   max|diff| (lot rounding + rebalance band + margin cap + denominator basis), equity-weighted
+   netting 17.2. **The `CCoreSignal` CoreEngine refactor is DELETED from the plan** — no
+   CoreEngine.mqh dissection needed; one engine (CoreSim) yields `f_core` *and* `a`.
+   Remaining for this piece: the MQL5-language-layer isolation run (`CheckFCore.mq5`,
+   staged; needs the ~3.5 GB segment bundles re-exported — fold into the S1 terminal batch).
 2. **CoreSim streaming wrapper: DON'T BUILD IT.** The review found `FinishSegment`'s
    bfill-of-first-in-segment-eqc is a **leading-edge lookahead a forward streamer
    structurally cannot compute** — so a "bit-exact incremental streaming `a`" is impossible

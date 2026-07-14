@@ -1,0 +1,30 @@
+{
+ "generated": "2026-07-14T17:46:22.291478",
+ "mode": "mqh_algorithm_sim_vs_parquet",
+ "parity_target": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_book_frac_1h.parquet",
+ "rows_sim": 49355,
+ "rows_expected": 49355,
+ "index_equal": true,
+ "bit_equal": {
+  "AUDUSD": true,
+  "BTCUSD": true,
+  "ETHUSD": true,
+  "EURGBP": true,
+  "NZDUSD": true,
+  "USDJPY": true,
+  "USTEC": true,
+  "XAUUSD": true
+ },
+ "max_abs_diff": {
+  "AUDUSD": 0.0,
+  "BTCUSD": 0.0,
+  "ETHUSD": 0.0,
+  "EURGBP": 0.0,
+  "NZDUSD": 0.0,
+  "USDJPY": 0.0,
+  "USTEC": 0.0,
+  "XAUUSD": 0.0
+ },
+ "verdict": "PASS",
+ "runtime_s": 198.4
+}

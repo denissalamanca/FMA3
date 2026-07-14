@@ -46,6 +46,7 @@ private:
    // --- captured per-bar series (this segment, in-window bars only) ---
    long   m_ts[];
    double m_c[], m_w[], m_m[];
+   double m_p[], m_mc[], m_qe[];       // f_core capture: pos, mid_c, eurq
    int    m_n;
    string m_err;
 
@@ -57,6 +58,9 @@ private:
       if(ArrayResize(m_c,  want) != want) { m_err="ArrayResize c";   return false; }
       if(ArrayResize(m_w,  want) != want) { m_err="ArrayResize w";   return false; }
       if(ArrayResize(m_m,  want) != want) { m_err="ArrayResize m";   return false; }
+      if(ArrayResize(m_p,  want) != want) { m_err="ArrayResize p";   return false; }
+      if(ArrayResize(m_mc, want) != want) { m_err="ArrayResize mc";  return false; }
+      if(ArrayResize(m_qe, want) != want) { m_err="ArrayResize qe";  return false; }
       return true;
      }
 
@@ -76,6 +80,12 @@ public:
    double EqC(const int i) const { return m_c[i];     }
    double EqW(const int i) const { return m_w[i];     }
    double Mg(const int i)  const { return m_m[i];     }
+   // f_core capture accessors (position AFTER fills — the position whose
+   // marks defined EqC(i), the anchor's extraction-capture point)
+   double Pos(const int i)  const { return m_p[i];    }
+   double MidC(const int i) const { return m_mc[i];   }
+   double Eurq(const int i) const { return m_qe[i];   }
+   double Contract(void)    const { return m_contract; }
    double Balance(void)    const { return m_balance;  }
    string LastError(void)  const { return m_err;      }
 
@@ -174,10 +184,13 @@ public:
       double eq_w = m_balance + unreal_w;
 
       // ---- 5. margin (+ noliq stop-out guard: MUST never fire) ----
+      // mid_c hoisted for the f_core capture; the margin expression below is
+      // textually unchanged (0.5*(b+a) vs the anchor's (b+a)*0.5 is bit-
+      // identical: IEEE-754 multiplication is commutative).
+      double mid_c  = 0.5*(bid_c + ask_c);
       double margin = 0.0;
       if(m_pos != 0.0)
         {
-         double mid_c = 0.5*(bid_c + ask_c);
          margin = MathAbs(m_pos) * m_contract * mid_c * eurq / m_lev;
          if(eq_w < CORESIM_STOP_OUT*margin)
            { m_err = "noliq stop-out fired (impossible in the anchor)"; return false; }
@@ -187,9 +200,10 @@ public:
       if(m_pos == 0.0 && m_balance <= 0.0)
         { m_err = "leg death (impossible in the anchor)"; return false; }
 
-      // ---- capture ----
+      // ---- capture (incl. f_core triple: pos-after-fills, mid_c, eurq) ----
       if(!Reserve()) return false;
-      m_ts[m_n]=ts; m_c[m_n]=eq_c; m_w[m_n]=eq_w; m_m[m_n]=margin; m_n++;
+      m_ts[m_n]=ts; m_c[m_n]=eq_c; m_w[m_n]=eq_w; m_m[m_n]=margin;
+      m_p[m_n]=m_pos; m_mc[m_n]=mid_c; m_qe[m_n]=eurq; m_n++;
       return true;
      }
 };
@@ -217,11 +231,20 @@ private:
    long         m_uts[];
    double       m_eqc[], m_eqw[], m_mg[];
    int          m_un;
+   // --- f_core state (net-symbol map, cross-segment carry, hourly rows) ---
+   int          m_legNet[];                // leg -> net col (-1 = unmapped)
+   int          m_nNet;                    // net symbol count (8 in the book)
+   double       m_cPos[], m_cMid[], m_cQe[]; // per-leg last-bar carry (ffill
+   bool         m_cValid[];                  //   across segment seams)
+   long         m_fts[];                   // hour-start epochs (persistent)
+   double       m_fv[];                    // row-major [row*m_nNet + net]
+   int          m_fn;                      // emitted hourly rows
    string       m_err;
 
 public:
                      CCoreBookSim(void) : m_nLegs(0), m_nSlots(0), m_W(0.0),
-                                          m_flat(0.0), m_un(0), m_err("") {}
+                                          m_flat(0.0), m_un(0),
+                                          m_nNet(0), m_fn(0), m_err("") {}
                     ~CCoreBookSim(void)
      {
       for(int i=0;i<m_nLegs;i++) if(CheckPointer(m_legs[i])==POINTER_DYNAMIC) delete m_legs[i];
@@ -247,6 +270,14 @@ public:
       m_legs[idx] = new CCoreLegSim();
       if(CheckPointer(m_legs[idx]) != POINTER_DYNAMIC) { m_err="new leg"; return -1; }
       m_legs[idx].Configure(slot_legs, contract, comm, lev, lot_step, min_lot);
+      if(ArrayResize(m_legNet, idx+1) != idx+1) { m_err="ArrayResize legNet"; return -1; }
+      if(ArrayResize(m_cPos,   idx+1) != idx+1) { m_err="ArrayResize cPos";   return -1; }
+      if(ArrayResize(m_cMid,   idx+1) != idx+1) { m_err="ArrayResize cMid";   return -1; }
+      if(ArrayResize(m_cQe,    idx+1) != idx+1) { m_err="ArrayResize cQe";    return -1; }
+      if(ArrayResize(m_cValid, idx+1) != idx+1) { m_err="ArrayResize cValid"; return -1; }
+      m_legNet[idx] = -1;
+      m_cPos[idx] = 0.0; m_cMid[idx] = 0.0; m_cQe[idx] = 0.0;
+      m_cValid[idx] = false;
       m_nLegs = idx+1;
       return idx;
      }
@@ -356,6 +387,132 @@ public:
    double Flat(void)         const { return m_flat;    }
    // seed for the NEXT frozen segment (spec 6.2 seed chain)
    double FinalEqC(void)     const { return (m_un > 0) ? m_eqc[m_un-1] : 0.0; }
+
+   //=================================================================
+   // f_core — the Core book's held fraction-of-own-equity per NET
+   // symbol, the frozen v7_book_frac_1h.parquet [legacy name] series.
+   // Identity PROVEN bit-exact over the full hourly grid in python
+   // (research/bpure/coresim/fcore_identity.json, verdict (c)-VIABLE):
+   //
+   //   f_core[net] = net_lots * contract * mid_c * eurq / book_eqc
+   //
+   //   net_lots  = sum of member-leg pos (leg index order), forward-
+   //               filled on the union grid INCLUDING segment seams;
+   //   mid_c/eurq forward-filled from the instrument's own bars;
+   //   book_eqc  = the combined close-mark equity (incl. flat legcap);
+   //   hourly row stamped at hour start h = snapshot at the LAST 1m
+   //   union bar with stamp in [h, h+1).
+   //
+   // Usage: SetNets(n) once, AssignLegNet(leg, net) per leg, then call
+   // ComputeFCore() after EVERY FinishSegment() in chain order. Rows
+   // accumulate across segments (the seam carry lives in this object).
+   //=================================================================
+   bool SetNets(const int n_net)
+     {
+      if(n_net <= 0) { m_err="bad n_net"; return false; }
+      m_nNet = n_net;
+      m_fn = 0;
+      return true;
+     }
+
+   bool AssignLegNet(const int leg, const int net)
+     {
+      if(leg < 0 || leg >= m_nLegs)  { m_err="AssignLegNet leg";  return false; }
+      if(net < 0 || net >= m_nNet)   { m_err="AssignLegNet net";  return false; }
+      m_legNet[leg] = net;
+      return true;
+     }
+
+   bool ComputeFCore(void)
+     {
+      if(m_nNet <= 0)  { m_err="f_core: SetNets not called"; return false; }
+      if(m_un <= 0)    { m_err="f_core: no finished segment"; return false; }
+      // per-leg cursor over this segment's captured bars
+      int q[];
+      if(ArrayResize(q, m_nLegs) != m_nLegs) { m_err="ArrayResize q"; return false; }
+      for(int l=0;l<m_nLegs;l++) q[l] = -1;
+      double fr[];
+      if(ArrayResize(fr, m_nNet) != m_nNet) { m_err="ArrayResize fr"; return false; }
+      double net_pos[], net_mid[], net_qe[], net_ct[];
+      bool   net_has[];
+      if(ArrayResize(net_pos, m_nNet) != m_nNet ||
+         ArrayResize(net_mid, m_nNet) != m_nNet ||
+         ArrayResize(net_qe,  m_nNet) != m_nNet ||
+         ArrayResize(net_ct,  m_nNet) != m_nNet ||
+         ArrayResize(net_has, m_nNet) != m_nNet)
+        { m_err="ArrayResize net scratch"; return false; }
+
+      for(int i=0;i<m_un;i++)
+        {
+         long t = m_uts[i];
+         // net accumulation in LEG INDEX ORDER (the anchor's per_inst
+         // accumulation order); one net's legs share the instrument, so
+         // mid/eurq come from the first member leg that has data.
+         for(int s=0;s<m_nNet;s++)
+           { net_pos[s]=0.0; net_mid[s]=0.0; net_qe[s]=0.0; net_ct[s]=0.0; net_has[s]=false; }
+         for(int l=0;l<m_nLegs;l++)
+           {
+            int s = m_legNet[l];
+            if(s < 0) continue;
+            CCoreLegSim *lg = m_legs[l];
+            int nb = lg.Bars();
+            while(q[l]+1 < nb && lg.Ts(q[l]+1) <= t) q[l]++;
+            double p, mc, qe;
+            if(q[l] >= 0)
+              { p = lg.Pos(q[l]);  mc = lg.MidC(q[l]); qe = lg.Eurq(q[l]); }
+            else if(m_cValid[l])
+              { p = m_cPos[l];     mc = m_cMid[l];     qe = m_cQe[l];      }
+            else
+               continue;           // before the instrument's first bar ever
+            net_pos[s] = net_pos[s] + p;          // left-to-right leg order
+            if(!net_has[s])
+              { net_mid[s]=mc; net_qe[s]=qe; net_ct[s]=lg.Contract(); net_has[s]=true; }
+           }
+         double eqc = m_eqc[i];
+         for(int s=0;s<m_nNet;s++)
+           {
+            if(!net_has[s]) { fr[s] = 0.0; continue; }   // fillna(0) case
+            // NORMATIVE grouping: ((lots * contract) * mid) * eurq / eqc
+            double val = net_pos[s] * net_ct[s] * net_mid[s] * net_qe[s];
+            fr[s] = val / eqc;
+           }
+         // hourly emit: keep only the LAST union bar of each hour bucket;
+         // same-hour rows overwrite (also heals a segment-seam straddle)
+         long hour = t - (t % 3600);
+         int  row  = m_fn;
+         if(m_fn > 0 && m_fts[m_fn-1] == hour) row = m_fn - 1;
+         if(row == m_fn)
+           {
+            int cap = ArraySize(m_fts);
+            if(m_fn >= cap)
+              {
+               int want = cap + CORESIM_GROW;
+               if(ArrayResize(m_fts, want) != want) { m_err="ArrayResize fts"; return false; }
+               if(ArrayResize(m_fv, want*m_nNet) != want*m_nNet) { m_err="ArrayResize fv"; return false; }
+              }
+            m_fn++;
+           }
+         m_fts[row] = hour;
+         for(int s=0;s<m_nNet;s++) m_fv[row*m_nNet + s] = fr[s];
+        }
+
+      // seam carry: legs that traded this segment update their ffill state
+      for(int l=0;l<m_nLegs;l++)
+        {
+         CCoreLegSim *lg = m_legs[l];
+         int nb = lg.Bars();
+         if(nb <= 0) continue;
+         m_cPos[l] = lg.Pos(nb-1);
+         m_cMid[l] = lg.MidC(nb-1);
+         m_cQe[l]  = lg.Eurq(nb-1);
+         m_cValid[l] = true;
+        }
+      return true;
+     }
+
+   int    FCoreRows(void)           const { return m_fn;     }
+   long   FCoreTs(const int k)      const { return m_fts[k]; }
+   double FCoreAt(const int k, const int net) const { return m_fv[k*m_nNet + net]; }
 };
 
 #endif // CORE_CORESIM_MQH
