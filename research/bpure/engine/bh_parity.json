@@ -1,0 +1,70 @@
+{
+ "generated": "2026-07-14T02:42:01.836262",
+ "golden": "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/curve.parquet",
+ "pin_source": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/outputs/v34_s10_pin_1m.json",
+ "stage1_subwindow": {
+  "pass": true,
+  "bars": 185736,
+  "max_abs_dclose": 0.0,
+  "max_abs_dworst": 0.0,
+  "max_rel_dclose": 0.0,
+  "max_rel_dworst": 0.0,
+  "carry_state_equal": true,
+  "seconds": 36.4
+ },
+ "stage2_full": {
+  "bars": 2948650,
+  "index_equal_vs_golden": true,
+  "bit_equal_equity": true,
+  "bit_equal_worst": true,
+  "max_abs_dequity": 0.0,
+  "max_abs_dworst": 0.0,
+  "max_rel_dequity": 0.0,
+  "max_rel_dworst": 0.0,
+  "cagr": 0.8865880762592069,
+  "maxdd_worst": 0.2167488591051508,
+  "final_eur": 449707.7452664526,
+  "n_trades": 20403,
+  "final_balance": 434132.98905617336,
+  "scalar_runtime_s": 532.7
+ },
+ "metrics_vs_pin": {
+  "cagr": {
+   "stepper": 0.8865880762592069,
+   "pin": 0.8865880762592069,
+   "bit_equal": true,
+   "sig_digits": "inf"
+  },
+  "maxdd_worst": {
+   "stepper": 0.2167488591051508,
+   "pin": 0.2167488591051508,
+   "bit_equal": true,
+   "sig_digits": "inf"
+  },
+  "final_eur": {
+   "stepper": 449707.7452664526,
+   "pin": 449707.7452664526,
+   "bit_equal": true,
+   "sig_digits": "inf"
+  },
+  "n_trades": {
+   "stepper": 20403,
+   "pin": 20403,
+   "equal": true
+  }
+ },
+ "stage3_warm": {
+  "snapshot_after": "2022Q2",
+  "resume_from": "2022Q3",
+  "tail_bars": 1830424,
+  "index_equal": true,
+  "bit_equal_equity": true,
+  "bit_equal_worst": true,
+  "max_abs_dequity": 0.0,
+  "max_abs_dworst": 0.0,
+  "resume_final_balance": 434132.98905617336,
+  "seconds": 323.7
+ },
+ "pass": true,
+ "total_runtime_s": 893.3
+}
