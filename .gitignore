@@ -21,3 +21,4 @@ research/baselines/
 # regenerated MQL5 comparator output
 research/bpure/mql5/out/harness_sim_actual.csv
 research/bpure/mql5/out/*_actual.csv
+research/bpure/book/out/
