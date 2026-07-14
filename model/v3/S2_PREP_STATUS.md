@@ -178,3 +178,19 @@ thing that catches it, and it does [MEASURED].
    FinishSegment/ComputeFCore/BeginSegment — only AFTER G-S1..G-S5 pass.
 6. **Warm-blob completeness check** for CCoreSignal state (incl. the two unbounded Donchian
    breach flags) folded into the Track-B serializer schema (version bump when added).
+
+---
+
+## OWNER RATIFICATIONS — 2026-07-14 (all on the recommended options)
+
+1. **Normative source = the NSF5 python target functions** (R=8.0 pure, pandas-faithful
+   kernels via SatMath). CoreEngine.mqh is NOT extracted, never included, never edited.
+2. **Trigger mode** = anchor-exact semantics (incl. retrospective bfill) in the R1/parity
+   harness; **live = causal hold-at-legcap + telemetry** (measured slack: 12-day min gap
+   vs 5-day gate, 2-day max bfill lag). Frozen-dates option rejected (not forward-viable).
+3. **Pass criterion** (if kernels not bit-zero) = **ZERO lot-decision flips + ≤1e-12** on
+   targets (the f_sat precedent; flip count is the discriminating test).
+4. **Harvest arm stays anchor-faithful** (k=2.5, exact semantics; 0 fires in-sample).
+5. **Swap/eurq live generator: NOT ratified into this track** — deferred to its own pass
+   (harness gates run on the pre-baked exported arrays; the generator is a live-deploy
+   prerequisite, tracked separately).
