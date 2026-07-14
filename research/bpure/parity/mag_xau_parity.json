@@ -1,0 +1,30 @@
+{
+  "sleeve": "mag_xau",
+  "n_hourly_bars": 49379,
+  "n_daily_bars": 1549,
+  "daily_grid_match": true,
+  "continuous_rel_err": {
+    "mid": 0.0,
+    "near": 0.0,
+    "dist": 0.0,
+    "ann": 3.4030901851998767e-15,
+    "raw_target": 2.9546534960699046e-15
+  },
+  "cont_max_err": 3.4030901851998767e-15,
+  "state_seq_exact": true,
+  "n_state_mismatches": 0,
+  "state_detail": {
+    "sig_mismatches": 0,
+    "near_mismatches": 0
+  },
+  "pos_maxabs_vs_golden": 5.329070518200751e-15,
+  "n_pos_bars_over_1e-12": 0,
+  "live_make_positions_vs_golden_maxabs": 0.0,
+  "state_roundtrip_tail_maxabs": 0.0,
+  "pass": {
+    "continuous_1e-8": true,
+    "state_exact": true,
+    "positions_1e-12": true,
+    "state_roundtrip": true
+  }
+}

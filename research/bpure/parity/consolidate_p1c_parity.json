@@ -1,0 +1,92 @@
+{
+  "sleeve": "consolidate_p1c",
+  "symbols": [
+    "XAUUSD",
+    "BTCUSD",
+    "ETHUSD",
+    "SOLUSD"
+  ],
+  "n_bars": 49379,
+  "n_daily_rows": 2081,
+  "continuous": {
+    "seasonal_vol": {
+      "max_rel": 3.073940849898456e-15,
+      "max_abs": 9.43689570931383e-16,
+      "nan_mask_mismatch": 0
+    },
+    "BTCUSD_sig_d": {
+      "max_rel": 5.62308968842873e-16,
+      "max_abs": 2.7755575615628914e-17,
+      "nan_mask_mismatch": 0
+    },
+    "BTCUSD_z": {
+      "max_rel": 6.322488249067264e-16,
+      "max_abs": 1.3322676295501878e-15,
+      "nan_mask_mismatch": 0
+    },
+    "BTCUSD_ma": {
+      "max_rel": 4.472198918289093e-15,
+      "max_abs": 3.637978807091713e-10,
+      "nan_mask_mismatch": 0
+    },
+    "ETHUSD_sig_d": {
+      "max_rel": 6.472162142839618e-16,
+      "max_abs": 2.7755575615628914e-17,
+      "nan_mask_mismatch": 0
+    },
+    "ETHUSD_z": {
+      "max_rel": 6.677316092550038e-16,
+      "max_abs": 1.3322676295501878e-15,
+      "nan_mask_mismatch": 0
+    },
+    "ETHUSD_ma": {
+      "max_rel": 2.7284363576825247e-15,
+      "max_abs": 5.9117155615240335e-12,
+      "nan_mask_mismatch": 0
+    },
+    "SOLUSD_sig_d": {
+      "max_rel": 5.046120222792243e-16,
+      "max_abs": 2.7755575615628914e-17,
+      "nan_mask_mismatch": 0
+    },
+    "SOLUSD_z": {
+      "max_rel": 6.413720832273459e-16,
+      "max_abs": 1.3322676295501878e-15,
+      "nan_mask_mismatch": 0
+    },
+    "SOLUSD_ma": {
+      "max_rel": 2.0676278133970607e-15,
+      "max_abs": 3.126388037344441e-13,
+      "nan_mask_mismatch": 0
+    }
+  },
+  "cont_max_rel_err": 4.472198918289093e-15,
+  "cont_nan_mask_mismatches": 0,
+  "state_seq_exact": true,
+  "n_state_mismatches": 0,
+  "n_state_rows": 6243,
+  "pos_maxabs_vs_golden": 1.4988010832439613e-15,
+  "pos_maxabs_per_symbol": {
+    "XAUUSD": 1.4988010832439613e-15,
+    "BTCUSD": 1.6653345369377348e-16,
+    "ETHUSD": 1.1102230246251565e-16,
+    "SOLUSD": 6.938893903907228e-17
+  },
+  "n_pos_entries_gt_1e-12": 0,
+  "warm_start_roundtrip_maxabs": 0.0,
+  "gate_delta": null,
+  "grid": [
+    "2020-01-02 00:00:00",
+    "2025-12-31 23:00:00"
+  ],
+  "golden": [
+    "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/seasonal_pos.parquet",
+    "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/crypto_smart_pos.parquet"
+  ],
+  "notes": [
+    "rel err computed over entries with |truth| >= 1e-6; abs err over all both-finite entries; nan_mask_mismatch counts finite/NaN disagreements",
+    "state sequence compared per daily-grid row per coin (3-state hysteresis)",
+    "positions compared vs frozen golden parquets over the full hourly grid",
+    "warm-start: JSON get_state/set_state at mid-grid, tail re-run bit-compared"
+  ]
+}

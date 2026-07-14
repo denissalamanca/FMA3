@@ -1,0 +1,47 @@
+{
+  "sleeve": "carry_breakout",
+  "n_bars": 49379,
+  "n_symbols": 32,
+  "golden_columns": [
+    "AUDJPY",
+    "CADCHF",
+    "CADJPY",
+    "EURCAD",
+    "EURNZD",
+    "EURUSD",
+    "GBPJPY",
+    "NZDJPY",
+    "USDCHF",
+    "USDJPY",
+    "DAX",
+    "JP225",
+    "UK100",
+    "US30",
+    "USA500",
+    "USTEC",
+    "XAGUSD",
+    "XAUUSD",
+    "XBRUSD",
+    "XNGUSD",
+    "XTIUSD"
+  ],
+  "cont": {
+    "vol30_max_rel_err": 0.0,
+    "vol30_nan_mismatch": 0,
+    "atr_max_rel_err": 0.0,
+    "atr_nan_mismatch": 0,
+    "carry_w_max_rel_err": 0.0,
+    "n_carry_days_compared": 2080
+  },
+  "cont_max_err": 0.0,
+  "state_seq_exact": true,
+  "n_state_mismatches": 0,
+  "n_state_mismatches_breakout": 0,
+  "n_state_mismatches_carry": 0,
+  "pos_maxabs_vs_golden": 1.6653345369377348e-16,
+  "notes": [
+    "worst pos diff at 2023-07-13 16:00:00 US30 (mine np.float64(0.43703567895966494) vs golden np.float64(0.4370356789596651))",
+    "symbols dropped by golden (must be all-zero): ['AUDCAD', 'AUDNZD', 'AUDUSD', 'EURCHF', 'EURGBP', 'EURJPY', 'EURNOK', 'EURSEK', 'GBPUSD', 'NZDCAD', 'NZDUSD']; stepper max|pos| there = 0.000e+00"
+  ],
+  "runtime_sec": 4.1
+}

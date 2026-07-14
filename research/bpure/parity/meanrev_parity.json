@@ -1,0 +1,27 @@
+{
+  "sleeve": "meanrev",
+  "notes": [],
+  "spec_sha256": "b23cc5a92dd15c6f364a4e974826681bf947368456772885f54631c1514b5752",
+  "pandas_ref_vs_golden_maxabs": 0.0,
+  "daily_grid_match": true,
+  "n_days": 2081,
+  "continuous": {
+    "px_daily": 0.0,
+    "vol_d": 3.2838334862067652e-15,
+    "w": 3.3513617587959866e-15,
+    "z": 7.987611745055435e-10,
+    "z_nan_mismatch": 0,
+    "pos_daily": 2.103208921291267e-15
+  },
+  "cont_max_err": 7.987611745055435e-10,
+  "n_bars": 33296,
+  "n_state_mismatches": 0,
+  "state_seq_exact": true,
+  "pos_maxabs_vs_golden": 1.887379141862766e-15,
+  "pos_n_cells_gt_1e-12": 0,
+  "n_hours": 49379,
+  "pass_positions": true,
+  "warmstart_roundtrip_maxabs": 0.0,
+  "warmstart_exact": true,
+  "runtime_sec": 2.8
+}

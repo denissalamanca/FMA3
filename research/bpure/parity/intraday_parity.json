@@ -1,0 +1,41 @@
+{
+  "sleeve": "intraday",
+  "grid": {
+    "n_hours": 49379,
+    "n_symbols": 2,
+    "start": "2020-01-02 00:00:00",
+    "end": "2025-12-31 23:00:00"
+  },
+  "sanity_ref_replica_vs_golden_maxabs": 0.0,
+  "continuous_rel_err": {
+    "vol30_hourly": 2.8946401338702494e-14,
+    "mv": 0.0,
+    "sc": 2.279755573664955e-15,
+    "z": 2.389774889470109e-15,
+    "w": 2.7920412973820462e-14,
+    "sig": 2.8328177526743484e-14
+  },
+  "cont_max_err": 2.8946401338702494e-14,
+  "n_entry_days": {
+    "USA500": 1550,
+    "USTEC": 1550
+  },
+  "state_seq": {
+    "n_bar_states": 98758,
+    "n_mismatches": 0,
+    "exact": true,
+    "mv_day_set_equal": {
+      "USA500": true,
+      "USTEC": true
+    },
+    "n_day_clip_state_mismatch": 0,
+    "first_mismatch": null
+  },
+  "pos_maxabs_vs_golden": 2.4980018054066022e-14,
+  "warm_start_resume_maxabs": 0.0,
+  "pass": {
+    "continuous_le_1e-8": true,
+    "states_exact": true,
+    "pos_le_1e-12": true
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "check": "full_book_parity",
+  "provenance": {
+    "V2_CAPS": {
+      "meanrev": 0.11,
+      "carry_breakout": 0.046,
+      "seasonal": 0.18,
+      "intraday": 0.168,
+      "crisis": 0.1,
+      "trend_v2": 0.042,
+      "crypto_smart": 0.13
+    },
+    "SCALE": 10.0,
+    "MAG_W": 0.05,
+    "gold_cap_derived": 1.7999999999999998,
+    "ensemble_py_sha256_frozen": "c0c6e4416157d4912de9930123ab4cb3aeaee5cf2172e2da6c491cb0757e0bfd",
+    "ensemble_py_frozen_eq_live": true
+  },
+  "grid": {
+    "n_hours": 49379,
+    "n_symbols": 31,
+    "start": "2020-01-02 00:00:00",
+    "end": "2025-12-31 23:00:00"
+  },
+  "sleeve_maxabs_vs_golden": {
+    "meanrev": 1.887379141862766e-15,
+    "carry_breakout": 1.6653345369377348e-16,
+    "seasonal": 1.4988010832439613e-15,
+    "intraday": 2.4980018054066022e-14,
+    "crisis": 0.0,
+    "trend_v2": 0.0,
+    "crypto_smart": 1.6653345369377348e-16,
+    "mag": 5.329070518200751e-15
+  },
+  "carry_dropped_cols_all_zero": true,
+  "book_maxabs_vs_golden": 4.196643033083092e-14,
+  "cells_total": 1530749,
+  "cells_nonzero": 132454,
+  "cells_gt_1e-12": 0,
+  "first_divergent": {
+    "hour": "2020-01-06 02:00:00",
+    "symbol": "XAUUSD",
+    "mine": 1.4536434056757142,
+    "golden": 1.4536434056757144,
+    "sleeve_contribs": {
+      "carry_breakout": {
+        "mine": 0.0,
+        "golden": 0.0
+      },
+      "seasonal": {
+        "mine": 0.8075796698198412,
+        "golden": 0.8075796698198413
+      },
+      "crisis": {
+        "mine": 0.0,
+        "golden": 0.0
+      },
+      "trend_v2": {
+        "mine": 0.0,
+        "golden": 0.0
+      },
+      "mag": {
+        "mine": 0.0,
+        "golden": 0.0
+      }
+    },
+    "attributed_sleeves": [
+      "seasonal"
+    ]
+  },
+  "gate": {
+    "cagr": 0.8865880762592069,
+    "maxdd_worst": 0.2167488591051508,
+    "sharpe": 1.8543172985943566,
+    "final_eur": 449707.7452664526,
+    "n_neg_years": 0,
+    "n_neg_quarters": 1,
+    "delta_vs_pin_quoted": {
+      "dCAGR": -4.079314663840705e-11,
+      "dMaxDD_worst": 5.150796456021567e-12,
+      "dSharpe": -4.05643518774923e-10,
+      "dFinalEUR": -3.3547403290867805e-05
+    },
+    "delta_vs_pin_fullprec": {
+      "dCAGR": 0.0,
+      "dMaxDD_worst": 0.0,
+      "dSharpe": 0.0,
+      "dFinalEUR": 5.820766091346741e-11
+    }
+  },
+  "pin_quoted": {
+    "cagr": 0.8865880763,
+    "maxdd": 0.2167488591,
+    "sharpe": 1.854317299,
+    "final_eur": 449707.7453
+  },
+  "pass_book_le_1e-12": true,
+  "pass_gate_deltas_le_1e-9_vs_quoted_pin": false,
+  "pass_gate_deltas_le_1e-9_vs_fullprec_pin": true,
+  "pass": true,
+  "runtime_sec": 637.6,
+  "pass_note": "overall pass uses the full-precision recorded pin (FMA2/research/outputs/v34_s10_pin_1m.json): dCAGR/dMaxDD/dSharpe exactly 0.0, dFinalEUR 5.82e-11. vs the 4dp-quoted task constant 449707.7453 the dFinalEUR is -3.35e-05 \u2014 pure quoting precision of the constant, not an engine divergence. cells_nonzero=132454 are all <=4.20e-14 (last-ulp accumulation from the 7 sleeve steppers, each <=2.5e-14 vs golden); 0 cells exceed the 1e-12 gate."
+}

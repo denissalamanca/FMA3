@@ -1,0 +1,70 @@
+{
+  "sleeve": "crisis",
+  "stepper_path": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/steppers/crisis_stepper.py",
+  "validate_path": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/parity/validate_crisis.py",
+  "golden_path": "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/crisis_pos.parquet",
+  "grid": {
+    "n_daily_bars": 1563,
+    "n_hourly_bars": 49379,
+    "daily_first": "2020-01-02 00:00:00",
+    "daily_last": "2025-12-31 00:00:00"
+  },
+  "continuous": {
+    "max_rel_err": 1.1085484336790715e-13,
+    "per_quantity": {
+      "vr": 1.1085484336790715e-13,
+      "dd": 0.0,
+      "s_eq": 0.0,
+      "fvr": 1.8892707176799923e-14,
+      "flev": 0.0,
+      "fma": 8.802085804498192e-16,
+      "s_fx": 0.0,
+      "au_ma": 6.890786256497364e-16,
+      "vol_XAUUSD": 1.1957243026161077e-15,
+      "w_pre_XAUUSD": 8.397108200794068e-16,
+      "w_XAUUSD": 0.0,
+      "vol_AUDJPY": 1.3600360860320251e-15,
+      "w_pre_AUDJPY": 1.363315489595409e-15,
+      "w_AUDJPY": 0.0,
+      "vol_NZDJPY": 9.719927970664994e-16,
+      "w_pre_NZDJPY": 9.301982758616019e-16,
+      "w_NZDJPY": 0.0,
+      "vol_CADJPY": 1.4722451231316781e-15,
+      "w_pre_CADJPY": 1.5516613804330075e-15,
+      "w_CADJPY": 0.0
+    },
+    "nan_pattern_mismatches": []
+  },
+  "state_sequence": {
+    "exact": true,
+    "n_mismatches": 0,
+    "n_daily_bars": 1563,
+    "n_checks": 10941,
+    "states": [
+      "trig_eq",
+      "trig_fx",
+      "up_au",
+      "level_XAUUSD",
+      "level_AUDJPY",
+      "level_NZDJPY",
+      "level_CADJPY"
+    ]
+  },
+  "positions": {
+    "max_abs_diff_vs_golden": 0.0,
+    "n_cells_gt_1e-12": 0,
+    "n_cells": 197516,
+    "pandas_ref_vs_golden_maxabs": 0.0
+  },
+  "warm_start_roundtrip_identical": true,
+  "threshold_margins": {
+    "min|vr-1.25|": 0.00023129965945001274,
+    "min|dd+0.05|": 7.81314878093714e-05,
+    "min|fvr-1.20|": 1.942730871884457e-05,
+    "min|flev-fma|": 1.0605650496264829e-05,
+    "min|au-au_ma|": 0.06470000000012988,
+    "min|grid_tie|": 7.104344963160258e-05,
+    "max_gross_pre_cap": 3.6599999999999997,
+    "n_days_gross_gt_cap": 27
+  }
+}
