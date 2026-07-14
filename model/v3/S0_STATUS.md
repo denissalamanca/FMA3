@@ -222,3 +222,22 @@ Measured gaps, in order:
 4. **Owner ratification** of the Track-B design implication (drop `CCoreSignal` for R1) so
    TestBook is built against the CoreSim-derived f_core path, not a second engine.
 5. Each terminal run above → dated `FMA3-RECON-N` ledger entry before the next step.
+
+---
+
+## S0 PROBE RESULTS — MEASURED 2026-07-14 (owner ran both modes)
+
+**VERDICT: PASS — multi-symbol data path proven for the deploy target (live).**
+
+| Dimension | Tester (1m-OHLC) | Live (BTCUSD M1 chart) |
+|---|---|---|
+| SYMBOLS | 34/34 present | 34/34 present |
+| GRID (union minutes) | 12,701 **bit-exact vs golden** | 12,701 **bit-exact vs golden** |
+| HAS_BAR (per-symbol mask) | **bit-exact, 0 mismatches** (incl. 2024-03-10 DST) | **bit-exact, 0 mismatches** |
+| DEPTH to 2020 | 0/34 (bounded ~2023-01 pre-cache from a 2024 test start) | **33/34 PASS**, earliest 1998–2017, bar counts match golden |
+
+- The 33/34 live miss = **SOLUSD download-lag** only: its probe-window data is bit-exact (12,492/12,492), its deep-history fetch hadn't landed at tries=60, and its golden history starts 2022 (no 2020 data expected). Not a capability gap; a re-attach would fill it.
+- **Conclusion:** live terminal supplies synchronized 34-symbol M1 with union grid + has_bar bit-identical to the frozen golden, plus deep history to 2020+. Tester synchronization is equally faithful; its bounded depth confirms the design's split — **historical certification on the frozen six-field engine / CSV-replay (R1), the native tester only for recent-window feed mechanics + R2.**
+- **f_core** resolved in the same S0 pass: `ComputeFCore()` from CoreSim state, bit-equal 0.0 on all 8 columns (no CoreEngine refactor).
+
+**S0 = COMPLETE & GREEN. Next: S1 — TestBook (the R1 whole-book compute gate on frozen six-field inputs).**
