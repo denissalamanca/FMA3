@@ -186,3 +186,30 @@ Per the revised stage plan (FABLE REVISION v2): **S2 = seam + execution on froze
    discontinuity — a re-based `a`/`b` passes every self-check while silently mis-weighting
    every trade; this is the highest-severity silent failure in the design.
 5. Each terminal run → dated `FMA3-RECON-N` entry before the next step.
+
+---
+
+## Track B (2026-07-14) — state serializer BUILT + python gate PASS (v2 item 5(v), S2 item 4 pulled forward)
+
+**Built (wine-compiled 0/0):** `mt5/ea/Include/Book/BookState.mqh` (`CBookState`: %.17g
+full-ledger JSON, atomic tmp+`FileDelete`+`FileMove` publish, fnv64/eof torn-write marker
+protocol, validating load, j-splice REFUSE_TO_TRADE latch with `Ready()/RefuseReason()`);
+additive `BsWriteState/BsSetState/BsContinuity` hooks in `BookOrchestrator.mqh` + sampler
+`Restore` + CoreSim carry/f_core restore hooks (compute paths untouched — TestBook,
+CheckBookOrchestrator, CheckFCore, TestCoreSim all recompiled 0/0). New synthetic gate
+script `mt5/ea/scripts/checks/CheckBookState.mq5` (split/continue bitwise, end-state
+byte round-trip, torn/bit-flip/anchor/j-splice refuse battery) — compiled 0/0, terminal
+run STAGED (no terminal launches from this repo). NOTE: MQL5 `FileMove` rename-atomicity
+is NOT certified from here — the marker protocol makes any torn write detectable on load
+regardless.
+
+**MEASURED python gate (RECON-8d warm-start pattern) — `book_state_gate.json` PASS:**
+mirror saved at 2022-06-30 23:00 (epoch 1656630000; 7,233,148-byte state, rows_offset
+251,354, j=5.935576542054057); fresh mirror restored (guard rel jump 0.0) and continued:
+**tail 554,231 rows BITWISE identical** to the uninterrupted baseline (0 diffs), tail also
+PASSES vs the golden tail (max|diff| 5.05e-13), **end states byte-identical** (7,845,417 B);
+baseline R1 re-verified PASS (5.06e-13) — no sim regression. Refuse-latch unit tests:
+truncation→TORN, bit-flip→CHECKSUM, a_first·1.01→A-ANCHOR, consistent re-base (sampler
+first_v + anchor)→**J-SPLICE (rel 6.9e-3 > 1e-9) REFUSE TO TRADE**. Documented divergence:
+mag/intraday/meanrev/crisis inner payloads are language-canonical (cross-language state
+exchange NOT certified; each side round-trips its own files bit-exact).

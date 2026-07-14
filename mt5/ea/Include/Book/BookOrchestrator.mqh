@@ -88,6 +88,7 @@
 #include <Sat/SatEquityNative.mqh>
 #include <Core/CoreSim.mqh>
 #include <Book/BookBlend.mqh>
+#include <Book/BookState.mqh>
 
 //==================================================================//
 // frozen wiring constants                                          //
@@ -263,6 +264,48 @@ public:
       if(i < 0 || i >= m_n)
          return false;                       // h not 3600-aligned / hole
       out = m_v[i];
+      return true;
+     }
+
+   //--- BookState additive hooks (serialize/restore; no compute) ----
+   long              BaseTs() const { return m_base; }
+   double            SampleAt(const int i) const
+     {
+      return (i >= 0 && i < m_n) ? m_v[i] : 0.0;
+     }
+
+   bool              Restore(const bool have, const long base,
+                             const long firstTs, const double firstV,
+                             const long lastTs, const double lastV,
+                             const double &v[], const int n)
+     {
+      Reset();
+      if(!have)
+        {
+         if(n != 0)
+            return false;
+         return true;
+        }
+      if(n < 0 || ArraySize(v) < n)
+         return false;
+      if(n > 0 && (base % 3600) != 0)
+         return false;
+      if(lastTs < firstTs)
+         return false;
+      if(n > 0)
+        {
+         if(ArrayResize(m_v, n) != n)
+            return false;
+         for(int i = 0; i < n; i++)
+            m_v[i] = v[i];
+        }
+      m_n       = n;
+      m_base    = base;
+      m_have    = true;
+      m_firstTs = firstTs;
+      m_firstV  = firstV;
+      m_lastTs  = lastTs;
+      m_lastV   = lastV;
       return true;
      }
   };
@@ -1151,6 +1194,762 @@ public:
       if(m_bS.Query(h, v))
          return v / m_bS.FirstV();
       return 1.0;
+     }
+
+   //================================================================//
+   // BookState hooks (Book/BookState.mqh) — ADDITIVE serialization  //
+   // of the COMPLETE live ledger.  ZERO compute-path change: these  //
+   // methods only read/write existing fields and call the           //
+   // components' own proven GetState/SetState.                      //
+   // Save is only legal BETWEEN core segments (seg_open refused).   //
+   // On a failed BsSetState the orchestrator may be PARTIALLY       //
+   // restored: the caller must Init() again before any other use    //
+   // (CBookState latches REFUSE_TO_TRADE in that case).             //
+   //================================================================//
+private:
+   void              BsWriteSampler(CBookStateWriter &w,
+                                    const CBookOrcHourSampler &sp)
+     {
+      w.Raw("{\"have\": ");
+      w.B(sp.Have());
+      w.KI("base",     sp.BaseTs());
+      w.KI("first_ts", sp.FirstTs());
+      w.KD("first_v",  sp.FirstV());
+      w.KI("last_ts",  sp.LastTs());
+      w.KD("last_v",   sp.LastV());
+      w.KI("n", sp.Samples());
+      w.CK("v");
+      w.Raw("[");
+      int n = sp.Samples();
+      for(int i = 0; i < n; i++)
+        {
+         if(i > 0)
+            w.Raw(", ");
+         w.D(sp.SampleAt(i));
+        }
+      w.Raw("]}");
+     }
+
+   bool              BsReadSampler(CBookStateTok &tk, CBookOrcHourSampler &sp,
+                                   const string what)
+     {
+      bool   have = false;
+      long   base = 0, fts = 0, lts = 0, n = 0;
+      double fv = 0.0, lv = 0.0;
+      bool ok = tk.Eat('{') && tk.Key("have") && tk.BoolVal(have);
+      ok = ok && tk.CommaKey("base")     && tk.IntVal(base);
+      ok = ok && tk.CommaKey("first_ts") && tk.IntVal(fts);
+      ok = ok && tk.CommaKey("first_v")  && tk.NumVal(fv);
+      ok = ok && tk.CommaKey("last_ts")  && tk.IntVal(lts);
+      ok = ok && tk.CommaKey("last_v")   && tk.NumVal(lv);
+      ok = ok && tk.CommaKey("n")        && tk.IntVal(n);
+      double v[];
+      ok = ok && tk.CommaKey("v") && tk.ArrD(v, (int)n) && tk.Eat('}');
+      if(!ok)
+        {
+         m_err = what + " sampler: " + tk.Err();
+         return false;
+        }
+      if(!sp.Restore(have, base, fts, fv, lts, lv, v, (int)n))
+        {
+         m_err = what + " sampler: Restore rejected (inconsistent fields)";
+         return false;
+        }
+      return true;
+     }
+
+public:
+   //---------------------------------------------------------------//
+   // BsWriteState — serialize everything (root members "config"     //
+   // through "samplers"; CBookState adds envelope + continuity +    //
+   // trailer).  Doubles %.17g via the writer, NEVER truncated.      //
+   //---------------------------------------------------------------//
+   bool              BsWriteState(CBookStateWriter &w)
+     {
+      if(!m_ready)   { m_err = "not initialized";                return false; }
+      if(m_seg_open) { m_err = "save inside an open core segment"; return false; }
+
+      // ---- config (verified on restore: component-count anchors) ---
+      w.Raw("\"config\": {\"w\": ");
+      w.D(m_blend.CoreWeight());
+      w.KI("nin",    BOOKORC_NIN);
+      w.KI("nsat",   SATEQ_NSYM);
+      w.KI("nnet",   BOOKORC_NNET);
+      w.KI("nbook",  BOOKORC_NBOOK);
+      w.KI("nlegs",  BOOKORC_NLEGS);
+      w.KI("held",   BOOKORC_HELD);
+      w.KI("ncross", BOOKORC_NCROSS);
+      w.Raw("}");
+
+      // ---- sleeves ---------------------------------------------------
+      w.Raw(", \"sleeves\": {");
+
+      // mag (struct state)
+      SSatMagXauState mg;
+      m_mag.GetState(mg);
+      w.Raw("\"mag\": {\"mids\": ");
+      w.ArrD(mg.mids, ArraySize(mg.mids));
+      w.KB("has_accum_day", mg.has_accum_day);
+      w.KI("accum_day",     mg.accum_day);
+      w.KD("accum_close",   mg.accum_close);
+      w.CK("pend_ts");
+      w.ArrL(mg.pending_ts,  ArraySize(mg.pending_ts));
+      w.CK("pend_tgt");
+      w.ArrD(mg.pending_tgt, ArraySize(mg.pending_tgt));
+      w.KD("current", mg.current);
+      w.Raw("}");
+
+      // intraday (2 syms x 13 doubles, documented flat order)
+        {
+         bool hd = false;
+         long cd = 0;
+         SSatIntradaySymState isy[];
+         m_intr.GetState(hd, cd, isy);
+         if(ArraySize(isy) != 2)
+           {
+            m_err = "intraday state width != 2";
+            return false;
+           }
+         double fl[26];
+         for(int k = 0; k < 2; k++)
+           {
+            int o = k * 13;
+            fl[o + 0]  = isy[k].prev_close;
+            fl[o + 1]  = isy[k].vol_num;
+            fl[o + 2]  = isy[k].vol_den;
+            fl[o + 3]  = isy[k].vol;
+            fl[o + 4]  = isy[k].w_vol;
+            fl[o + 5]  = isy[k].sc_num;
+            fl[o + 6]  = isy[k].sc_den;
+            fl[o + 7]  = (double)isy[k].sc_nobs;
+            fl[o + 8]  = isy[k].c15;
+            fl[o + 9]  = isy[k].has15 ? 1.0 : 0.0;
+            fl[o + 10] = isy[k].has16 ? 1.0 : 0.0;
+            fl[o + 11] = isy[k].mv_pending;
+            fl[o + 12] = isy[k].sig;
+           }
+         w.Raw(", \"intraday\": {\"has_day\": ");
+         w.B(hd);
+         w.KI("cur_day", cd);
+         w.CK("flat");
+         w.ArrD(fl, 26);
+         w.Raw("}");
+        }
+
+      // meanrev (struct state, field arrays)
+        {
+         SSatMeanRevState ms;
+         m_mr.GetState(ms);
+         double par[14];
+         par[0]  = (double)ms.L;
+         par[1]  = ms.z_in;
+         par[2]  = ms.z_out;
+         par[3]  = (double)ms.D;
+         par[4]  = ms.z_entry;
+         par[5]  = ms.K;
+         par[6]  = ms.z_exit;
+         par[7]  = (double)ms.trend_L;
+         par[8]  = (double)ms.max_hold;
+         par[9]  = (double)ms.exec_lag;
+         par[10] = ms.vol_floor;
+         par[11] = ms.pos_cap;
+         par[12] = ms.gross_cap;
+         par[13] = (double)ms.vol_span;
+         w.Raw(", \"meanrev\": {\"params\": ");
+         w.ArrD(par, 14);
+         w.KI("cur_day", ms.cur_day);
+         w.KI("dcount",  ms.dcount);
+         w.KI("dptr",    ms.dptr);
+         w.CK("close");
+         w.ArrD(ms.close, SatMR_NSYM);
+         w.CK("wavg");
+         w.ArrD(ms.wavg, SatMR_NSYM);
+         w.CK("old_wt");
+         w.ArrD(ms.old_wt, SatMR_NSYM);
+         w.CK("nobs");
+         w.ArrL(ms.nobs, SatMR_NSYM);
+         w.CK("dbuf");
+         w.Raw("[");
+         for(int i = 0; i < SatMR_NSYM; i++)
+            for(int j = 0; j < SatMR_RING; j++)
+              {
+               if(i + j > 0)
+                  w.Raw(", ");
+               w.D(ms.dbuf[i][j]);
+              }
+         w.Raw("]");
+         long st16[SatMR_NSYM], hd6[SatMR_NIDX];
+         for(int i = 0; i < SatMR_NSYM; i++)
+            st16[i] = (long)ms.st[i];
+         for(int i = 0; i < SatMR_NIDX; i++)
+            hd6[i] = (long)ms.held[i];
+         w.CK("st");
+         w.ArrL(st16, SatMR_NSYM);
+         w.CK("held");
+         w.ArrL(hd6, SatMR_NIDX);
+         w.CK("size");
+         w.ArrD(ms.size, SatMR_NSYM);
+         w.CK("pos");
+         w.ArrD(ms.pos, SatMR_NSYM);
+         w.KI("pend_count", ms.pend_count);
+         w.CK("pend_eff");
+         w.Raw("[");
+         for(int k = 0; k < ms.pend_count; k++)
+           {
+            if(k > 0)
+               w.Raw(", ");
+            w.I((long)ms.pend_eff[k]);
+           }
+         w.Raw("]");
+         w.CK("pend_pos");
+         w.Raw("[");
+         for(int k = 0; k < ms.pend_count; k++)
+            for(int i = 0; i < SatMR_NSYM; i++)
+              {
+               if(k + i > 0)
+                  w.Raw(", ");
+               w.D(ms.pend_pos[k][i]);
+              }
+         w.Raw("]}");
+        }
+
+      // crisis (flat double array, python dict order)
+        {
+         double cst[];
+         int nc = m_crisis.GetState(cst);
+         if(nc != SatCRISIS_STATE_SIZE)
+           {
+            m_err = "crisis state size drift";
+            return false;
+           }
+         w.CK("crisis");
+         w.ArrD(cst, nc);
+        }
+
+      // JSON-string components (their own proven %.17g serializers)
+      w.CK("seasonal_crypto");
+      w.Raw(m_sc.GetState());
+      w.CK("carry_breakout");
+      w.Raw(m_cb.GetState());
+      w.CK("trend_v2");
+      w.Raw(m_tv.GetState());
+      // ensemble is config-only (stateless across bars): stored for the
+      // component-config check on restore
+      w.CK("ensemble");
+      w.Q(m_shell.GetState());
+      w.Raw("}");
+
+      // ---- b engine ---------------------------------------------------
+      w.CK("b_engine");
+      w.Raw(m_beng.GetState());
+
+      // ---- core (CoreSim seam carry + f_core ledger + cursor/seed) ----
+      w.Raw(", \"core\": {\"n_segs\": ");
+      w.I(m_n_segs);
+      w.KD("seed", m_seed);
+      w.KB("seg_open",  m_seg_open);
+      w.KB("core_done", m_core_done);
+      w.KI("fc_cursor", m_fc_cursor);
+        {
+         long   cvl[BOOKORC_NLEGS];
+         double cps[BOOKORC_NLEGS], cmd[BOOKORC_NLEGS], cqe[BOOKORC_NLEGS];
+         for(int l = 0; l < BOOKORC_NLEGS; l++)
+           {
+            cvl[l] = m_core.CarryValid(l) ? 1 : 0;
+            cps[l] = m_core.CarryPos(l);
+            cmd[l] = m_core.CarryMid(l);
+            cqe[l] = m_core.CarryQe(l);
+           }
+         w.CK("carry_valid");
+         w.ArrL(cvl, BOOKORC_NLEGS);
+         w.CK("carry_pos");
+         w.ArrD(cps, BOOKORC_NLEGS);
+         w.CK("carry_mid");
+         w.ArrD(cmd, BOOKORC_NLEGS);
+         w.CK("carry_qe");
+         w.ArrD(cqe, BOOKORC_NLEGS);
+        }
+      int fn = m_core.FCoreRows();
+      w.KI("fcore_n", fn);
+      w.CK("fcore_ts");
+      w.Raw("[");
+      for(int k = 0; k < fn; k++)
+        {
+         if(k > 0)
+            w.Raw(", ");
+         w.I(m_core.FCoreTs(k));
+        }
+      w.Raw("]");
+      w.CK("fcore_v");
+      w.Raw("[");
+      for(int k = 0; k < fn; k++)
+         for(int s = 0; s < BOOKORC_NNET; s++)
+           {
+            if(k + s > 0)
+               w.Raw(", ");
+            w.D(m_core.FCoreAt(k, s));
+           }
+      w.Raw("]}");
+
+      // ---- glue --------------------------------------------------------
+      w.Raw(", \"glue\": {\"ffill\": ");
+      w.ArrD(m_ffill, BOOKORC_NIN);
+      w.KB("has_day", m_has_day);
+      w.KI("cur_day", m_cur_day);
+      int ntv = ArraySize(m_tvq_eff);
+      int ncr = ArraySize(m_crq_eff);
+      w.KI("tvq_n", ntv);
+      w.CK("tvq_eff");
+      w.ArrL(m_tvq_eff, ntv);
+      w.CK("tvq_w");
+      w.ArrD(m_tvq_w, ntv * SatTV2_NSYM);
+      w.KI("crq_n", ncr);
+      w.CK("crq_eff");
+      w.ArrL(m_crq_eff, ncr);
+      w.CK("crq_w");
+      w.ArrD(m_crq_w, ncr * SatCRISIS_NOUT);
+      w.CK("trend_cur");
+      w.ArrD(m_trend_cur, SatTV2_NSYM);
+      w.CK("crisis_cur");
+      w.ArrD(m_crisis_cur, SatCRISIS_NOUT);
+      w.KB("have_prev", m_have_prev);
+      w.KI("prev_ts",   m_prev_ts);
+      w.CK("prev_mr");
+      w.ArrD(m_prev_mr, SatMR_NSYM);
+      w.CK("prev_cbk");
+      w.ArrD(m_prev_cbk, BOOKORC_NKEEP);
+      w.CK("prev_id");
+      w.ArrD(m_prev_id, 2);
+      w.CK("prev_cr");
+      w.ArrD(m_prev_cr, SatCRISIS_NOUT);
+      w.CK("prev_tv");
+      w.ArrD(m_prev_tv, SatTV2_NSYM);
+      w.CK("prev_mg");
+      w.ArrD(m_prev_mg, 1);
+      w.KI("h1_bars",    m_h1_bars);
+      w.KI("h1_last_ts", m_h1_last_ts);
+      w.KB("finalized",  m_finalized);
+      w.KI("m1_last_ts", m_m1_last_ts);
+      w.KI("m1_bars",    m_m1_bars);
+      w.KD("b_eqc", m_b_eqc);
+      w.KD("b_eqw", m_b_eqw);
+      w.KI("held_n", m_held_n);
+      w.CK("held_ts");
+      w.ArrL(m_held_ts, BOOKORC_HELD);
+      w.CK("held_rows");
+      w.Raw("[");
+      for(int i = 0; i < BOOKORC_HELD; i++)
+         for(int k = 0; k < SATEQ_NSYM; k++)
+           {
+            if(i + k > 0)
+               w.Raw(", ");
+            w.D(m_held_row[i][k]);
+           }
+      w.Raw("]");
+      w.KI("last_emit_hour",  m_last_emit_hour);
+      w.KI("total_rows",      m_total_rows);
+      w.KI("total_hours",     m_total_hours);
+      w.KI("total_sentinels", m_total_sentinels);
+      w.KD("last_ah", m_last_ah);
+      w.KD("last_bh", m_last_bh);
+      w.Raw("}");
+
+      // ---- a/b hour samplers -------------------------------------------
+      w.Raw(", \"samplers\": {\"a\": ");
+      BsWriteSampler(w, m_aS);
+      w.CK("b");
+      BsWriteSampler(w, m_bS);
+      w.Raw("}");
+      return true;
+     }
+
+   //---------------------------------------------------------------//
+   // BsSetState — parse + validate + restore ("config" through      //
+   // "samplers"; the tokenizer is left positioned for CBookState's  //
+   // continuity block).  Requires a fresh Init() first (component   //
+   // wiring/config is rebuilt by Init, verified here).              //
+   //---------------------------------------------------------------//
+   bool              BsSetState(CBookStateTok &tk)
+     {
+      if(!m_ready)
+        {
+         m_err = "not initialized (Init before restore)";
+         return false;
+        }
+
+      // ---- config: verify against the live wiring ---------------------
+      double cw = 0.0;
+      long nin = 0, nsat = 0, nnet = 0, nbook = 0, nlegs = 0, held = 0, ncross = 0;
+      bool ok = tk.Key("config") && tk.Eat('{');
+      ok = ok && tk.Key("w") && tk.NumVal(cw);
+      ok = ok && tk.CommaKey("nin")    && tk.IntVal(nin);
+      ok = ok && tk.CommaKey("nsat")   && tk.IntVal(nsat);
+      ok = ok && tk.CommaKey("nnet")   && tk.IntVal(nnet);
+      ok = ok && tk.CommaKey("nbook")  && tk.IntVal(nbook);
+      ok = ok && tk.CommaKey("nlegs")  && tk.IntVal(nlegs);
+      ok = ok && tk.CommaKey("held")   && tk.IntVal(held);
+      ok = ok && tk.CommaKey("ncross") && tk.IntVal(ncross);
+      ok = ok && tk.Eat('}');
+      if(!ok)
+        {
+         m_err = "config: " + tk.Err();
+         return false;
+        }
+      if(!(cw == m_blend.CoreWeight()) || nin != BOOKORC_NIN
+         || nsat != SATEQ_NSYM || nnet != BOOKORC_NNET
+         || nbook != BOOKORC_NBOOK || nlegs != BOOKORC_NLEGS
+         || held != BOOKORC_HELD || ncross != BOOKORC_NCROSS)
+        {
+         m_err = StringFormat("config mismatch (w %.17g vs %.17g, nin %I64d, "
+                              "nsat %I64d, nnet %I64d, nbook %I64d, nlegs %I64d, "
+                              "held %I64d, ncross %I64d)",
+                              cw, m_blend.CoreWeight(), nin, nsat, nnet,
+                              nbook, nlegs, held, ncross);
+         return false;
+        }
+
+      // ---- sleeves ------------------------------------------------------
+      ok = tk.CommaKey("sleeves") && tk.Eat('{');
+      if(!ok) { m_err = "sleeves: " + tk.Err(); return false; }
+
+      // mag
+        {
+         SSatMagXauState mg;
+         mg.version = 1;
+         mg.sleeve  = "mag_xau";
+         int nm = 0, np1 = 0, np2 = 0;
+         ok = tk.Key("mag") && tk.Eat('{');
+         ok = ok && tk.Key("mids") && tk.ArrDVar(mg.mids, nm);
+         ok = ok && tk.CommaKey("has_accum_day") && tk.BoolVal(mg.has_accum_day);
+         ok = ok && tk.CommaKey("accum_day")     && tk.IntVal(mg.accum_day);
+         ok = ok && tk.CommaKey("accum_close")   && tk.NumVal(mg.accum_close);
+         ok = ok && tk.CommaKey("pend_ts")  && tk.ArrLVar(mg.pending_ts, np1);
+         ok = ok && tk.CommaKey("pend_tgt") && tk.ArrDVar(mg.pending_tgt, np2);
+         ok = ok && tk.CommaKey("current")  && tk.NumVal(mg.current);
+         ok = ok && tk.Eat('}');
+         if(!ok || np1 != np2)
+           {
+            m_err = "mag: " + (ok ? "pending count mismatch" : tk.Err());
+            return false;
+           }
+         ArrayResize(mg.mids, nm);
+         ArrayResize(mg.pending_ts, np1);
+         ArrayResize(mg.pending_tgt, np2);
+         m_mag.SetState(mg);
+        }
+
+      // intraday
+        {
+         bool hd = false;
+         long cd = 0;
+         double fl[];
+         ok = tk.CommaKey("intraday") && tk.Eat('{');
+         ok = ok && tk.Key("has_day") && tk.BoolVal(hd);
+         ok = ok && tk.CommaKey("cur_day") && tk.IntVal(cd);
+         ok = ok && tk.CommaKey("flat") && tk.ArrD(fl, 26) && tk.Eat('}');
+         if(!ok) { m_err = "intraday: " + tk.Err(); return false; }
+         SSatIntradaySymState isy[];
+         ArrayResize(isy, 2);
+         for(int k = 0; k < 2; k++)
+           {
+            int o = k * 13;
+            isy[k].prev_close = fl[o + 0];
+            isy[k].vol_num    = fl[o + 1];
+            isy[k].vol_den    = fl[o + 2];
+            isy[k].vol        = fl[o + 3];
+            isy[k].w_vol      = fl[o + 4];
+            isy[k].sc_num     = fl[o + 5];
+            isy[k].sc_den     = fl[o + 6];
+            isy[k].sc_nobs    = (long)fl[o + 7];
+            isy[k].c15        = fl[o + 8];
+            isy[k].has15      = (fl[o + 9]  != 0.0);
+            isy[k].has16      = (fl[o + 10] != 0.0);
+            isy[k].mv_pending = fl[o + 11];
+            isy[k].sig        = fl[o + 12];
+           }
+         m_intr.SetState(hd, cd, isy);
+        }
+
+      // meanrev
+        {
+         SSatMeanRevState ms;
+         ms.version = 1;
+         double par[];
+         long cur_day = 0, dcount = 0, dptr = 0, pend_count = 0;
+         ok = tk.CommaKey("meanrev") && tk.Eat('{');
+         ok = ok && tk.Key("params") && tk.ArrD(par, 14);
+         ok = ok && tk.CommaKey("cur_day") && tk.IntVal(cur_day);
+         ok = ok && tk.CommaKey("dcount")  && tk.IntVal(dcount);
+         ok = ok && tk.CommaKey("dptr")    && tk.IntVal(dptr);
+         double cl[], wa[], ow[], db[], sz[], ps[];
+         long   nb[], st16[], hd6[];
+         ok = ok && tk.CommaKey("close")  && tk.ArrD(cl, SatMR_NSYM);
+         ok = ok && tk.CommaKey("wavg")   && tk.ArrD(wa, SatMR_NSYM);
+         ok = ok && tk.CommaKey("old_wt") && tk.ArrD(ow, SatMR_NSYM);
+         ok = ok && tk.CommaKey("nobs")   && tk.ArrL(nb, SatMR_NSYM);
+         ok = ok && tk.CommaKey("dbuf")   && tk.ArrD(db, SatMR_NSYM * SatMR_RING);
+         ok = ok && tk.CommaKey("st")     && tk.ArrL(st16, SatMR_NSYM);
+         ok = ok && tk.CommaKey("held")   && tk.ArrL(hd6, SatMR_NIDX);
+         ok = ok && tk.CommaKey("size")   && tk.ArrD(sz, SatMR_NSYM);
+         ok = ok && tk.CommaKey("pos")    && tk.ArrD(ps, SatMR_NSYM);
+         ok = ok && tk.CommaKey("pend_count") && tk.IntVal(pend_count);
+         if(ok && (pend_count < 0 || pend_count > SatMR_MAX_PEND))
+           {
+            m_err = "meanrev: pend_count out of range";
+            return false;
+           }
+         long   pe[];
+         double pp[];
+         ok = ok && tk.CommaKey("pend_eff") && tk.ArrL(pe, (int)pend_count);
+         ok = ok && tk.CommaKey("pend_pos")
+                 && tk.ArrD(pp, (int)pend_count * SatMR_NSYM);
+         ok = ok && tk.Eat('}');
+         if(!ok) { m_err = "meanrev: " + tk.Err(); return false; }
+         ms.L         = (int)par[0];
+         ms.z_in      = par[1];
+         ms.z_out     = par[2];
+         ms.D         = (int)par[3];
+         ms.z_entry   = par[4];
+         ms.K         = par[5];
+         ms.z_exit    = par[6];
+         ms.trend_L   = (int)par[7];
+         ms.max_hold  = (int)par[8];
+         ms.exec_lag  = (int)par[9];
+         ms.vol_floor = par[10];
+         ms.pos_cap   = par[11];
+         ms.gross_cap = par[12];
+         ms.vol_span  = (int)par[13];
+         ms.cur_day   = cur_day;
+         ms.dcount    = (int)dcount;
+         ms.dptr      = (int)dptr;
+         for(int i = 0; i < SatMR_NSYM; i++)
+           {
+            ms.close[i]  = cl[i];
+            ms.wavg[i]   = wa[i];
+            ms.old_wt[i] = ow[i];
+            ms.nobs[i]   = nb[i];
+            for(int j = 0; j < SatMR_RING; j++)
+               ms.dbuf[i][j] = db[i * SatMR_RING + j];
+            ms.st[i]   = (int)st16[i];
+            ms.size[i] = sz[i];
+            ms.pos[i]  = ps[i];
+           }
+         for(int i = 0; i < SatMR_NIDX; i++)
+            ms.held[i] = (int)hd6[i];
+         ms.pend_count = (int)pend_count;
+         for(int k = 0; k < (int)pend_count; k++)
+           {
+            ms.pend_eff[k] = (datetime)pe[k];
+            for(int i = 0; i < SatMR_NSYM; i++)
+               ms.pend_pos[k][i] = pp[k * SatMR_NSYM + i];
+           }
+         m_mr.SetState(ms);
+        }
+
+      // crisis
+        {
+         double cst[];
+         ok = tk.CommaKey("crisis") && tk.ArrD(cst, SatCRISIS_STATE_SIZE);
+         if(!ok) { m_err = "crisis: " + tk.Err(); return false; }
+         if(!m_crisis.SetState(cst))
+           {
+            m_err = "crisis: SetState rejected";
+            return false;
+           }
+        }
+
+      // JSON-string components
+        {
+         string js;
+         if(!tk.CommaKey("seasonal_crypto") || !tk.ObjRaw(js))
+           { m_err = "seasonal_crypto: " + tk.Err(); return false; }
+         if(!m_sc.SetState(js))
+           { m_err = "seasonal_crypto: SetState rejected"; return false; }
+         if(!tk.CommaKey("carry_breakout") || !tk.ObjRaw(js))
+           { m_err = "carry_breakout: " + tk.Err(); return false; }
+         if(!m_cb.SetState(js))
+           { m_err = "carry_breakout: SetState rejected"; return false; }
+         if(!tk.CommaKey("trend_v2") || !tk.ObjRaw(js))
+           { m_err = "trend_v2: " + tk.Err(); return false; }
+         if(!m_tv.SetState(js))
+           { m_err = "trend_v2: SetState rejected"; return false; }
+         // ensemble: config-only — verify identity with the live shell
+         string ens;
+         if(!tk.CommaKey("ensemble") || !tk.StrVal(ens))
+           { m_err = "ensemble: " + tk.Err(); return false; }
+         if(ens != m_shell.GetState())
+           { m_err = "ensemble config mismatch (stored != live shell)"; return false; }
+         if(!tk.Eat('}'))
+           { m_err = "sleeves close: " + tk.Err(); return false; }
+        }
+
+      // ---- b engine -------------------------------------------------
+        {
+         string js;
+         if(!tk.CommaKey("b_engine") || !tk.ObjRaw(js))
+           { m_err = "b_engine: " + tk.Err(); return false; }
+         if(!m_beng.SetState(js))
+           { m_err = "b_engine: SetState rejected"; return false; }
+        }
+
+      // ---- core -------------------------------------------------------
+        {
+         long n_segs = 0, fc_cursor = 0, fn = 0;
+         double seed = 0.0;
+         bool seg_open = false, core_done = false;
+         ok = tk.CommaKey("core") && tk.Eat('{');
+         ok = ok && tk.Key("n_segs") && tk.IntVal(n_segs);
+         ok = ok && tk.CommaKey("seed") && tk.NumVal(seed);
+         ok = ok && tk.CommaKey("seg_open")  && tk.BoolVal(seg_open);
+         ok = ok && tk.CommaKey("core_done") && tk.BoolVal(core_done);
+         ok = ok && tk.CommaKey("fc_cursor") && tk.IntVal(fc_cursor);
+         long   cvl[];
+         double cps[], cmd[], cqe[];
+         ok = ok && tk.CommaKey("carry_valid") && tk.ArrL(cvl, BOOKORC_NLEGS);
+         ok = ok && tk.CommaKey("carry_pos")   && tk.ArrD(cps, BOOKORC_NLEGS);
+         ok = ok && tk.CommaKey("carry_mid")   && tk.ArrD(cmd, BOOKORC_NLEGS);
+         ok = ok && tk.CommaKey("carry_qe")    && tk.ArrD(cqe, BOOKORC_NLEGS);
+         ok = ok && tk.CommaKey("fcore_n")     && tk.IntVal(fn);
+         if(!ok) { m_err = "core: " + tk.Err(); return false; }
+         if(seg_open)
+           {
+            m_err = "core: state saved inside an open segment (unsupported)";
+            return false;
+           }
+         if(fn < 0 || fc_cursor < 0 || fc_cursor > fn)
+           {
+            m_err = "core: fc_cursor/fcore_n inconsistent";
+            return false;
+           }
+         long   fts[];
+         double fv[];
+         ok = tk.CommaKey("fcore_ts") && tk.ArrL(fts, (int)fn);
+         ok = ok && tk.CommaKey("fcore_v")
+                 && tk.ArrD(fv, (int)fn * BOOKORC_NNET);
+         ok = ok && tk.Eat('}');
+         if(!ok) { m_err = "core arrays: " + tk.Err(); return false; }
+         for(int l = 0; l < BOOKORC_NLEGS; l++)
+            if(!m_core.SetCarry(l, cvl[l] != 0, cps[l], cmd[l], cqe[l]))
+              {
+               m_err = "core: " + m_core.LastError();
+               return false;
+              }
+         if(!m_core.RestoreFCoreRows(fts, fv, (int)fn))
+           {
+            m_err = "core: " + m_core.LastError();
+            return false;
+           }
+         m_n_segs    = (int)n_segs;
+         m_seed      = seed;
+         m_seg_open  = false;
+         m_core_done = core_done;
+         m_fc_cursor = (int)fc_cursor;
+        }
+
+      // ---- glue ---------------------------------------------------------
+        {
+         ok = tk.CommaKey("glue") && tk.Eat('{');
+         ok = ok && tk.Key("ffill") && tk.ArrD(m_ffill, BOOKORC_NIN);
+         ok = ok && tk.CommaKey("has_day") && tk.BoolVal(m_has_day);
+         long cd = 0;
+         ok = ok && tk.CommaKey("cur_day") && tk.IntVal(cd);
+         long ntv = 0, ncr = 0;
+         ok = ok && tk.CommaKey("tvq_n") && tk.IntVal(ntv);
+         ok = ok && tk.CommaKey("tvq_eff") && tk.ArrL(m_tvq_eff, (int)ntv);
+         ok = ok && tk.CommaKey("tvq_w")
+                 && tk.ArrD(m_tvq_w, (int)ntv * SatTV2_NSYM);
+         ok = ok && tk.CommaKey("crq_n") && tk.IntVal(ncr);
+         ok = ok && tk.CommaKey("crq_eff") && tk.ArrL(m_crq_eff, (int)ncr);
+         ok = ok && tk.CommaKey("crq_w")
+                 && tk.ArrD(m_crq_w, (int)ncr * SatCRISIS_NOUT);
+         ok = ok && tk.CommaKey("trend_cur")  && tk.ArrD(m_trend_cur, SatTV2_NSYM);
+         ok = ok && tk.CommaKey("crisis_cur") && tk.ArrD(m_crisis_cur, SatCRISIS_NOUT);
+         ok = ok && tk.CommaKey("have_prev") && tk.BoolVal(m_have_prev);
+         long pts = 0;
+         ok = ok && tk.CommaKey("prev_ts") && tk.IntVal(pts);
+         ok = ok && tk.CommaKey("prev_mr")  && tk.ArrD(m_prev_mr, SatMR_NSYM);
+         ok = ok && tk.CommaKey("prev_cbk") && tk.ArrD(m_prev_cbk, BOOKORC_NKEEP);
+         ok = ok && tk.CommaKey("prev_id")  && tk.ArrD(m_prev_id, 2);
+         ok = ok && tk.CommaKey("prev_cr")  && tk.ArrD(m_prev_cr, SatCRISIS_NOUT);
+         ok = ok && tk.CommaKey("prev_tv")  && tk.ArrD(m_prev_tv, SatTV2_NSYM);
+         ok = ok && tk.CommaKey("prev_mg")  && tk.ArrD(m_prev_mg, 1);
+         long h1b = 0, h1l = 0, m1l = 0, m1b = 0, hn = 0;
+         ok = ok && tk.CommaKey("h1_bars")    && tk.IntVal(h1b);
+         ok = ok && tk.CommaKey("h1_last_ts") && tk.IntVal(h1l);
+         ok = ok && tk.CommaKey("finalized")  && tk.BoolVal(m_finalized);
+         ok = ok && tk.CommaKey("m1_last_ts") && tk.IntVal(m1l);
+         ok = ok && tk.CommaKey("m1_bars")    && tk.IntVal(m1b);
+         ok = ok && tk.CommaKey("b_eqc") && tk.NumVal(m_b_eqc);
+         ok = ok && tk.CommaKey("b_eqw") && tk.NumVal(m_b_eqw);
+         ok = ok && tk.CommaKey("held_n") && tk.IntVal(hn);
+         ok = ok && tk.CommaKey("held_ts") && tk.ArrL(m_held_ts, BOOKORC_HELD);
+         double hr[];
+         ok = ok && tk.CommaKey("held_rows")
+                 && tk.ArrD(hr, BOOKORC_HELD * SATEQ_NSYM);
+         long ler = 0, trw = 0, thr = 0, tse = 0;
+         ok = ok && tk.CommaKey("last_emit_hour")  && tk.IntVal(ler);
+         ok = ok && tk.CommaKey("total_rows")      && tk.IntVal(trw);
+         ok = ok && tk.CommaKey("total_hours")     && tk.IntVal(thr);
+         ok = ok && tk.CommaKey("total_sentinels") && tk.IntVal(tse);
+         ok = ok && tk.CommaKey("last_ah") && tk.NumVal(m_last_ah);
+         ok = ok && tk.CommaKey("last_bh") && tk.NumVal(m_last_bh);
+         ok = ok && tk.Eat('}');
+         if(!ok) { m_err = "glue: " + tk.Err(); return false; }
+         m_cur_day    = cd;
+         m_prev_ts    = pts;
+         m_h1_bars    = h1b;
+         m_h1_last_ts = h1l;
+         m_m1_last_ts = m1l;
+         m_m1_bars    = m1b;
+         m_held_n     = (int)hn;
+         for(int i = 0; i < BOOKORC_HELD; i++)
+            for(int k = 0; k < SATEQ_NSYM; k++)
+               m_held_row[i][k] = hr[i * SATEQ_NSYM + k];
+         m_last_emit_hour  = ler;
+         m_total_rows      = trw;
+         m_total_hours     = thr;
+         m_total_sentinels = tse;
+        }
+
+      // ---- samplers -------------------------------------------------------
+      ok = tk.CommaKey("samplers") && tk.Eat('{') && tk.Key("a");
+      if(!ok) { m_err = "samplers: " + tk.Err(); return false; }
+      if(!BsReadSampler(tk, m_aS, "a"))
+         return false;
+      if(!tk.CommaKey("b"))
+        { m_err = "samplers: " + tk.Err(); return false; }
+      if(!BsReadSampler(tk, m_bS, "b"))
+         return false;
+      if(!tk.Eat('}'))
+        { m_err = "samplers close: " + tk.Err(); return false; }
+
+      // per-call transients
+      m_emit_n = 0;
+      m_err = "";
+      return true;
+     }
+
+   //---------------------------------------------------------------//
+   // BsContinuity — the ratio-chain anchor snapshot: recomputable    //
+   // identically from a restored state (the CBookState j-splice      //
+   // guard compares save-time vs restore-time values).               //
+   //---------------------------------------------------------------//
+   bool              BsContinuity(SBookStateContinuity &c)
+     {
+      if(!m_ready)
+        {
+         m_err = "not initialized";
+         return false;
+        }
+      c.have   = (m_total_hours > 0);
+      c.j_hour = c.have ? m_last_emit_hour : -1;
+      c.a_h    = c.have ? AH(m_last_emit_hour) : 1.0;
+      c.b_h    = c.have ? BH(m_last_emit_hour) : 1.0;
+      c.w      = m_blend.CoreWeight();
+      c.j      = c.w * c.a_h + (1.0 - c.w) * c.b_h;
+      c.a_first = AFirst();
+      c.b_first = BFirst();
+      return true;
      }
   };
 

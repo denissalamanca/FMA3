@@ -67,6 +67,22 @@ Usage (run from FMA2/research per campaign convention; NEEDS python >= 3.13
     /Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/book/book_orchestrator_sim.py
 Writes out/FMA3_book_mirror_actual.csv + book_mirror_parity.json and
 prints the R1 verdict via validate_book_stream.compare().
+
+STATE SERIALIZER EXTENSION (Track B, design v2 item 5(v)) — python
+statement-mirror of mt5/ea/Include/Book/BookState.mqh via
+book_state_mirror.py (same envelope/trailer/continuity schema):
+  --save-at=EPOCH [--state=PATH]   run until the first grid stamp >=
+                                   EPOCH, serialize the COMPLETE ledger
+                                   (atomic tmp+rename, fnv64/eof torn-
+                                   write trailer), exit;
+  --load=PATH                      restore a saved ledger (validating
+                                   load + the j-splice CONTINUITY GUARD
+                                   -> StateRefuse on any anchor/j jump),
+                                   continue from the boundary; emits
+                                   ONLY the tail rows;
+  --save-end=PATH                  serialize the end-of-run state;
+  --tail-csv=PATH                  tail stream target for --load runs.
+The split-run bitwise gate is run_state_split_gate.py.
 """
 from __future__ import annotations
 
@@ -119,6 +135,7 @@ from sat_equity_harness_sim import (make_engine, SYMBOLS as SAT_SYMS,  # noqa: E
                                     CROSS_IX, expected_header)
 from mirror_blend import BookBlendMirror, broker_sym, cmp_ordinal  # noqa: E402
 import validate_book_stream as VJ                               # noqa: E402
+import book_state_mirror as BSM                                 # noqa: E402
 
 NAN = float("nan")
 NSYM = 31
@@ -486,7 +503,7 @@ def run_core_phase():
 
     assert all(fts[i] < fts[i + 1] for i in range(len(fts) - 1)), \
         "f_core hours not strictly ascending"
-    return a_ts, a_eqc, fts, frows, seed
+    return a_ts, a_eqc, fts, frows, seed, carry
 
 
 # =============================================================================
@@ -551,15 +568,57 @@ def load_quarter(q: str) -> dict:
 # =============================================================================
 # The three-clock driver
 # =============================================================================
-def main() -> int:
+def main(argv=None) -> int:
+    # ------------------------------------------------ state-serializer args
+    save_at = None
+    state_path = HERE / "out/FMA3_book_state_D.json"
+    load_path = None
+    save_end = None
+    tail_csv = HERE / "out/FMA3_book_mirror_tail.csv"
+    for a in (sys.argv[1:] if argv is None else argv):
+        if a.startswith("--save-at="):
+            save_at = int(a.split("=", 1)[1])
+        elif a.startswith("--state="):
+            state_path = Path(a.split("=", 1)[1])
+        elif a.startswith("--load="):
+            load_path = Path(a.split("=", 1)[1])
+        elif a.startswith("--save-end="):
+            save_end = Path(a.split("=", 1)[1])
+        elif a.startswith("--tail-csv="):
+            tail_csv = Path(a.split("=", 1)[1])
+        else:
+            raise SystemExit(f"unknown arg: {a}")
+    assert save_at is None or load_path is None, "--save-at xor --load"
+
     log("verify golden pin ...")
     sha = hashlib.sha256(GOLDEN.read_bytes()).hexdigest()
     assert sha == GOLDEN_SHA, f"golden sha drift: {sha}"
     log(f"golden OK: {GOLDEN.name} sha256 {sha[:16]}...")
 
     # ------------------------------------------------ core phase (clock 1)
-    log("core phase: 32 frozen segments, segment-batch ahead of the H1 clock")
-    a_ts, a_eqc, fts, frows, final_eqc = run_core_phase()
+    state = None
+    if load_path is not None:
+        # restore path: the core ledger comes from the STATE FILE (torn-
+        # write marker + checksum + schema validated), not a re-run
+        state = BSM.load_state_file(load_path)
+        cs = state["core"]
+        assert cs["core_done"] and not cs["seg_open"], "core feed not done"
+        a_ts, a_eqc = BSM.sampler_arrays(state["samplers"]["a"])
+        nfc = int(cs["fcore_n"])
+        fts = [int(t) for t in cs["fcore_ts"]]
+        fv = cs["fcore_v"]
+        assert len(fts) == nfc and len(fv) == nfc * NNET, "fcore count check"
+        frows = [[float(fv[i * NNET + s]) for s in range(NNET)]
+                 for i in range(nfc)]
+        final_eqc = float(cs["seed"])
+        core_carry = [None if cs["carry_valid"][l] == 0 else
+                      (float(cs["carry_pos"][l]), float(cs["carry_mid"][l]),
+                       float(cs["carry_qe"][l])) for l in range(9)]
+        log(f"state restored from {load_path.name}: {len(a_ts):,} a-sampler "
+            f"points, {len(fts):,} f_core rows, seed={final_eqc!r}")
+    else:
+        log("core phase: 32 frozen segments, segment-batch ahead of the H1 clock")
+        a_ts, a_eqc, fts, frows, final_eqc, core_carry = run_core_phase()
     assert final_eqc == FINAL_EQC_TARGET, \
         f"core seed chain drift: {final_eqc!r} != {FINAL_EQC_TARGET!r}"
     a_first = a_eqc[0]
@@ -634,6 +693,11 @@ def main() -> int:
     stats = {"hours": 0, "data_rows": 0, "sentinels": 0}
     last_emit_hour = [None]
     tgt_diag = {"max_abs": 0.0, "n_hours_diff": 0}
+    # state-serializer trackers (glue/emit bookkeeping — no compute effect)
+    lastab = {"a": 1.0, "b": 1.0}      # a_h/b_h used at the last emit
+    b_last = {"eqc": 0.0, "eqw": 0.0}  # last b engine marks
+    held_cnt = {"n": 0}                # total held-ring pushes (slot law)
+    rows_offset = 0                    # rows emitted before a restore
 
     def a_query(h: int) -> float:
         i = bisect.bisect_right(a_ts, h) - 1
@@ -650,7 +714,11 @@ def main() -> int:
     def emit_hour(h: int, fc: list, fs: list):
         assert last_emit_hour[0] is None or h > last_emit_hour[0], \
             f"emission hour {h} not ascending"
-        out = blend.step(fc, fs, a_query(h), b_query(h))
+        av = a_query(h)
+        bv = b_query(h)
+        lastab["a"] = av
+        lastab["b"] = bv
+        out = blend.step(fc, fs, av, bv)
         any_leg = False
         for k in range(nnet):
             v = out[perm[k]]
@@ -686,6 +754,7 @@ def main() -> int:
         # held ring (the b tgt source): raw f_sat, depth 16
         ring[ts_sec] = fsat
         ring_order.append(ts_sec)
+        held_cnt["n"] += 1
         if len(ring_order) > HELD:
             old = ring_order.popleft()
             del ring[old]
@@ -759,6 +828,8 @@ def main() -> int:
     # ------------------------------------------------ M1 feeder (clock 3)
     q_state = {"qi": 0, "data": None, "t": 0, "cur_wanted": None,
                "cur_tgt": ZEROS31}
+    resume_m1_last = -1                # minutes <= this are restore-skipped
+    resume_h1_last = -1                # H1 grid stamps <= this are skipped
 
     def feed_until(limit: int):
         """StepM1 for every pending 1m row with ts <= limit."""
@@ -791,6 +862,9 @@ def main() -> int:
             step = beng.step
             while t < n:
                 mts = ts_l[t]
+                if mts <= resume_m1_last:      # already inside the restored b
+                    t += 1
+                    continue
                 if mts > limit:
                     q_state["t"] = t
                     return
@@ -822,17 +896,214 @@ def main() -> int:
                 eq_c, _eq_w = step(tgt, has_l[t], bo_l[t], ao_l[t],
                                    bc_l[t], ac_l[t], bl_l[t], ah_l[t],
                                    eurq_sym, swl_l[t], sws_l[t])
+                b_last["eqc"] = eq_c
+                b_last["eqw"] = _eq_w
                 b_ts.append(mts)
                 b_v.append(eq_c)
                 m1_bars += 1
                 t += 1
             q_state["t"] = t
 
+    # ------------------------------------------------ state build / restore
+    def ens_config_str() -> str:
+        # == CSatEnsembleStepper::GetState (sleeves in Add order + gold_cap)
+        s = "FMA3ENSv1"
+        for name, cols in sleeve_cols.items():
+            s += "|" + name + ":" + ";".join(cols)
+        return s + "|gold_cap=" + ("%.17g" % shell.gold_cap)
+
+    def build_state(finalized: bool) -> dict:
+        held_n = held_cnt["n"]
+        held_ts = [-1] * HELD
+        held_rows = [[0.0] * NSYM for _ in range(HELD)]
+        for idx, tss in enumerate(ring_order):
+            k = held_n - len(ring_order) + idx      # this push's global index
+            held_ts[k % HELD] = int(tss)
+            held_rows[k % HELD] = [float(v) for v in ring[tss]]
+        pm = prev_rows or {}
+
+        def row_arr(name, syms):
+            if not have_prev or name not in pm:
+                return [0.0] * len(syms)
+            return [float(pm[name][s]) for s in syms]
+
+        core_sec = {
+            "n_segs": N_SEG, "seed": final_eqc, "seg_open": False,
+            "core_done": True, "fc_cursor": fc_cursor,
+            "carry_valid": [0 if core_carry[l] is None else 1 for l in range(9)],
+            "carry_pos": [0.0 if core_carry[l] is None else float(core_carry[l][0])
+                          for l in range(9)],
+            "carry_mid": [0.0 if core_carry[l] is None else float(core_carry[l][1])
+                          for l in range(9)],
+            "carry_qe": [0.0 if core_carry[l] is None else float(core_carry[l][2])
+                         for l in range(9)],
+            "fcore_n": len(fts), "fcore_ts": [int(t) for t in fts],
+            "fcore_v": [float(v) for row in frows for v in row]}
+        gl = {
+            "ffill": [float(v) for v in ffill],
+            "has_day": bool(has_day), "cur_day": int(cur_day),
+            "tvq_n": len(tvq), "tvq_eff": [int(e) for e, _ in tvq],
+            "tvq_w": [float(v) for _, wv in tvq for v in wv],
+            "crq_n": len(crq), "crq_eff": [int(e) for e, _ in crq],
+            "crq_w": [float(v) for _, wv in crq for v in wv],
+            "trend_cur": [float(v) for v in trend_cur],
+            "crisis_cur": [float(v) for v in crisis_cur],
+            "have_prev": bool(have_prev), "prev_ts": int(prev_ts),
+            "prev_mr": row_arr("meanrev", MR_SYMS),
+            "prev_cbk": row_arr("carry_breakout", CB_KEPT),
+            "prev_id": row_arr("intraday", ID_SYMS),
+            "prev_cr": row_arr("crisis", CR_OUT),
+            "prev_tv": row_arr("trend_v2", TV_SYMS),
+            "prev_mg": row_arr("mag", ["XAUUSD"]),
+            "h1_bars": int(h1_bars),
+            "h1_last_ts": int(prev_grid_ts) if prev_grid_ts is not None else -1,
+            "finalized": bool(finalized),
+            "m1_last_ts": int(b_ts[-1]) if b_ts else -1,
+            "m1_bars": int(m1_bars),
+            "b_eqc": float(b_last["eqc"]), "b_eqw": float(b_last["eqw"]),
+            "held_n": held_n, "held_ts": held_ts,
+            "held_rows": [v for row in held_rows for v in row],
+            "last_emit_hour": int(last_emit_hour[0])
+                              if last_emit_hour[0] is not None else 0,
+            "total_rows": stats["data_rows"] + stats["sentinels"],
+            "total_hours": stats["hours"],
+            "total_sentinels": stats["sentinels"],
+            "last_ah": float(lastab["a"]), "last_bh": float(lastab["b"])}
+        have_e = stats["hours"] > 0
+        jh = gl["last_emit_hour"] if have_e else -1
+        a_h = a_query(jh) if have_e else 1.0
+        b_h = b_query(jh) if have_e else 1.0
+        cont = {"have": have_e, "j_hour": jh, "a_h": a_h, "b_h": b_h,
+                "w": W_CORE, "j": W_CORE * a_h + (1.0 - W_CORE) * b_h,
+                "a_first": a_eqc[0] if a_eqc else 0.0,
+                "b_first": b_v[0] if b_v else 0.0}
+        return {"schema": BSM.SCHEMA, "version": BSM.VERSION,
+                "config": {"w": W_CORE, "nin": 37, "nsat": NSYM,
+                           "nnet": NNET, "nbook": 33, "nlegs": 9,
+                           "held": HELD, "ncross": 8},
+                "sleeves": {"mag": mag.get_state(),
+                            "intraday": intr.get_state(),
+                            "meanrev": mr.get_state(),
+                            "crisis": crisis.get_state(),
+                            "seasonal_crypto": sc.get_state(),
+                            "carry_breakout": cb.get_state(),
+                            "trend_v2": tv.get_state(),
+                            "ensemble": ens_config_str()},
+                "b_engine": beng.get_state(),
+                "core": core_sec, "glue": gl,
+                "samplers": {"a": BSM.sampler_state(a_ts, a_eqc),
+                             "b": BSM.sampler_state(b_ts, b_v)},
+                "continuity": cont}
+
+    if state is not None:
+        # ---- component-config checks -----------------------------------
+        exp_cfg = {"w": W_CORE, "nin": 37, "nsat": NSYM, "nnet": NNET,
+                   "nbook": 33, "nlegs": 9, "held": HELD, "ncross": 8}
+        if state["config"] != exp_cfg:
+            raise BSM.StateRefuse(f"config mismatch: {state['config']}")
+        sl = state["sleeves"]
+        if sl["ensemble"] != ens_config_str():
+            raise BSM.StateRefuse("ensemble config mismatch (stored != live)")
+        # ---- restore every component ------------------------------------
+        mag = MagXauStepper.from_state(sl["mag"])
+        intr.set_state(sl["intraday"])
+        mr.set_state(sl["meanrev"])
+        crisis.set_state(sl["crisis"])
+        sc.set_state(sl["seasonal_crypto"])
+        cb.set_state(sl["carry_breakout"])
+        tv.set_state(sl["trend_v2"])
+        beng.set_state(state["b_engine"])
+        # ---- glue ---------------------------------------------------------
+        gl = state["glue"]
+        assert not gl["finalized"], "state already finalized"
+        ffill[:] = [float(v) for v in gl["ffill"]]
+        has_day = bool(gl["has_day"])
+        cur_day = int(gl["cur_day"])
+        assert len(gl["tvq_eff"]) == gl["tvq_n"] \
+            and len(gl["tvq_w"]) == gl["tvq_n"] * 5, "tvq count check"
+        assert len(gl["crq_eff"]) == gl["crq_n"] \
+            and len(gl["crq_w"]) == gl["crq_n"] * 4, "crq count check"
+        tvq[:] = [(int(e), [float(v) for v in gl["tvq_w"][i * 5:(i + 1) * 5]])
+                  for i, e in enumerate(gl["tvq_eff"])]
+        crq[:] = [(int(e), [float(v) for v in gl["crq_w"][i * 4:(i + 1) * 4]])
+                  for i, e in enumerate(gl["crq_eff"])]
+        trend_cur = [float(v) for v in gl["trend_cur"]]
+        crisis_cur[:] = [float(v) for v in gl["crisis_cur"]]
+        have_prev = bool(gl["have_prev"])
+        prev_ts = int(gl["prev_ts"])
+        prev_rows = {
+            "meanrev": dict(zip(MR_SYMS, map(float, gl["prev_mr"]))),
+            "carry_breakout": dict(zip(CB_KEPT, map(float, gl["prev_cbk"]))),
+            "intraday": dict(zip(ID_SYMS, map(float, gl["prev_id"]))),
+            "crisis": dict(zip(CR_OUT, map(float, gl["prev_cr"]))),
+            "trend_v2": dict(zip(TV_SYMS, map(float, gl["prev_tv"]))),
+            "mag": {"XAUUSD": float(gl["prev_mg"][0])},
+        } if have_prev else None
+        h1_bars = int(gl["h1_bars"])
+        m1_bars = int(gl["m1_bars"])
+        b_last["eqc"] = float(gl["b_eqc"])
+        b_last["eqw"] = float(gl["b_eqw"])
+        # held ring (slot law: push k lives in slot k % HELD)
+        held_cnt["n"] = int(gl["held_n"])
+        assert len(gl["held_ts"]) == HELD \
+            and len(gl["held_rows"]) == HELD * NSYM, "held ring count check"
+        ring.clear()
+        ring_order.clear()
+        ring_evicted.clear()
+        hn = held_cnt["n"]
+        ent = []
+        for s16 in range(HELD):
+            tss = int(gl["held_ts"][s16])
+            if tss == -1:
+                continue
+            k = (hn - 1) - ((hn - 1 - s16) % HELD)
+            ent.append((k, tss,
+                        [float(v) for v in
+                         gl["held_rows"][s16 * NSYM:(s16 + 1) * NSYM]]))
+        for _k, tss, row in sorted(ent):
+            ring[tss] = row
+            ring_order.append(tss)
+        stats["hours"] = int(gl["total_hours"])
+        stats["sentinels"] = int(gl["total_sentinels"])
+        stats["data_rows"] = int(gl["total_rows"]) - stats["sentinels"]
+        rows_offset = int(gl["total_rows"])
+        last_emit_hour[0] = int(gl["last_emit_hour"]) \
+            if stats["hours"] > 0 else None
+        lastab["a"] = float(gl["last_ah"])
+        lastab["b"] = float(gl["last_bh"])
+        fc_cursor = int(state["core"]["fc_cursor"])
+        assert 0 <= fc_cursor <= len(fts), "fc_cursor range"
+        # b stream from the restored sampler (hour-boundary asof-identical)
+        rb_ts, rb_v = BSM.sampler_arrays(state["samplers"]["b"])
+        b_ts[:] = rb_ts
+        b_v[:] = rb_v
+        resume_m1_last = int(gl["m1_last_ts"])
+        resume_h1_last = int(gl["h1_last_ts"])
+        # fast-forward the quarter cursor to the resume quarter
+        if resume_m1_last > 0:
+            dtq = datetime.fromtimestamp(resume_m1_last, tz=timezone.utc)
+            q_state["qi"] = QUARTERS.index(f"{dtq.year}Q{(dtq.month-1)//3+1}")
+        # ---- CONTINUITY GUARD (recomputed from the RESTORED queries) ------
+        have_e = stats["hours"] > 0
+        jh = last_emit_hour[0] if have_e else -1
+        a_hr = a_query(jh) if have_e else 1.0
+        b_hr = b_query(jh) if have_e else 1.0
+        restored_c = {"have": have_e, "j_hour": jh, "a_h": a_hr, "b_h": b_hr,
+                      "w": W_CORE,
+                      "j": W_CORE * a_hr + (1.0 - W_CORE) * b_hr,
+                      "a_first": a_eqc[0] if a_eqc else 0.0,
+                      "b_first": b_v[0] if b_v else 0.0}
+        BSM.continuity_guard(state["continuity"], restored_c)
+        log(f"RESTORE GUARD PASS: j={restored_c['j']!r} at hour {jh} "
+            f"(rel jump {abs(restored_c['j']-state['continuity']['j'])!r}); "
+            f"resume h1_last={resume_h1_last} m1_last={resume_m1_last} "
+            f"rows_offset={rows_offset:,}")
+
     # ------------------------------------------------ H1 master loop (clock 2)
     log("H1+M1 drive: master grid with pending-minute schedule "
         "(feed ts<=prev, then StepH1)")
     in_csv = COMMON / "FMA3_v34_inputs.csv"
-    prev_grid_ts = None
+    prev_grid_ts = resume_h1_last if state is not None else None
     trailing_hazard_minutes = 0
     with open(in_csv) as fh:
         header = fh.readline().rstrip("\n")
@@ -845,11 +1116,21 @@ def main() -> int:
             assert len(f) == 38, f"master row width {len(f)}"
             ts = int(f[0])
             assert ts % 3600 == 0, "H1 stamp not hour-aligned"
+            if ts <= resume_h1_last:
+                continue                     # restored past this stamp
             raw = [NAN if c == "" else float(c) for c in f[1:]]
-            if prev_grid_ts is not None:
+            if prev_grid_ts is not None and prev_grid_ts >= 0:
                 feed_until(prev_grid_ts)
             step_h1(ts, raw)
             prev_grid_ts = ts
+            if save_at is not None and ts >= save_at:
+                st = build_state(False)
+                BSM.save_state_file(state_path, st)
+                log(f"STATE SAVED at grid stamp {ts} -> {state_path} "
+                    f"(rows {stats['data_rows'] + stats['sentinels']:,}, "
+                    f"h1_bars {h1_bars:,}, m1 {m1_bars:,}, "
+                    f"j={st['continuity']['j']!r})")
+                return 0
             if h1_bars % 5000 == 0:
                 log(f"H1 bar {h1_bars:,}, m1 {m1_bars:,}, hours "
                     f"{stats['hours']:,}, rows {stats['data_rows']:,}")
@@ -884,17 +1165,27 @@ def main() -> int:
         f"max|d|={tgt_diag['max_abs']:.3g} over "
         f"{tgt_diag['n_hours_diff']:,} differing (hour,quarter) probes")
 
+    # ------------------------------------------------ end-state serialization
+    if save_end is not None:
+        BSM.save_state_file(save_end, build_state(True))
+        log(f"end-state saved -> {save_end}")
+
     # ------------------------------------------------ write + judge
-    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_CSV, "w") as fh:
+    out_csv = OUT_CSV if state is None else tail_csv
+    out_json = OUT_JSON if state is None \
+        else HERE / "book_state_resume_parity.json"
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_csv, "w") as fh:
         fh.write(f"w_v7={W_CORE:.17g},config_hash=51a7541cc2aaa593,"
                  f"fmt=3,prec=17,src=book_orchestrator_sim\n")
         for e, s, v in emit_rows:
             fh.write(f"{e},{s},{v}\n")
-    log(f"wrote {OUT_CSV} ({len(emit_rows):,} rows incl. sentinels)")
+    log(f"wrote {out_csv} ({len(emit_rows):,} rows incl. sentinels)")
 
     actual = [(e, s, v) for e, s, v in emit_rows]
     golden = VJ.parse_stream(GOLDEN)
+    if state is not None:
+        golden = golden[rows_offset:]      # judge the TAIL vs the golden tail
     rep = VJ.compare(actual, golden, tol=1e-12)
     rep.update(
         r1_gate="book_frac max|diff| <= 1e-12 vs 12dp golden (5e-13 "
@@ -913,8 +1204,9 @@ def main() -> int:
         tgt_diag_max_abs=tgt_diag["max_abs"],
         tgt_diag_n_probes_diff=tgt_diag["n_hours_diff"],
         runtime_s=round(time.time() - T0, 1),
-        actual_path=str(OUT_CSV), golden_path=str(GOLDEN))
-    OUT_JSON.write_text(json.dumps(rep, indent=1))
+        rows_offset=rows_offset, resumed=bool(state is not None),
+        actual_path=str(out_csv), golden_path=str(GOLDEN))
+    out_json.write_text(json.dumps(rep, indent=1))
 
     log(f"=== R1 MIRROR RESULT ===")
     log(f"rows {rep['rows_actual']:,} vs golden {rep['rows_golden']:,} | "
@@ -924,7 +1216,7 @@ def main() -> int:
     if rep["first_divergence"]:
         log(f"FIRST DIVERGENCE: {rep['first_divergence']}")
     log(f"VERDICT: {'PASS' if rep['pass'] else 'FAIL'}  "
-        f"(report -> {OUT_JSON}, {rep['runtime_s']}s)")
+        f"(report -> {out_json}, {rep['runtime_s']}s)")
     return 0 if rep["pass"] else 1
 
 

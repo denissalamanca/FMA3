@@ -1,0 +1,52 @@
+{
+ "gate": "FMA3 Track-B state-serializer split gate",
+ "boundary_epoch": 1656630000,
+ "boundary_utc": "2022-06-30 23:00:00",
+ "reused_baseline": false,
+ "reused_save": false,
+ "t_baseline_s": 291.0,
+ "baseline_r1_pass": true,
+ "baseline_max_abs_diff": 5.060396546241464e-13,
+ "baseline_rows": 805585,
+ "t_split_save_s": 252.6,
+ "state_file_bytes": 7233148,
+ "rows_at_save": 251354,
+ "save_h1_last_ts": 1656630000,
+ "save_j": 5.935576542054057,
+ "unit_tests": {
+  "t_pass": {
+   "ok": true,
+   "j": 5.935576542054057,
+   "a_first": 10000.0,
+   "b_first": 10000.0
+  },
+  "t_torn": {
+   "refused": true,
+   "reason": "TORN WRITE: eof marker missing (partial/failed save)"
+  },
+  "t_flip": {
+   "refused": true,
+   "reason": "CHECKSUM MISMATCH: fnv64 6c4e5e6db2f2c5b8 != stored cab2571125339183 (torn/corrupted state file)"
+  },
+  "t_anchor": {
+   "refused": true,
+   "reason": "A-ANCHOR MISMATCH: restored a_first 10000 != saved 10100 \u2014 state re-based/corrupted"
+  },
+  "t_splice": {
+   "refused": true,
+   "reason": "J-SPLICE DISCONTINUITY: j_restored 5.8946266022338545 vs j_saved 5.9355765420540569 (rel 0.0069 > 1e-09) \u2014 REFUSE TO TRADE"
+  }
+ },
+ "t_resume_s": 194.5,
+ "resume_tail_vs_golden_pass": true,
+ "resume_tail_max_abs_diff": 5.051514762044462e-13,
+ "tail_rows_expected": 554231,
+ "tail_rows_resumed": 554231,
+ "tail_bitwise_identical": true,
+ "tail_n_diff": 0,
+ "tail_first_divergence": null,
+ "end_state_bytes": 7845417,
+ "end_state_byte_identical": true,
+ "pass": true,
+ "runtime_s": 743.4
+}

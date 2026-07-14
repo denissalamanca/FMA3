@@ -513,6 +513,54 @@ public:
    int    FCoreRows(void)           const { return m_fn;     }
    long   FCoreTs(const int k)      const { return m_fts[k]; }
    double FCoreAt(const int k, const int net) const { return m_fv[k*m_nNet + net]; }
+
+   //=================================================================
+   // BookState additive state hooks (Book/BookState.mqh serializer).
+   // Pure accessors + restore setters over EXISTING fields — zero
+   // compute-path change (the S1 gate paths above are untouched).
+   // The serializable cross-segment state of this object is exactly:
+   //   per-leg seam carry (m_cPos/m_cMid/m_cQe/m_cValid) + the
+   //   accumulated hourly f_core rows (m_fts/m_fv/m_fn).
+   // Per-segment scratch (leg captures, union arrays) is NOT state:
+   // saves are only legal between segments (seg_open is refused by
+   // the orchestrator's BsSetState).
+   //=================================================================
+   int    Nets(void)                const { return m_nNet; }
+   bool   CarryValid(const int l)   const { return (l >= 0 && l < m_nLegs) ? m_cValid[l] : false; }
+   double CarryPos(const int l)     const { return (l >= 0 && l < m_nLegs) ? m_cPos[l] : 0.0; }
+   double CarryMid(const int l)     const { return (l >= 0 && l < m_nLegs) ? m_cMid[l] : 0.0; }
+   double CarryQe(const int l)      const { return (l >= 0 && l < m_nLegs) ? m_cQe[l]  : 0.0; }
+
+   bool SetCarry(const int l, const bool valid, const double pos,
+                 const double mid, const double qe)
+     {
+      if(l < 0 || l >= m_nLegs) { m_err="SetCarry leg"; return false; }
+      m_cValid[l] = valid;
+      m_cPos[l]   = pos;
+      m_cMid[l]   = mid;
+      m_cQe[l]    = qe;
+      return true;
+     }
+
+   // restore the accumulated hourly f_core ledger (v row-major n*m_nNet)
+   bool RestoreFCoreRows(const long &ts[], const double &v[], const int n)
+     {
+      if(m_nNet <= 0)          { m_err="RestoreFCoreRows: SetNets first"; return false; }
+      if(n < 0)                { m_err="RestoreFCoreRows: bad n";         return false; }
+      if(ArraySize(ts) < n)    { m_err="RestoreFCoreRows: ts short";      return false; }
+      if(ArraySize(v) < n*m_nNet) { m_err="RestoreFCoreRows: v short";    return false; }
+      for(int k = 1; k < n; k++)
+         if(ts[k] <= ts[k-1])  { m_err="RestoreFCoreRows: ts not ascending"; return false; }
+      if(n > 0)
+        {
+         if(ArrayResize(m_fts, n) != n)          { m_err="ArrayResize fts"; return false; }
+         if(ArrayResize(m_fv, n*m_nNet) != n*m_nNet) { m_err="ArrayResize fv"; return false; }
+         for(int k = 0; k < n; k++)        m_fts[k] = ts[k];
+         for(int i = 0; i < n*m_nNet; i++) m_fv[i]  = v[i];
+        }
+      m_fn = n;
+      return true;
+     }
 };
 
 #endif // CORE_CORESIM_MQH
