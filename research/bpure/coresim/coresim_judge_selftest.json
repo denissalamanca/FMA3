@@ -1,0 +1,69 @@
+{
+ "generated": "2026-07-14T13:57:38.348390",
+ "mode": "self_test_golden_vs_parquet",
+ "dir": "/Users/dsalamanca/Library/Application Support/net.metaquotes.wine.metatrader5/drive_c/users/crossover/AppData/Roaming/MetaQuotes/Terminal/Common/Files",
+ "parity_target": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_book_equity_1m.parquet",
+ "verification_source": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_extract_verification.json",
+ "manifest_windows_match": true,
+ "segments_judged": 1,
+ "segments_passed": [
+  0
+ ],
+ "results": [
+  {
+   "segment": 0,
+   "file": "FMA3_coresim_golden_seg0.csv",
+   "t0": "2020-01-01 00:00:00",
+   "t1": "2020-03-17 00:00:00",
+   "bars_expected": 76316,
+   "bars_actual": 76316,
+   "index_equal": true,
+   "bit_equal_eqc": true,
+   "max_abs_deqc": 0.0,
+   "bit_equal_eqw": true,
+   "max_abs_deqw": 0.0,
+   "bit_equal_margin": true,
+   "max_abs_dmargin": 0.0,
+   "verdict": "PASS"
+  }
+ ],
+ "full_run_gate": {
+  "evaluated": false,
+  "outstanding_segments": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31
+  ]
+ },
+ "all_judged_pass": true,
+ "judge_pass": true,
+ "runtime_s": 1.2
+}
