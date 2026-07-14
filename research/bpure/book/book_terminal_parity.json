@@ -1,0 +1,25 @@
+{
+ "rows_actual": 805585,
+ "rows_golden": 805585,
+ "structural_ok": true,
+ "first_divergence": null,
+ "max_abs_diff": 5.060396546241464e-13,
+ "argmax": {
+  "row": 194550,
+  "epoch": 1641837600,
+  "symbol": "USTEC",
+  "actual": "0.51429446766950604",
+  "golden": "0.514294467669"
+ },
+ "n_over_tol": 0,
+ "n_over_quant_bound": 41,
+ "n_data_rows": 805183,
+ "n_sentinels_actual": 402,
+ "n_sentinels_golden": 402,
+ "tol": 1e-12,
+ "quant_bound": 5e-13,
+ "pass": true,
+ "within_quant_bound": false,
+ "actual_path": "/Users/dsalamanca/Library/Application Support/net.metaquotes.wine.metatrader5/drive_c/users/crossover/AppData/Roaming/MetaQuotes/Terminal/Common/Files/FMA3_book_actual.csv",
+ "golden_path": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/mt5/FMA3_fed_frac_v3.csv"
+}
