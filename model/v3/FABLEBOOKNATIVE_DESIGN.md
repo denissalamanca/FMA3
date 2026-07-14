@@ -14,6 +14,68 @@ doc: it specifies what to build and what the owner must decide. No MQL5 is writt
 
 ---
 
+## ⬥ FABLE REVISION v2 (2026-07-14) — decisions replacing options
+
+This revision resolves the adversarial review's three blocking findings and corrects one
+stale claim. Where v2 conflicts with the original text below, **v2 wins**.
+
+1. **`f_core` source: DECIDED — option (a).** The identity-check gamble (§1.4 option b) is
+   dead: the review **measured** that CoreSim's 9 legs net to the 8 `f_core` columns with
+   USDJPY as TWO separate-equity legs — collapsing them is equity-weighted netting, not a
+   `tgt` passthrough, so (b) cannot be bit-exact. Build the **compute-only `CCoreSignal`**
+   refactor of CoreEngine (no `CTrade`, no order sends). Its gate: `f_core[8]` vs
+   `v7_book_frac_1h.parquet` on frozen bars (the G1-analog signal check) — a *verification*,
+   no longer a *decision-maker*.
+2. **CoreSim streaming wrapper: DON'T BUILD IT.** The review found `FinishSegment`'s
+   bfill-of-first-in-segment-eqc is a **leading-edge lookahead a forward streamer
+   structurally cannot compute** — so a "bit-exact incremental streaming `a`" is impossible
+   by construction, and chasing it would burn effort on a false target. Resolution by gate:
+   - **R1 (frozen-input replay): use the proven segment-batch path verbatim** — full segments
+     are available offline, so the exact frozen semantics (incl. the bfill) reproduce for free.
+     Nothing new to build for the primary gate.
+   - **LIVE / tester: incremental `eqc` with hold-at-segment-cap** until a leg's first bar,
+     plus **explicit `a_h` leading-edge divergence telemetry** (32 segment edges over 6y,
+     bounded, falls under the ratified band like every other feed effect). Live can never
+     know the frozen bfill value at those minutes — this divergence is *structural*, so we
+     measure it instead of pretending to eliminate it.
+3. **Stale review claim corrected:** CoreSim `a` **does** have in-terminal MQL5 evidence —
+   RECON-8d (2026-07-14 16:22): TestCoreSim 32/32 segments bitwise, final eqc
+   `532229.8433634703` exact. What remains open is only the **live/hourly access path**
+   (item 2 above), not the engine. Original stage S1 ("write the missing exporter") is
+   **already done** and is removed from the plan.
+4. **Stage order inverted: the multi-symbol feed probe is now S0** (the review is right that
+   the original plan back-loaded the product-viability question). The probe tests **both
+   modes** — the 1m-OHLC tester *and* a live chart — because tester multi-symbol failure
+   would NOT imply live failure; the deploy target is live `CopyRates`. Probe spec: on the
+   BTCUSD M1 clock, pull the 33 book symbols + EUR crosses; check M1 history depth to 2020
+   per symbol; reproduce one known week's union grid + `has_bar` mask against the golden
+   union. **Named fallback if the tester mode fails:** historical certification stays on the
+   six-field frozen engine (already the MaxDD plan), R2 gets measured on a demo-forward run
+   instead of a tester backtest, and the EA remains deployable.
+5. **Feed-assembler requirements added** (review issues, now binding): (i) in R1 mode the
+   assembler must **float32-quantize prices exactly as the exporter** (BH_ENGINE_SPEC §7) or
+   b's bit-parity is unreachable; (ii) the live `g_fedTgt` writer must reproduce the
+   exporter's **flatten-by-omission / `__GRID__` emission semantics** at the seam; (iii)
+   **keep `eqw`/margin in the live hot path** with alerting — dropping them is safe only
+   in-sample; a real stop-out on a divergent live feed must be detectable; (iv) log per-hour
+   **`a_h`/`b_h` drift telemetry** in S4 — these two scalars are the blend's only live inputs,
+   so their feed-drift directly re-weights the book; (v) **refuse-to-trade on any
+   `j`-splice discontinuity** + replace the 4-decimal `SaveState` with a **≥12-sig-digit
+   atomic state serializer** (a re-based `a`/`b` passes every self-check while silently
+   mis-weighting every trade — this is the highest-severity silent failure in the design).
+
+**Revised stage plan (replaces §6):**
+- **S0 — feed probe (both modes) + `CCoreSignal` refactor start.** Go/no-go on the probe.
+- **S1 — R1 WHOLE-BOOK GATE:** `TestBook` on frozen six-field bundles → `book_frac[33]` vs
+  golden (segment-batch `a`, proven paths only). *The crown gate, tester-independent.*
+- **S2 — seam + execution on frozen `g_fedTgt`** (RECON-4 position-level reproduction).
+- **S3 — tester run (feed mechanics + position fidelity + R2 measured)**, with the ratified
+  band as acceptance and the a_h/b_h telemetry from item 5(iv).
+- **S4 — warm-start blob + FMA3-RECON-9-WS** state-diff certification.
+- **S5 — crisis real-tick cross-check + demo-forward (owner decision) → RECON-9.**
+
+---
+
 ## 0. The one-paragraph architecture
 
 Attach to an M1 24/7 clock chart (BTCUSD, as `FableBook.mq5` L21). **Three clocks**
@@ -69,7 +131,7 @@ Top-level `FableBookNative` owns one instance of each, plus glue state:
 | Core-signal (`f_core`) | daily series + band/quarter ledger [RISK §1.4] |
 | top-level glue | `ffill[37]`, `cur_day`, trend/crisis pending queues, `trend_cur[5]`, `crisis_cur[4]`, `prev_rows`(7 sleeves), `prev_ts`, `f_sat_held[31]`, per-leg Core `tgt_held`, `a_first`/`b_first`, `g_fedTgt[33]` |
 
-### 1.4 The `f_core` source — the include-graph decision [RISK/OPEN, gates the build]
+### 1.4 The `f_core` source — the include-graph decision [SUPERSEDED by FABLE REVISION v2 item 1: option (a) DECIDED — option (b) measured non-bit-exact (USDJPY 2-leg netting)]
 
 `CoreEngine.mqh` is the **verbatim v7 executing-EA body**: file-scope `CTrade trade;`,
 order-sending `QuarterRebalance`/`ExecSleeve`. It **cannot be `#include`d beside `BookExec.mqh`**
@@ -311,7 +373,7 @@ zero-inits then writes; an absent hour holds).
 
 ---
 
-## 6. Staged build plan (hard checkpoints, low-risk-first)
+## 6. Staged build plan [SUPERSEDED by the FABLE REVISION v2 stage plan at the top — key changes: feed probe moved to S0 (both tester AND live modes, with a named fallback), original S1 deleted (CoreSim in-terminal gate ALREADY PASSED, RECON-8d), no streaming wrapper built (structural lookahead — see v2 item 2)]
 
 Each stage is a go/no-go. **The compute chain is fully validated against golden on frozen
 inputs BEFORE any execution or tester run.**
@@ -351,9 +413,9 @@ inputs BEFORE any execution or tester run.**
    1m-OHLC tester certifies feed mechanics + position fidelity and measures R2; **MaxDD/crisis
    stay on the six-field engine + real-tick, NOT the tester.** Accept that no single vehicle
    certifies the whole book.
-2. **`f_core` source (§1.4).** Approve refactoring CoreEngine into a compute-only signal class
-   (re-prove G1) vs reusing CoreSim's leg targets — and fund the leg↔column identity check
-   that decides it.
+2. **`f_core` source (§1.4).** ~~Approve (a) vs (b)~~ **RESOLVED by FABLE REVISION v2:
+   option (a) — compute-only `CCoreSignal` refactor. Option (b) was measured non-bit-exact
+   (USDJPY two-leg equity-weighted netting). No owner decision needed.**
 3. **Is a demo-forward (out-of-sample live) run REQUIRED before capital deploy?** The 2026
    stream is the unfitted holdout; a perfect sim still produces numbers the campaign agreed
    not to trust blindly.
