@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-14T13:58:19.630713",
+ "generated": "2026-07-14T18:20:23.395631",
  "outdir": "/Users/dsalamanca/Library/Application Support/net.metaquotes.wine.metatrader5/drive_c/users/crossover/AppData/Roaming/MetaQuotes/Terminal/Common/Files",
  "parity_target": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_book_equity_1m.parquet",
  "verification_source": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/outputs/v7_extract_verification.json",
@@ -72,7 +72,7 @@
    "final_eqw": 9565.635779858872,
    "final_margin": 428.99235821688285,
    "replay_pass": true,
-   "seconds": 36.0
+   "seconds": 7.4
   },
   {
    "segment": 1,
@@ -107,7 +107,7 @@
    "final_eqw": 11485.050319654345,
    "final_margin": 717.4061621057067,
    "replay_pass": true,
-   "seconds": 34.7
+   "seconds": 6.5
   },
   {
    "segment": 2,
@@ -142,7 +142,7 @@
    "final_eqw": 15472.624549006727,
    "final_margin": 1444.352926176208,
    "replay_pass": true,
-   "seconds": 40.9
+   "seconds": 8.1
   },
   {
    "segment": 3,
@@ -177,7 +177,7 @@
    "final_eqw": 15542.381064603534,
    "final_margin": 1659.3234655987103,
    "replay_pass": true,
-   "seconds": 22.9
+   "seconds": 5.3
   },
   {
    "segment": 4,
@@ -212,7 +212,7 @@
    "final_eqw": 19542.757879907833,
    "final_margin": 4472.388805007229,
    "replay_pass": true,
-   "seconds": 32.2
+   "seconds": 9.6
   },
   {
    "segment": 5,
@@ -247,7 +247,7 @@
    "final_eqw": 27283.859903706034,
    "final_margin": 10368.03834196591,
    "replay_pass": true,
-   "seconds": 27.9
+   "seconds": 5.3
   },
   {
    "segment": 6,
@@ -282,7 +282,7 @@
    "final_eqw": 30609.050687549014,
    "final_margin": 13081.258658766812,
    "replay_pass": true,
-   "seconds": 12.9
+   "seconds": 2.3
   },
   {
    "segment": 7,
@@ -317,7 +317,7 @@
    "final_eqw": 31201.577621225253,
    "final_margin": 12654.455919306442,
    "replay_pass": true,
-   "seconds": 13.3
+   "seconds": 2.3
   },
   {
    "segment": 8,
@@ -352,7 +352,7 @@
    "final_eqw": 37002.89252355811,
    "final_margin": 9733.582210972274,
    "replay_pass": true,
-   "seconds": 62.9
+   "seconds": 8.4
   },
   {
    "segment": 9,
@@ -387,7 +387,7 @@
    "final_eqw": 33570.509772201614,
    "final_margin": 5123.157475595838,
    "replay_pass": true,
-   "seconds": 9.2
+   "seconds": 1.7
   },
   {
    "segment": 10,
@@ -422,7 +422,7 @@
    "final_eqw": 36473.89218206042,
    "final_margin": 8698.264959323546,
    "replay_pass": true,
-   "seconds": 18.9
+   "seconds": 3.5
   },
   {
    "segment": 11,
@@ -457,7 +457,7 @@
    "final_eqw": 40790.089328335824,
    "final_margin": 12024.19902731142,
    "replay_pass": true,
-   "seconds": 105.5
+   "seconds": 11.4
   },
   {
    "segment": 12,
@@ -492,7 +492,7 @@
    "final_eqw": 43303.23179210768,
    "final_margin": 17731.590717076055,
    "replay_pass": true,
-   "seconds": 44.7
+   "seconds": 9.3
   },
   {
    "segment": 13,
@@ -527,7 +527,7 @@
    "final_eqw": 45389.895186249225,
    "final_margin": 7960.294143620305,
    "replay_pass": true,
-   "seconds": 56.3
+   "seconds": 12.4
   },
   {
    "segment": 14,
@@ -562,7 +562,7 @@
    "final_eqw": 52257.629291150355,
    "final_margin": 7933.309121449675,
    "replay_pass": true,
-   "seconds": 16.9
+   "seconds": 3.6
   },
   {
    "segment": 15,
@@ -597,7 +597,7 @@
    "final_eqw": 59967.664520049104,
    "final_margin": 6819.426852862793,
    "replay_pass": true,
-   "seconds": 44.2
+   "seconds": 9.4
   },
   {
    "segment": 16,
@@ -632,7 +632,7 @@
    "final_eqw": 64119.6008106798,
    "final_margin": 6265.7376503255055,
    "replay_pass": true,
-   "seconds": 34.3
+   "seconds": 5.2
   },
   {
    "segment": 17,
@@ -667,7 +667,7 @@
    "final_eqw": 63881.057717735326,
    "final_margin": 8492.295605998765,
    "replay_pass": true,
-   "seconds": 45.4
+   "seconds": 8.9
   },
   {
    "segment": 18,
@@ -702,7 +702,7 @@
    "final_eqw": 66716.4633742067,
    "final_margin": 10797.412450017406,
    "replay_pass": true,
-   "seconds": 49.8
+   "seconds": 10.9
   },
   {
    "segment": 19,
@@ -737,7 +737,7 @@
    "final_eqw": 100047.23255500551,
    "final_margin": 16113.43013038475,
    "replay_pass": true,
-   "seconds": 201.5
+   "seconds": 34.7
   },
   {
    "segment": 20,
@@ -772,7 +772,7 @@
    "final_eqw": 126357.15456813772,
    "final_margin": 50252.33532144859,
    "replay_pass": true,
-   "seconds": 93.4
+   "seconds": 19.7
   },
   {
    "segment": 21,
@@ -807,7 +807,7 @@
    "final_eqw": 176122.19823956108,
    "final_margin": 68317.8585920732,
    "replay_pass": true,
-   "seconds": 42.9
+   "seconds": 10.4
   },
   {
    "segment": 22,
@@ -842,7 +842,7 @@
    "final_eqw": 184135.88184679172,
    "final_margin": 60055.811807135295,
    "replay_pass": true,
-   "seconds": 41.0
+   "seconds": 9.8
   },
   {
    "segment": 23,
@@ -877,7 +877,7 @@
    "final_eqw": 174621.7887201989,
    "final_margin": 31794.664386559292,
    "replay_pass": true,
-   "seconds": 17.7
+   "seconds": 4.1
   },
   {
    "segment": 24,
@@ -912,7 +912,7 @@
    "final_eqw": 199186.1800635007,
    "final_margin": 52478.96694543803,
    "replay_pass": true,
-   "seconds": 50.7
+   "seconds": 11.1
   },
   {
    "segment": 25,
@@ -947,7 +947,7 @@
    "final_eqw": 232444.80061620977,
    "final_margin": 91188.85976759573,
    "replay_pass": true,
-   "seconds": 35.9
+   "seconds": 8.3
   },
   {
    "segment": 26,
@@ -982,7 +982,7 @@
    "final_eqw": 269645.8881016732,
    "final_margin": 39498.49463180948,
    "replay_pass": true,
-   "seconds": 32.6
+   "seconds": 7.4
   },
   {
    "segment": 27,
@@ -1017,7 +1017,7 @@
    "final_eqw": 247416.20173405058,
    "final_margin": 38799.66138010486,
    "replay_pass": true,
-   "seconds": 15.7
+   "seconds": 3.1
   },
   {
    "segment": 28,
@@ -1052,7 +1052,7 @@
    "final_eqw": 293763.2527080497,
    "final_margin": 44351.11843032266,
    "replay_pass": true,
-   "seconds": 19.5
+   "seconds": 4.2
   },
   {
    "segment": 29,
@@ -1087,7 +1087,7 @@
    "final_eqw": 340407.3605316621,
    "final_margin": 137650.4684123931,
    "replay_pass": true,
-   "seconds": 47.7
+   "seconds": 13.7
   },
   {
    "segment": 30,
@@ -1122,7 +1122,7 @@
    "final_eqw": 470221.5978484029,
    "final_margin": 99926.39877106134,
    "replay_pass": true,
-   "seconds": 44.1
+   "seconds": 32.2
   },
   {
    "segment": 31,
@@ -1157,7 +1157,7 @@
    "final_eqw": 532216.90273287,
    "final_margin": 136709.48931591038,
    "replay_pass": true,
-   "seconds": 42.7
+   "seconds": 54.4
   }
  ],
  "all_replay_pass": true,
@@ -1167,5 +1167,5 @@
  "manifest_path": "/Users/dsalamanca/Library/Application Support/net.metaquotes.wine.metatrader5/drive_c/users/crossover/AppData/Roaming/MetaQuotes/Terminal/Common/Files/FMA3_coresim_segments.csv",
  "manifest_segments": 32,
  "staged_but_not_in_manifest": [],
- "runtime_s": 1458.2
+ "runtime_s": 361.7
 }
