@@ -1,0 +1,1644 @@
+{
+ "generated": "2026-07-15T00:57:50.814029",
+ "params": {
+  "up": 0.25,
+  "down": 0.08163265306122448,
+  "kmult": 2.5,
+  "min_gap_days": 5,
+  "probe_months": [
+   6,
+   18,
+   999
+  ],
+  "window": [
+   "2020-01-01 00:00:00",
+   "2026-01-01 00:00:00"
+  ],
+  "W": 0.14285714285714285,
+  "init": 10000.0
+ },
+ "target_source": "core_signal_reference live steppers",
+ "tgt_regression": "9/9 legs bit-equal vs frozen book()",
+ "G_S3": {
+  "n_triggers_frozen": 31,
+  "n_triggers_mine": 31,
+  "act_dates_matched": 31,
+  "decided_dates_matched": 31,
+  "segment_t0_matched": "32/32",
+  "seeds_max_abs_diff": 0.0,
+  "seeds_all_bit_equal": true,
+  "final_eqc": 532229.8433634703,
+  "final_eqc_bit_equal": true,
+  "final_eqc_target": 532229.8433634703,
+  "n_harvest_fires": 0,
+  "sunday_decided_reproduced": [
+   "2021-05-23"
+  ],
+  "harvest_headroom_max_slot_over_thr": 1.0288098526509408,
+  "per_trigger": [
+   {
+    "j": 0,
+    "frozen_decided": "2020-03-16",
+    "frozen_act": "2020-03-17",
+    "mine_decided": "2020-03-16",
+    "mine_act": "2020-03-17",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 9565.635779858872,
+    "seed_mine": 9565.635779858872,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 1,
+    "frozen_decided": "2020-05-18",
+    "frozen_act": "2020-05-19",
+    "mine_decided": "2020-05-18",
+    "mine_act": "2020-05-19",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 11485.050319654345,
+    "seed_mine": 11485.050319654345,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 2,
+    "frozen_decided": "2020-08-03",
+    "frozen_act": "2020-08-04",
+    "mine_decided": "2020-08-03",
+    "mine_act": "2020-08-04",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 15472.624549006727,
+    "seed_mine": 15472.624549006727,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 3,
+    "frozen_decided": "2020-09-23",
+    "frozen_act": "2020-09-24",
+    "mine_decided": "2020-09-23",
+    "mine_act": "2020-09-24",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 15542.381064603534,
+    "seed_mine": 15542.381064603534,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 4,
+    "frozen_decided": "2020-12-17",
+    "frozen_act": "2020-12-18",
+    "mine_decided": "2020-12-17",
+    "mine_act": "2020-12-18",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 19542.920920284778,
+    "seed_mine": 19542.920920284778,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 5,
+    "frozen_decided": "2021-02-02",
+    "frozen_act": "2021-02-03",
+    "mine_decided": "2021-02-02",
+    "mine_act": "2021-02-03",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 27303.596350302007,
+    "seed_mine": 27303.596350302007,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 6,
+    "frozen_decided": "2021-02-18",
+    "frozen_act": "2021-02-19",
+    "mine_decided": "2021-02-18",
+    "mine_act": "2021-02-19",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 30613.688792946217,
+    "seed_mine": 30613.688792946217,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 7,
+    "frozen_decided": "2021-03-08",
+    "frozen_act": "2021-03-09",
+    "mine_decided": "2021-03-08",
+    "mine_act": "2021-03-09",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 31201.577621225253,
+    "seed_mine": 31201.577621225253,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 8,
+    "frozen_decided": "2021-05-10",
+    "frozen_act": "2021-05-11",
+    "mine_decided": "2021-05-10",
+    "mine_act": "2021-05-11",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 37003.12338570455,
+    "seed_mine": 37003.12338570455,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 9,
+    "frozen_decided": "2021-05-23",
+    "frozen_act": "2021-05-24",
+    "mine_decided": "2021-05-23",
+    "mine_act": "2021-05-24",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 33585.020991137106,
+    "seed_mine": 33585.020991137106,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 10,
+    "frozen_decided": "2021-06-17",
+    "frozen_act": "2021-06-18",
+    "mine_decided": "2021-06-17",
+    "mine_act": "2021-06-18",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 36473.89218206042,
+    "seed_mine": 36473.89218206042,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 11,
+    "frozen_decided": "2021-09-14",
+    "frozen_act": "2021-09-15",
+    "mine_decided": "2021-09-14",
+    "mine_act": "2021-09-15",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 40790.63998912877,
+    "seed_mine": 40790.63998912877,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 12,
+    "frozen_decided": "2021-11-23",
+    "frozen_act": "2021-11-24",
+    "mine_decided": "2021-11-23",
+    "mine_act": "2021-11-24",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 43303.791841889884,
+    "seed_mine": 43303.791841889884,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 13,
+    "frozen_decided": "2022-02-28",
+    "frozen_act": "2022-03-01",
+    "mine_decided": "2022-02-28",
+    "mine_act": "2022-03-01",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 45389.895186249225,
+    "seed_mine": 45389.895186249225,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 14,
+    "frozen_decided": "2022-03-28",
+    "frozen_act": "2022-03-29",
+    "mine_decided": "2022-03-28",
+    "mine_act": "2022-03-29",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 52257.629291150355,
+    "seed_mine": 52257.629291150355,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 15,
+    "frozen_decided": "2022-06-08",
+    "frozen_act": "2022-06-09",
+    "mine_decided": "2022-06-08",
+    "mine_act": "2022-06-09",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 59967.664520049104,
+    "seed_mine": 59967.664520049104,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 16,
+    "frozen_decided": "2022-07-18",
+    "frozen_act": "2022-07-19",
+    "mine_decided": "2022-07-18",
+    "mine_act": "2022-07-19",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 64119.6008106798,
+    "seed_mine": 64119.6008106798,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 17,
+    "frozen_decided": "2022-09-23",
+    "frozen_act": "2022-09-24",
+    "mine_decided": "2022-09-23",
+    "mine_act": "2022-09-24",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 63881.057717735326,
+    "seed_mine": 63881.057717735326,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 18,
+    "frozen_decided": "2022-12-15",
+    "frozen_act": "2022-12-16",
+    "mine_decided": "2022-12-15",
+    "mine_act": "2022-12-16",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 66716.4633742067,
+    "seed_mine": 66716.4633742067,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 19,
+    "frozen_decided": "2023-09-01",
+    "frozen_act": "2023-09-02",
+    "mine_decided": "2023-09-01",
+    "mine_act": "2023-09-02",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 100047.95655370601,
+    "seed_mine": 100047.95655370601,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 20,
+    "frozen_decided": "2024-01-29",
+    "frozen_act": "2024-01-30",
+    "mine_decided": "2024-01-29",
+    "mine_act": "2024-01-30",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 126358.72377476531,
+    "seed_mine": 126358.72377476531,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 21,
+    "frozen_decided": "2024-04-15",
+    "frozen_act": "2024-04-16",
+    "mine_decided": "2024-04-15",
+    "mine_act": "2024-04-16",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 176123.23360189085,
+    "seed_mine": 176123.23360189085,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 22,
+    "frozen_decided": "2024-06-26",
+    "frozen_act": "2024-06-27",
+    "mine_decided": "2024-06-26",
+    "mine_act": "2024-06-27",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 184139.25263330858,
+    "seed_mine": 184139.25263330858,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 23,
+    "frozen_decided": "2024-07-26",
+    "frozen_act": "2024-07-27",
+    "mine_decided": "2024-07-26",
+    "mine_act": "2024-07-27",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 174659.36255180676,
+    "seed_mine": 174659.36255180676,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 24,
+    "frozen_decided": "2024-10-17",
+    "frozen_act": "2024-10-18",
+    "mine_decided": "2024-10-17",
+    "mine_act": "2024-10-18",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 199187.09228945206,
+    "seed_mine": 199187.09228945206,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 25,
+    "frozen_decided": "2024-12-18",
+    "frozen_act": "2024-12-19",
+    "mine_decided": "2024-12-18",
+    "mine_act": "2024-12-19",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 232478.28049446477,
+    "seed_mine": 232478.28049446477,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 26,
+    "frozen_decided": "2025-02-13",
+    "frozen_act": "2025-02-14",
+    "mine_decided": "2025-02-13",
+    "mine_act": "2025-02-14",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 269655.9782537421,
+    "seed_mine": 269655.9782537421,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 27,
+    "frozen_decided": "2025-03-10",
+    "frozen_act": "2025-03-11",
+    "mine_decided": "2025-03-10",
+    "mine_act": "2025-03-11",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 247416.20173405058,
+    "seed_mine": 247416.20173405058,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 28,
+    "frozen_decided": "2025-04-11",
+    "frozen_act": "2025-04-12",
+    "mine_decided": "2025-04-11",
+    "mine_act": "2025-04-12",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 293868.99541232147,
+    "seed_mine": 293868.99541232147,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 29,
+    "frozen_decided": "2025-07-25",
+    "frozen_act": "2025-07-26",
+    "mine_decided": "2025-07-25",
+    "mine_act": "2025-07-26",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 340438.46878446353,
+    "seed_mine": 340438.46878446353,
+    "seed_bit_equal": true
+   },
+   {
+    "j": 30,
+    "frozen_decided": "2025-10-13",
+    "frozen_act": "2025-10-14",
+    "mine_decided": "2025-10-13",
+    "mine_act": "2025-10-14",
+    "act_match": true,
+    "decided_match": true,
+    "kind": "band",
+    "seed_frozen": 470226.16119727877,
+    "seed_mine": 470226.16119727877,
+    "seed_bit_equal": true
+   }
+  ],
+  "PASS": true
+ },
+ "harness_triggers": [
+  {
+   "kind": "band",
+   "decided": "2020-03-16",
+   "max_share": 0.16385024331916076,
+   "min_share": 0.07566697347670351,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2020-03-17",
+   "book": 9565.635779858872
+  },
+  {
+   "kind": "band",
+   "decided": "2020-05-18",
+   "max_share": 0.26336666478167536,
+   "min_share": 0.09807421502581533,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2020-05-19",
+   "book": 11485.050319654345
+  },
+  {
+   "kind": "band",
+   "decided": "2020-08-03",
+   "max_share": 0.24297326192292093,
+   "min_share": 0.08050907251010882,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "S5_JPY",
+   "act": "2020-08-04",
+   "book": 15472.624549006727
+  },
+  {
+   "kind": "band",
+   "decided": "2020-09-23",
+   "max_share": 0.19748944818854997,
+   "min_share": 0.07164893759483106,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2020-09-24",
+   "book": 15542.381064603534
+  },
+  {
+   "kind": "band",
+   "decided": "2020-12-17",
+   "max_share": 0.22365267976672698,
+   "min_share": 0.07838331418477505,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2020-12-18",
+   "book": 19542.920920284778
+  },
+  {
+   "kind": "band",
+   "decided": "2021-02-02",
+   "max_share": 0.25043001896947703,
+   "min_share": 0.09896798614301114,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "ZC_EG",
+   "act": "2021-02-03",
+   "book": 27303.596350302007
+  },
+  {
+   "kind": "band",
+   "decided": "2021-02-18",
+   "max_share": 0.19299092033201004,
+   "min_share": 0.07869731434755968,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "ZC_EG",
+   "act": "2021-02-19",
+   "book": 30613.688792946217
+  },
+  {
+   "kind": "band",
+   "decided": "2021-03-08",
+   "max_share": 0.22258677614838931,
+   "min_share": 0.07852946054588433,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2021-03-09",
+   "book": 31201.577621225253
+  },
+  {
+   "kind": "band",
+   "decided": "2021-05-10",
+   "max_share": 0.25751069285622413,
+   "min_share": 0.08495974952960549,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2021-05-11",
+   "book": 37003.12338570455
+  },
+  {
+   "kind": "band",
+   "decided": "2021-05-23",
+   "max_share": 0.16171636084968963,
+   "min_share": 0.08030587177495717,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "S1_ETH",
+   "act": "2021-05-24",
+   "book": 33585.020991137106
+  },
+  {
+   "kind": "band",
+   "decided": "2021-06-17",
+   "max_share": 0.1908294074345892,
+   "min_share": 0.07470691799442387,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2021-06-18",
+   "book": 36473.89218206042
+  },
+  {
+   "kind": "band",
+   "decided": "2021-09-14",
+   "max_share": 0.1942608374057694,
+   "min_share": 0.07790006478936205,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "S5_JPY",
+   "act": "2021-09-15",
+   "book": 40790.63998912877
+  },
+  {
+   "kind": "band",
+   "decided": "2021-11-23",
+   "max_share": 0.22721980463424657,
+   "min_share": 0.08079372308036811,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2021-11-24",
+   "book": 43303.791841889884
+  },
+  {
+   "kind": "band",
+   "decided": "2022-02-28",
+   "max_share": 0.24508653020663618,
+   "min_share": 0.07797059167618112,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "act": "2022-03-01",
+   "book": 45389.895186249225
+  },
+  {
+   "kind": "band",
+   "decided": "2022-03-28",
+   "max_share": 0.2509538074433906,
+   "min_share": 0.09338986720565214,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2022-03-29",
+   "book": 52257.629291150355
+  },
+  {
+   "kind": "band",
+   "decided": "2022-06-08",
+   "max_share": 0.2684282179129252,
+   "min_share": 0.08725958451869767,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2022-06-09",
+   "book": 59967.664520049104
+  },
+  {
+   "kind": "band",
+   "decided": "2022-07-18",
+   "max_share": 0.178514446267099,
+   "min_share": 0.08051121307889485,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2022-07-19",
+   "book": 64119.6008106798
+  },
+  {
+   "kind": "band",
+   "decided": "2022-09-23",
+   "max_share": 0.18515952848364836,
+   "min_share": 0.07451535199254561,
+   "max_sleeve": "S6_OPEXUSD",
+   "min_sleeve": "ZC_EG",
+   "act": "2022-09-24",
+   "book": 63881.057717735326
+  },
+  {
+   "kind": "band",
+   "decided": "2022-12-15",
+   "max_share": 0.2587370651945863,
+   "min_share": 0.0828645745475341,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2022-12-16",
+   "book": 66716.4633742067
+  },
+  {
+   "kind": "band",
+   "decided": "2023-09-01",
+   "max_share": 0.21301392500737118,
+   "min_share": 0.08147840393530613,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "S1_ETH",
+   "act": "2023-09-02",
+   "book": 100047.95655370601
+  },
+  {
+   "kind": "band",
+   "decided": "2024-01-29",
+   "max_share": 0.22089509370670646,
+   "min_share": 0.08112622694401925,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "ZC_EG",
+   "act": "2024-01-30",
+   "book": 126358.72377476531
+  },
+  {
+   "kind": "band",
+   "decided": "2024-04-15",
+   "max_share": 0.26002299817318897,
+   "min_share": 0.08024170508747802,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2024-04-16",
+   "book": 176123.23360189085
+  },
+  {
+   "kind": "band",
+   "decided": "2024-06-26",
+   "max_share": 0.2206506628052902,
+   "min_share": 0.08099443519901857,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2024-06-27",
+   "book": 184139.25263330858
+  },
+  {
+   "kind": "band",
+   "decided": "2024-07-26",
+   "max_share": 0.16656863819246337,
+   "min_share": 0.08131817817160135,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "act": "2024-07-27",
+   "book": 174659.36255180676
+  },
+  {
+   "kind": "band",
+   "decided": "2024-10-17",
+   "max_share": 0.2579724634113398,
+   "min_share": 0.11827470981638943,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "ZC_EG",
+   "act": "2024-10-18",
+   "book": 199187.09228945206
+  },
+  {
+   "kind": "band",
+   "decided": "2024-12-18",
+   "max_share": 0.18041255951286436,
+   "min_share": 0.07693751625393175,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "BOOK_XAU",
+   "act": "2024-12-19",
+   "book": 232478.28049446477
+  },
+  {
+   "kind": "band",
+   "decided": "2025-02-13",
+   "max_share": 0.25871190213564027,
+   "min_share": 0.10199656241973176,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "act": "2025-02-14",
+   "book": 269655.9782537421
+  },
+  {
+   "kind": "band",
+   "decided": "2025-03-10",
+   "max_share": 0.16884155395529046,
+   "min_share": 0.07478963092130847,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_USTEC",
+   "act": "2025-03-11",
+   "book": 247416.20173405058
+  },
+  {
+   "kind": "band",
+   "decided": "2025-04-11",
+   "max_share": 0.256626384998361,
+   "min_share": 0.08066293731453536,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "ZC_EG",
+   "act": "2025-04-12",
+   "book": 293868.99541232147
+  },
+  {
+   "kind": "band",
+   "decided": "2025-07-25",
+   "max_share": 0.236901127066841,
+   "min_share": 0.07626735386810365,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "ZC_EG",
+   "act": "2025-07-26",
+   "book": 340438.46878446353
+  },
+  {
+   "kind": "band",
+   "decided": "2025-10-13",
+   "max_share": 0.2660167138776877,
+   "min_share": 0.09186229251541847,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BTC_REP",
+   "act": "2025-10-14",
+   "book": 470226.16119727877
+  }
+ ],
+ "live_triggers": [
+  {
+   "kind": "band",
+   "decided": "2020-03-16",
+   "max_share": 0.16385024331916076,
+   "min_share": 0.07566697347670351,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": false,
+   "act": "2020-03-17",
+   "book": 9565.635779858872
+  },
+  {
+   "kind": "band",
+   "decided": "2020-05-18",
+   "max_share": 0.26336666478167536,
+   "min_share": 0.09807421502581533,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2020-05-19",
+   "book": 11485.050319654345
+  },
+  {
+   "kind": "band",
+   "decided": "2020-08-03",
+   "max_share": 0.24297326192292093,
+   "min_share": 0.08050907251010882,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "S5_JPY",
+   "harvest_also": false,
+   "act": "2020-08-04",
+   "book": 15472.624549006727
+  },
+  {
+   "kind": "band",
+   "decided": "2020-09-23",
+   "max_share": 0.19748944818854997,
+   "min_share": 0.07164893759483106,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2020-09-24",
+   "book": 15542.381064603534
+  },
+  {
+   "kind": "band",
+   "decided": "2020-12-17",
+   "max_share": 0.22365267976672698,
+   "min_share": 0.07838331418477505,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2020-12-18",
+   "book": 19542.920920284778
+  },
+  {
+   "kind": "band",
+   "decided": "2021-02-02",
+   "max_share": 0.25043001896947703,
+   "min_share": 0.09896798614301114,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2021-02-03",
+   "book": 27303.596350302007
+  },
+  {
+   "kind": "band",
+   "decided": "2021-02-18",
+   "max_share": 0.19299092033201004,
+   "min_share": 0.07869731434755968,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2021-02-19",
+   "book": 30613.688792946217
+  },
+  {
+   "kind": "band",
+   "decided": "2021-03-08",
+   "max_share": 0.22258677614838931,
+   "min_share": 0.07852946054588433,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": false,
+   "act": "2021-03-09",
+   "book": 31201.577621225253
+  },
+  {
+   "kind": "band",
+   "decided": "2021-05-10",
+   "max_share": 0.25751069285622413,
+   "min_share": 0.08495974952960549,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2021-05-11",
+   "book": 37003.12338570455
+  },
+  {
+   "kind": "band",
+   "decided": "2021-05-23",
+   "max_share": 0.16171636084968963,
+   "min_share": 0.08030587177495717,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "S1_ETH",
+   "harvest_also": false,
+   "act": "2021-05-24",
+   "book": 33585.020991137106
+  },
+  {
+   "kind": "band",
+   "decided": "2021-06-17",
+   "max_share": 0.1908294074345892,
+   "min_share": 0.07470691799442387,
+   "max_sleeve": "S1_ETH",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2021-06-18",
+   "book": 36473.89218206042
+  },
+  {
+   "kind": "band",
+   "decided": "2021-09-14",
+   "max_share": 0.1942608374057694,
+   "min_share": 0.07790006478936205,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "S5_JPY",
+   "harvest_also": false,
+   "act": "2021-09-15",
+   "book": 40790.63998912877
+  },
+  {
+   "kind": "band",
+   "decided": "2021-11-23",
+   "max_share": 0.22721980463424657,
+   "min_share": 0.08079372308036811,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2021-11-24",
+   "book": 43303.791841889884
+  },
+  {
+   "kind": "band",
+   "decided": "2022-02-28",
+   "max_share": 0.24508653020663618,
+   "min_share": 0.07797059167618112,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "harvest_also": false,
+   "act": "2022-03-01",
+   "book": 45389.895186249225
+  },
+  {
+   "kind": "band",
+   "decided": "2022-03-28",
+   "max_share": 0.2509538074433906,
+   "min_share": 0.09338986720565214,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": false,
+   "act": "2022-03-29",
+   "book": 52257.629291150355
+  },
+  {
+   "kind": "band",
+   "decided": "2022-06-08",
+   "max_share": 0.2684282179129252,
+   "min_share": 0.08725958451869767,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2022-06-09",
+   "book": 59967.664520049104
+  },
+  {
+   "kind": "band",
+   "decided": "2022-07-18",
+   "max_share": 0.178514446267099,
+   "min_share": 0.08051121307889485,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": false,
+   "act": "2022-07-19",
+   "book": 64119.6008106798
+  },
+  {
+   "kind": "band",
+   "decided": "2022-09-23",
+   "max_share": 0.18515952848364836,
+   "min_share": 0.07451535199254561,
+   "max_sleeve": "S6_OPEXUSD",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2022-09-24",
+   "book": 63881.057717735326
+  },
+  {
+   "kind": "band",
+   "decided": "2022-12-15",
+   "max_share": 0.2587370651945863,
+   "min_share": 0.0828645745475341,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2022-12-16",
+   "book": 66716.4633742067
+  },
+  {
+   "kind": "band",
+   "decided": "2023-09-01",
+   "max_share": 0.21301392500737118,
+   "min_share": 0.08147840393530613,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "S1_ETH",
+   "harvest_also": false,
+   "act": "2023-09-02",
+   "book": 100047.95655370601
+  },
+  {
+   "kind": "band",
+   "decided": "2024-01-29",
+   "max_share": 0.22089509370670646,
+   "min_share": 0.08112622694401925,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2024-01-30",
+   "book": 126358.72377476531
+  },
+  {
+   "kind": "band",
+   "decided": "2024-04-15",
+   "max_share": 0.26002299817318897,
+   "min_share": 0.08024170508747802,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": true,
+   "act": "2024-04-16",
+   "book": 176123.23360189085
+  },
+  {
+   "kind": "band",
+   "decided": "2024-06-26",
+   "max_share": 0.2206506628052902,
+   "min_share": 0.08099443519901857,
+   "max_sleeve": "S5_JPY",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2024-06-27",
+   "book": 184139.25263330858
+  },
+  {
+   "kind": "band",
+   "decided": "2024-07-26",
+   "max_share": 0.16656863819246337,
+   "min_share": 0.08131817817160135,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "harvest_also": false,
+   "act": "2024-07-27",
+   "book": 174659.36255180676
+  },
+  {
+   "kind": "band",
+   "decided": "2024-10-17",
+   "max_share": 0.2579724634113398,
+   "min_share": 0.11827470981638943,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2024-10-18",
+   "book": 199187.09228945206
+  },
+  {
+   "kind": "band",
+   "decided": "2024-12-18",
+   "max_share": 0.18041255951286436,
+   "min_share": 0.07693751625393175,
+   "max_sleeve": "BTC_REP",
+   "min_sleeve": "BOOK_XAU",
+   "harvest_also": false,
+   "act": "2024-12-19",
+   "book": 232478.28049446477
+  },
+  {
+   "kind": "band",
+   "decided": "2025-02-13",
+   "max_share": 0.25871190213564027,
+   "min_share": 0.10199656241973176,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "S5_JPY",
+   "harvest_also": false,
+   "act": "2025-02-14",
+   "book": 269655.9782537421
+  },
+  {
+   "kind": "band",
+   "decided": "2025-03-10",
+   "max_share": 0.16884155395529046,
+   "min_share": 0.07478963092130847,
+   "max_sleeve": "ZC_EG",
+   "min_sleeve": "BOOK_USTEC",
+   "harvest_also": false,
+   "act": "2025-03-11",
+   "book": 247416.20173405058
+  },
+  {
+   "kind": "band",
+   "decided": "2025-04-11",
+   "max_share": 0.256626384998361,
+   "min_share": 0.08066293731453536,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2025-04-12",
+   "book": 293868.99541232147
+  },
+  {
+   "kind": "band",
+   "decided": "2025-07-25",
+   "max_share": 0.236901127066841,
+   "min_share": 0.07626735386810365,
+   "max_sleeve": "BOOK_USTEC",
+   "min_sleeve": "ZC_EG",
+   "harvest_also": false,
+   "act": "2025-07-26",
+   "book": 340438.46878446353
+  },
+  {
+   "kind": "band",
+   "decided": "2025-10-13",
+   "max_share": 0.2660167138776877,
+   "min_share": 0.09186229251541847,
+   "max_sleeve": "BOOK_XAU",
+   "min_sleeve": "BTC_REP",
+   "harvest_also": true,
+   "act": "2025-10-14",
+   "book": 470226.16119727877
+  }
+ ],
+ "live_differential": {
+  "n_triggers_harness": 31,
+  "n_triggers_live": 31,
+  "trigger_dates_identical": true,
+  "date_diffs": [],
+  "seeds_max_abs_diff": 0.0,
+  "final_eqc_live": 532229.8433634703,
+  "final_eqc_equal": true,
+  "n_held_rows": 5,
+  "n_held_rows_decision_differs": 0,
+  "held_rows": [
+   {
+    "seg_start": "2022-09-24",
+    "date": "2022-09-25",
+    "held_slots": [
+     "BOOK_XAU",
+     "S5_JPY",
+     "ZC_EG",
+     "BOOK_USTEC",
+     "S6_OPEXUSD"
+    ],
+    "live_max_share": 0.14285714285714285,
+    "live_min_share": 0.14285714285714285,
+    "bfill_max_share": 0.1534688204983319,
+    "bfill_min_share": 0.13418739804803367,
+    "band_raw_live": false,
+    "band_raw_bfill": false,
+    "band_gated_live": false,
+    "band_gated_bfill": false,
+    "harvest_live": false,
+    "harvest_bfill": false,
+    "decision_differs": false
+   },
+   {
+    "seg_start": "2023-09-02",
+    "date": "2023-09-03",
+    "held_slots": [
+     "BOOK_XAU",
+     "S5_JPY",
+     "ZC_EG",
+     "BOOK_USTEC",
+     "S6_OPEXUSD"
+    ],
+    "live_max_share": 0.14285714285714282,
+    "live_min_share": 0.14285714285714282,
+    "bfill_max_share": 0.14789229678815866,
+    "bfill_min_share": 0.13948037027528445,
+    "band_raw_live": false,
+    "band_raw_bfill": false,
+    "band_gated_live": false,
+    "band_gated_bfill": false,
+    "harvest_live": false,
+    "harvest_bfill": false,
+    "decision_differs": false
+   },
+   {
+    "seg_start": "2024-07-27",
+    "date": "2024-07-28",
+    "held_slots": [
+     "BOOK_XAU",
+     "S5_JPY",
+     "ZC_EG",
+     "BOOK_USTEC",
+     "S6_OPEXUSD"
+    ],
+    "live_max_share": 0.14285714285714288,
+    "live_min_share": 0.14285714285714288,
+    "bfill_max_share": 0.14588987043788879,
+    "bfill_min_share": 0.1351411796047565,
+    "band_raw_live": false,
+    "band_raw_bfill": false,
+    "band_gated_live": false,
+    "band_gated_bfill": false,
+    "harvest_live": false,
+    "harvest_bfill": false,
+    "decision_differs": false
+   },
+   {
+    "seg_start": "2025-04-12",
+    "date": "2025-04-13",
+    "held_slots": [
+     "BOOK_XAU",
+     "S5_JPY",
+     "ZC_EG",
+     "BOOK_USTEC",
+     "S6_OPEXUSD"
+    ],
+    "live_max_share": 0.14285714285714285,
+    "live_min_share": 0.14285714285714285,
+    "bfill_max_share": 0.15150709561653852,
+    "bfill_min_share": 0.13600443464290413,
+    "band_raw_live": false,
+    "band_raw_bfill": false,
+    "band_gated_live": false,
+    "band_gated_bfill": false,
+    "harvest_live": false,
+    "harvest_bfill": false,
+    "decision_differs": false
+   },
+   {
+    "seg_start": "2025-07-26",
+    "date": "2025-07-27",
+    "held_slots": [
+     "BOOK_XAU",
+     "S5_JPY",
+     "ZC_EG",
+     "BOOK_USTEC",
+     "S6_OPEXUSD"
+    ],
+    "live_max_share": 0.1464686235052235,
+    "live_min_share": 0.14189601820276823,
+    "bfill_max_share": 0.16062629675256931,
+    "bfill_min_share": 0.13514457164171637,
+    "band_raw_live": false,
+    "band_raw_bfill": false,
+    "band_gated_live": false,
+    "band_gated_bfill": false,
+    "harvest_live": false,
+    "harvest_bfill": false,
+    "decision_differs": false
+   }
+  ],
+  "max_first_print_lag_days": 2,
+  "per_segment_lags": [
+   {
+    "seg_start": "2020-01-01",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2020-03-17",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2020-05-19",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2020-08-04",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2020-09-24",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2020-12-18",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-02-03",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-02-19",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-03-09",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-05-11",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-05-24",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-06-18",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-09-15",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2021-11-24",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-03-01",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-03-29",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-06-09",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-07-19",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-09-24",
+    "max_first_print_lag_days": 2,
+    "lags": {
+     "BOOK_XAU": 2,
+     "S5_JPY": 2,
+     "S1_ETH": 0,
+     "ZC_EG": 2,
+     "BOOK_USTEC": 2,
+     "S6_OPEXUSD": 2,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2022-12-16",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2023-09-02",
+    "max_first_print_lag_days": 2,
+    "lags": {
+     "BOOK_XAU": 2,
+     "S5_JPY": 2,
+     "S1_ETH": 0,
+     "ZC_EG": 2,
+     "BOOK_USTEC": 2,
+     "S6_OPEXUSD": 2,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-01-30",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-04-16",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-06-27",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-07-27",
+    "max_first_print_lag_days": 2,
+    "lags": {
+     "BOOK_XAU": 2,
+     "S5_JPY": 2,
+     "S1_ETH": 0,
+     "ZC_EG": 2,
+     "BOOK_USTEC": 2,
+     "S6_OPEXUSD": 2,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-10-18",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2024-12-19",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2025-02-14",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2025-03-11",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2025-04-12",
+    "max_first_print_lag_days": 2,
+    "lags": {
+     "BOOK_XAU": 2,
+     "S5_JPY": 2,
+     "S1_ETH": 0,
+     "ZC_EG": 2,
+     "BOOK_USTEC": 2,
+     "S6_OPEXUSD": 2,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2025-07-26",
+    "max_first_print_lag_days": 2,
+    "lags": {
+     "BOOK_XAU": 2,
+     "S5_JPY": 2,
+     "S1_ETH": 0,
+     "ZC_EG": 2,
+     "BOOK_USTEC": 2,
+     "S6_OPEXUSD": 2,
+     "BTC_REP": 0
+    }
+   },
+   {
+    "seg_start": "2025-10-14",
+    "max_first_print_lag_days": 0,
+    "lags": {
+     "BOOK_XAU": 0,
+     "S5_JPY": 0,
+     "S1_ETH": 0,
+     "ZC_EG": 0,
+     "BOOK_USTEC": 0,
+     "S6_OPEXUSD": 0,
+     "BTC_REP": 0
+    }
+   }
+  ],
+  "harvest_headroom_max_slot_over_thr": 1.0288098526509408
+ },
+ "runtime_s": 247.7
+}

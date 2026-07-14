@@ -1,0 +1,255 @@
+{
+ "generated": "2026-07-15T00:57:30.272520",
+ "mirror_of": "mt5/ea/Include/Core/CoreSignal.mqh",
+ "arithmetic": "CsFmaEmul (Dekker/TwoProduct software fma) roll_var \u2014 the MQL5 shape",
+ "M_3_tables": {
+  "opex_equal": true,
+  "opex_n": 375,
+  "opex_ascending": true,
+  "usd_days_equal": true,
+  "usd_rates_equal": true,
+  "jpy_days_equal": true,
+  "jpy_rates_equal": true
+ },
+ "M_1_fullgrid": {
+  "0": {
+   "n": 2123532,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "XAUUSD"
+  },
+  "1": {
+   "n": 2233629,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "USDJPY"
+  },
+  "5": {
+   "n": 2233629,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "USDJPY"
+  },
+  "2": {
+   "n": 2619688,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "ETHUSD"
+  },
+  "3": {
+   "n": 2234313,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "EURGBP"
+  },
+  "4": {
+   "n": 2114245,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "USTEC"
+  },
+  "6": {
+   "n": 2233223,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "AUDUSD"
+  },
+  "7": {
+   "n": 2232575,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "NZDUSD"
+  },
+  "8": {
+   "n": 2925842,
+   "bit_equal": true,
+   "n_not_bit_equal": 0,
+   "max_abs_diff": 0.0,
+   "n_gt_1e12": 0,
+   "discrete_flips": 0,
+   "inst": "BTCUSD"
+  }
+ },
+ "mathpow_telemetry": {
+  "btc_min_hurdle_dist": 0.003705256643905197,
+  "btc_n_hurdle_close_1e9": 0
+ },
+ "M_2_seg_replay": {
+  "segments": 32,
+  "per_leg": {
+   "0": {
+    "n": 2123532,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "XAUUSD",
+    "bit_equal": true
+   },
+   "1": {
+    "n": 2233629,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "USDJPY",
+    "bit_equal": true
+   },
+   "2": {
+    "n": 2619688,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "ETHUSD",
+    "bit_equal": true
+   },
+   "3": {
+    "n": 2234313,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "EURGBP",
+    "bit_equal": true
+   },
+   "4": {
+    "n": 2114245,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "USTEC",
+    "bit_equal": true
+   },
+   "5": {
+    "n": 2233629,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "USDJPY",
+    "bit_equal": true
+   },
+   "6": {
+    "n": 2233223,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "AUDUSD",
+    "bit_equal": true
+   },
+   "7": {
+    "n": 2232575,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "NZDUSD",
+    "bit_equal": true
+   },
+   "8": {
+    "n": 2925842,
+    "n_not_bit_equal": 0,
+    "max_abs_diff": 0.0,
+    "n_gt_1e12": 0,
+    "discrete_flips": 0,
+    "inst": "BTCUSD",
+    "bit_equal": true
+   }
+  }
+ },
+ "M_4_coverage": {
+  "0": {
+   "inst": "XAUUSD",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2123532,
+   "grid_len": 2123532
+  },
+  "1": {
+   "inst": "USDJPY",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2233629,
+   "grid_len": 2233629
+  },
+  "2": {
+   "inst": "ETHUSD",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2619688,
+   "grid_len": 2619688
+  },
+  "3": {
+   "inst": "EURGBP",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2234313,
+   "grid_len": 2234313
+  },
+  "4": {
+   "inst": "USTEC",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2114245,
+   "grid_len": 2114245
+  },
+  "5": {
+   "inst": "USDJPY",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2233629,
+   "grid_len": 2233629
+  },
+  "6": {
+   "inst": "AUDUSD",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2233223,
+   "grid_len": 2233223
+  },
+  "7": {
+   "inst": "NZDUSD",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2232575,
+   "grid_len": 2232575
+  },
+  "8": {
+   "inst": "BTCUSD",
+   "first_stamp_is_grid_start": true,
+   "rows_replayed": 2925842,
+   "grid_len": 2925842
+  }
+ },
+ "fma_emul": {
+  "calls": 78088,
+  "mismatches_vs_hw_fma": 0
+ },
+ "verdicts": {
+  "M_3_pass": true,
+  "M_1_pass": true,
+  "M_2_pass": true,
+  "M_4_pass": true,
+  "fma_emul_bit_equal_hw": true
+ },
+ "runtime_s": 49.8
+}

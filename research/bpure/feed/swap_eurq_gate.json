@@ -1,0 +1,20 @@
+{
+ "generated": "2026-07-15T00:52:49.622868",
+ "outdir": "/Users/dsalamanca/Library/Application Support/net.metaquotes.wine.metatrader5/drive_c/users/crossover/AppData/Roaming/MetaQuotes/Terminal/Common/Files",
+ "perturbation": null,
+ "tables": {
+  "policy_rates": "match",
+  "markups": "match",
+  "instruments": "match",
+  "rollover_dst_days_checked": 2618,
+  "swap_pct_mult": "match"
+ },
+ "positive_control_bh": {
+  "PASS": true,
+  "bars": 92155
+ },
+ "positive_control_coresim": {
+  "PASS": true,
+  "rows": 599565
+ }
+}

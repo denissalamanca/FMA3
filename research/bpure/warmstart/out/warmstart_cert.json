@@ -1,0 +1,265 @@
+{
+ "gate": "FMA3-RECON-9-WS warm-start certifier",
+ "candidate": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/book/out/FMA3_book_state_D.json",
+ "reference": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/warmstart/out/FMA3_book_state_Dref.json",
+ "boundary_epoch": 1656630000,
+ "boundary_utc": "2022-06-30 23:00:00",
+ "mode": "forward",
+ "hours": 960,
+ "strictness": {
+  "blob_mode": "BITWISE (ratified)",
+  "tol_mode": "discrete exact / continuous <= 1e-12 (report-only)"
+ },
+ "D_cold_start": {
+  "a_h_at_t0": 1.0,
+  "b_h_at_t0": 1.0,
+  "a_b_normalized_at_t0": true,
+  "leading_zero_hours_until_first_nonzero_f_sat": {
+   "carry_breakout(960h Donchian)": 1477,
+   "crisis(250d EwmStd)": 496,
+   "meanrev(SMA200d)": 2533,
+   "trend_v2(125d)": 804,
+   "crypto(120d MA)": 2912
+  },
+  "cold_start_signature_present": true,
+  "src": "FMA3_blend_inputs.csv (RECON-4 golden chain)",
+  "meaning": "hours>0 == the sleeve was still warming up from EMPTY state at t0 -> the golden IS cold-started; a >=2019 pre-warm would have produced a signal here at h=0",
+  "in_sample_prewarm_guard": "ARMED \u2014 mode=in_sample + any blob/boundary!=t0 raises InSampleWarmStartRefused"
+ },
+ "A_envelope": {
+  "ok": true,
+  "bytes": 7233148,
+  "note": "fnv64 + eof trailer + schema/version OK"
+ },
+ "B_continuity_latch": {
+  "ok": true,
+  "j": 5.935576542054057,
+  "note": "RECON-8f latch (anchors/j_hour/w/j-splice rel<=1e-9) PASS"
+ },
+ "A_boundary_binding": {
+  "ok": true,
+  "h1_last_ts": 1656630000,
+  "want": 1656630000,
+  "j_hour": 1656626400,
+  "m1_last_ts": 1656626400,
+  "note": "the state must be the frozen chain's state AT the boundary"
+ },
+ "A_manifest": {
+  "ok": true,
+  "errors": [],
+  "n_errors": 0,
+  "note": "11 top / 8 sleeves / 35 glue / 12 core / 4 b_engine required fields DECLARED (not derived)",
+  "reference_errors": []
+ },
+ "E_anchors": {
+  "E1_core_seed_pin": {
+   "ok": true,
+   "got": 532229.8433634703,
+   "want": 532229.8433634703,
+   "src": "export_coresim_inputs.py seed-chain pin"
+  },
+  "E2_fcore_cursor_invariant": {
+   "ok": true,
+   "got": 18675,
+   "want": 18675,
+   "src": "fc_cursor == #{fcore_ts <= last_emit_hour}"
+  },
+  "E3_a_h_vs_golden": {
+   "ok": true,
+   "got": 5.908491316914911,
+   "want": 5.908491316914911,
+   "abs_diff": 0.0,
+   "src": "FMA3_blend_inputs.csv col a @ j_hour (RECON-4 chain)"
+  },
+  "E4_b_h_vs_golden": {
+   "ok": true,
+   "got": 5.998775400712066,
+   "want": 5.998775400712066,
+   "abs_diff": 0.0,
+   "src": "FMA3_blend_inputs.csv col b @ j_hour (RECON-4 chain)"
+  },
+  "E5_b_eqc_vs_bh_golden": {
+   "ok": true,
+   "got": 59987.75400712066,
+   "want": 59987.75400712066,
+   "src": "FMA3_bh_golden_*.csv equity @ m1_last_ts 1656626400"
+  },
+  "E6_cold_t0_anchors": {
+   "ok": true,
+   "got": {
+    "sampler_a.first_v": 10000,
+    "sampler_b.first_v": 10000,
+    "continuity.a_first": 10000,
+    "continuity.b_first": 10000
+   },
+   "want": 10000.0,
+   "src": "t0 COLD-start INIT anchor (a=b=10000 exactly at model t0)"
+  },
+  "E7_continuity_recompute_bitwise": {
+   "ok": true,
+   "mismatched_fields": [],
+   "got": {},
+   "want": {},
+   "src": "recompute_continuity(state) == state.continuity, BITWISE"
+  },
+  "E8_j_identity": {
+   "ok": true,
+   "got": 5.935576542054057,
+   "want": 5.935576542054057,
+   "src": "j == w*a_h + (1-w)*b_h (bitwise, same statement order)"
+  },
+  "E9_t0_anchor_epoch": {
+   "ok": true,
+   "got": {
+    "a.first_ts": 1577923200,
+    "b.first_ts": 1577923200
+   },
+   "want": 1577923200,
+   "src": "model t0 = 2020-01-02 00:00 UTC"
+  }
+ },
+ "E_anchors_ok": true,
+ "P_class_p": {
+  "ok": true,
+  "n_leaves": 518808,
+  "leaf_floor": 100000,
+  "n_diffs": 0,
+  "diffs": [],
+  "covers": "b(balance,lots[31],entry[31],n_trades) + a(seed,fc_cursor,seg_open,carry[9]x4,fcore) + samplers(a,b) + continuity",
+  "strictness": "BITWISE"
+ },
+ "S_class_s": {
+  "ok": true,
+  "n_leaves": 9976,
+  "leaf_floor": 400,
+  "n_discrete": 2161,
+  "n_continuous": 7815,
+  "n_diffs": 0,
+  "n_diffs_that_1e-12_TOL_WOULD_HAVE_PASSED": 0,
+  "diffs": [],
+  "covers": "ewm(weighted,old_wt,nobs) triples, hysteresis ints, ring buffers, Donchian breach flags/state machines, ensemble config, glue queues/rings",
+  "strictness": "BITWISE (tol verdict reported per-diff)"
+ },
+ "reference_diff_ran": true,
+ "R_restore_fidelity": {
+  "mag": {
+   "ok": true,
+   "n_leaves": 26,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "intraday": {
+   "ok": true,
+   "n_leaves": 27,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "meanrev": {
+   "ok": true,
+   "n_leaves": 4232,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "crisis": {
+   "ok": true,
+   "n_leaves": 399,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "seasonal_crypto": {
+   "ok": true,
+   "n_leaves": 498,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "carry_breakout": {
+   "ok": true,
+   "n_leaves": 3514,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "trend_v2": {
+   "ok": true,
+   "n_leaves": 652,
+   "n_diffs": 0,
+   "diffs": []
+  },
+  "b_engine": {
+   "ok": true,
+   "n_leaves": 95,
+   "n_diffs": 0,
+   "diffs": []
+  }
+ },
+ "R_restore_fidelity_ok": true,
+ "C_rederive": {
+  "hours_requested": 960,
+  "hours_compared": 960,
+  "first_hour": 1656630000,
+  "last_hour": 1660096800,
+  "band": 1e-12,
+  "streams": [
+   {
+    "stream": "a_h",
+    "max_abs_diff": 0.0,
+    "pass": true,
+    "worst_at": null
+   },
+   {
+    "stream": "b_h",
+    "max_abs_diff": 0.0,
+    "pass": true,
+    "worst_at": null
+   },
+   {
+    "stream": "f_core[8]",
+    "max_abs_diff": 0.0,
+    "pass": true,
+    "worst_at": null
+   },
+   {
+    "stream": "f_sat[31]",
+    "max_abs_diff": 2.5757174171303632e-14,
+    "pass": true,
+    "worst_at": {
+     "hour": 1659715200,
+     "col": 22,
+     "got": 1.3732560538289644,
+     "want": 1.3732560538289902
+    }
+   },
+   {
+    "stream": "book_frac[33] (vs sha-pinned golden)",
+    "max_abs_diff": 4.99933427988708e-13,
+    "pass": true,
+    "worst_at": {
+     "hour": 1659513600,
+     "sym": "USDJPY",
+     "got": 0.5767812947625,
+     "want": 0.576781294762
+    },
+    "rows_missing_vs_golden": [],
+    "n_missing": 0,
+    "rows_extra_vs_golden": [],
+    "n_extra": 0
+   }
+  ],
+  "ok": true,
+  "probe_seconds": 12.2,
+  "no_cold_start_artifact": true
+ },
+ "sub_checks": {
+  "A_envelope": true,
+  "A_boundary_binding": true,
+  "A_manifest": true,
+  "B_continuity_latch": true,
+  "E_anchors": true,
+  "R_restore_fidelity": true,
+  "P_class_p": true,
+  "S_class_s": true,
+  "C_rederive": true
+ },
+ "failed_checks": [],
+ "verdict": "PASS",
+ "seconds": 14.6
+}

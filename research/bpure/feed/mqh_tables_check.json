@@ -1,0 +1,27 @@
+{
+ "mqh": "/Users/dsalamanca/vs_env/FableMultiAssets3/mt5/ea/Include/Book/SwapEurq.mqh",
+ "PASS": true,
+ "findings": [],
+ "tables_drift_guard": {
+  "policy_rates": "match",
+  "markups": "match",
+  "instruments": "match",
+  "rollover_dst_days_checked": 2618,
+  "swap_pct_mult": "match"
+ },
+ "negative_control_1": {
+  "injected": "SE_SYM_QUOT[USDJPY] = CHF (was JPY)",
+  "FAILED_as_required": true,
+  "findings": [
+   "USDJPY: quote ccy id 4 != JPY",
+   "USDJPY: eurq cross EURCHF != EURJPY"
+  ]
+ },
+ "negative_control_2": {
+  "injected": "SE_RRATE[SE_JPY][2] 0.25 -> 0.35",
+  "FAILED_as_required": true,
+  "findings": [
+   "policy JPY: step table differs from python (4 rows read)"
+  ]
+ }
+}
