@@ -19,6 +19,17 @@ spec for this wave). **Frozen artifact:** FMA3-v34-freeze-1, freeze_hash
 > 03:32). The wave is now READY-TO-RUN: the only remaining step is the
 > owner's in-terminal replay (§4, step 1 now obsolete — start at step 2).**
 
+> **RESULT (2026-07-14 09:16, RECON-8b): PASS.** Owner ran `TestV34Native` in
+> the MT5 terminal (49,379 bars; Experts-log DONE line confirmed).
+> `validate_mql5_book.py` vs the frozen golden `book.parquet`: **max|diff|
+> 4.197e-14, 0/1,530,749 cells above the 1e-12 gate**, 0 NaN, shapes aligned.
+> Worst USA500 4.2e-14 / USTEC 3.6e-14 (last-ULP on the tanh-heavy intraday/
+> trend legs). The native MQL5 v34 signal layer reproduces the shipped book
+> across the full 6 years — the Stage-0-deferred MathRound/banker-tie and
+> transcendental-ULP residuals are measured negligible. Scope: signal-layer
+> arithmetic on the frozen (float32-quantized) input CSV; b_h-native, v7/a_h,
+> the live blender, execution, and live-tick pricing remain Wave 3.
+
 ---
 
 ## 1. Translation status (per unit)
