@@ -1,4 +1,4 @@
-# V3.0 trade characteristics — the 33-symbol netted federation book + faithful execution
+# V3.0 trade characteristics — the 33-symbol netted blend book + faithful execution
 
 **v3.0 is the faithful-executor release.** v1.0 shipped the *model* — a Python record-engine book, the
 `static_fed(0.70)` blend at config hash `51a7541cc2aaa593`. v3.0 ships the EA that provably *executes*
@@ -7,7 +7,7 @@ the **precomputed unified, already-netted `fed_frac` stream** (`FMA3_fed_frac_v3
 `static_fed(0.70)` matrix from [`model/v3/reproduce.py`](../../model/v3/reproduce.py). So the trade
 characteristics live at two layers, kept separate on purpose:
 
-1. **Book composition — structural, from `model/v3`.** Which symbols the federation trades, how the two
+1. **Book composition — structural, from `model/v3`.** Which symbols the blend trades, how the two
    parent books stack, and how the 6 shared symbols net into one column. This is a property of the frozen
    `static_fed(0.70)` matrix (33 columns), and v3 replays it byte-for-byte
    ([EA_V3_DESIGN §3](../../model/v3/EA_V3_DESIGN.md) — the exporter re-parses to `< 1e-12` of `static_fed`
@@ -28,23 +28,23 @@ performance in [PERFORMANCE.md](PERFORMANCE.md).
 
 ### The two parent books and the netting
 
-The federation blends the **v7.0 band book (8 net columns)** and the **v3.4 fixed-fraction replay book
+The Fable book blends the **Core band book (8 net columns)** and the **Satellite fixed-fraction replay book
 (31 columns)**. Their union is **33 distinct symbols**; **6 are shared and NETTED into one column each**
 ([MODEL_SPEC §2](../../model/v3/MODEL_SPEC.md)):
 
 | Sub-book | Columns | Symbols |
 |---|---:|---|
-| **v7.0 band book** (w = 0.70) | 8 | AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD |
-| **v3.4 replay book** (share 0.30) | 31 | the 6 shared below + 25 v3.4-only (FX crosses, indices, metals/energy, SOL) |
+| **Core band book** (w = 0.70) | 8 | AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD |
+| **Satellite replay book** (share 0.30) | 31 | the 6 shared below + 25 Satellite-only (FX crosses, indices, metals/energy, SOL) |
 | **Shared (netted, 6)** | 6 | **BTCUSD, ETHUSD, EURGBP, USDJPY, USTEC, XAUUSD** |
-| **Union** | **33** | 2 v7-only + 6 shared + 25 v3.4-only |
+| **Union** | **33** | 2 Core-only + 6 shared + 25 Satellite-only |
 
-The federation weight is per-hour, per-symbol:
+The blend weight is per-hour, per-symbol:
 `fed[h,k] = f7·(w·aₕ/j) + f34·((1−w)·bₕ/j)`, `j = w·aₕ + (1−w)·bₕ`, `w = 0.70`, where `a,b` are each
 book's **frozen native standalone** equity multiple. On the 6 shared symbols the two books' signed targets
 **sum into one net column before quantization** — opposing demands cancel instead of crossing the spread
-twice. This is the same netting v1.0 measured in the record engine: the federation prints **25,869 fills vs
-26,809 for the parents run separately** (20,403 v3.4 + 6,406 v7), a component of the −2.7pp federation
+twice. This is the same netting v1.0 measured in the record engine: the blend prints **25,869 fills vs
+26,809 for the parents run separately** (20,403 Satellite + 6,406 Core), a component of the −2.7pp blend
 friction. **v3 inherits this netting exactly** — the exporter emits one net `net_frac` per (hour, symbol),
 the EA holds **one net position + one magic per symbol** ([EA_V3_DESIGN §3–4](../../model/v3/EA_V3_DESIGN.md)).
 
@@ -57,35 +57,35 @@ symbol names shown where the repo→broker map applies (`USA500=US500`, `DAX=DE4
 
 | Origin | Symbol | Active share | Origin | Symbol | Active share |
 |---|---|---:|---|---|---:|
-| shared | **XAUUSD** | 98.3% | v3.4 | XNGUSD | 85.9% |
-| shared | **EURGBP** | 95.3% | v3.4 | XTIUSD | 84.0% |
-| shared | **USTEC** | 86.1% | v3.4 | XBRUSD | 82.4% |
-| shared | **BTCUSD** | 74.0% | v3.4 | XAGUSD | 80.8% |
-| shared | **ETHUSD** | 72.0% | v3.4 | USA500 (US500) | 68.9% |
-| shared | **USDJPY** | 69.2% | v3.4 | US30 | 59.4% |
-| v7-only | AUDUSD | 15.0% | v3.4 | DAX (DE40) | 54.1% |
-| v7-only | NZDUSD | 15.0% | v3.4 | JP225 | 51.0% |
-| v3.4 | UK100 | 49.1% | v3.4 | AUDJPY | 47.0% |
-| v3.4 | NZDJPY | 45.4% | v3.4 | CADJPY | 41.8% |
-| v3.4 | SOLUSD | 41.6% | v3.4 | GBPJPY | 37.4% |
-| v3.4 | EURNZD | 35.5% | v3.4 | CADCHF | 33.4% |
-| v3.4 | EURNOK | 29.2% | v3.4 | NZDCAD | 29.2% |
-| v3.4 | AUDNZD | 29.5% | v3.4 | EURCAD | 28.4% |
-| v3.4 | EURCHF | 27.5% | v3.4 | EURSEK | 27.4% |
-| v3.4 | AUDCAD | 23.6% | v3.4 | USDCHF | 12.2% |
-| v3.4 | EURUSD | 1.3% | | | |
+| shared | **XAUUSD** | 98.3% | Satellite | XNGUSD | 85.9% |
+| shared | **EURGBP** | 95.3% | Satellite | XTIUSD | 84.0% |
+| shared | **USTEC** | 86.1% | Satellite | XBRUSD | 82.4% |
+| shared | **BTCUSD** | 74.0% | Satellite | XAGUSD | 80.8% |
+| shared | **ETHUSD** | 72.0% | Satellite | USA500 (US500) | 68.9% |
+| shared | **USDJPY** | 69.2% | Satellite | US30 | 59.4% |
+| Core-only | AUDUSD | 15.0% | Satellite | DAX (DE40) | 54.1% |
+| Core-only | NZDUSD | 15.0% | Satellite | JP225 | 51.0% |
+| Satellite | UK100 | 49.1% | Satellite | AUDJPY | 47.0% |
+| Satellite | NZDJPY | 45.4% | Satellite | CADJPY | 41.8% |
+| Satellite | SOLUSD | 41.6% | Satellite | GBPJPY | 37.4% |
+| Satellite | EURNZD | 35.5% | Satellite | CADCHF | 33.4% |
+| Satellite | EURNOK | 29.2% | Satellite | NZDCAD | 29.2% |
+| Satellite | AUDNZD | 29.5% | Satellite | EURCAD | 28.4% |
+| Satellite | EURCHF | 27.5% | Satellite | EURSEK | 27.4% |
+| Satellite | AUDCAD | 23.6% | Satellite | USDCHF | 12.2% |
+| Satellite | EURUSD | 1.3% | | | |
 
 The book's risk is concentrated in **four lines** — the six shared symbols carry the weight, and of those
-**EURGBP, XAUUSD, USDJPY, USTEC** are the workhorses (both parents' mean-reversion EURGBP; v7 gold stacked
-on v3.4's three gold-touching sleeves; v7 carry + opex USDJPY on v3.4 JPY-cross legs; v7 NASDAQ on v3.4
-index legs). The long tail of ~25 small v3.4 lines is the breadth: FX crosses, indices, metals/energy, SOL.
+**EURGBP, XAUUSD, USDJPY, USTEC** are the workhorses (both parents' mean-reversion EURGBP; Core gold stacked
+on Satellite's three gold-touching sleeves; Core carry + opex USDJPY on Satellite JPY-cross legs; Core NASDAQ on Satellite
+index legs). The long tail of ~25 small Satellite lines is the breadth: FX crosses, indices, metals/energy, SOL.
 
 ---
 
-## Part 2 — The v3.4 sleeve revival (7 previously-dead symbols now trading)
+## Part 2 — The Satellite sleeve revival (7 previously-dead symbols now trading)
 
 **v1/v2 silently killed 7 of the 33 symbols; v3 revives all of them.** The v1/v2 EA's currency-conversion
-had only three branches with a `1/EURUSD` catch-all, so every v3.4 leg whose *quote currency* was JPY, NOK,
+had only three branches with a `1/EURUSD` catch-all, so every Satellite leg whose *quote currency* was JPY, NOK,
 or SEK was mispriced ~10×–117× off — its computed lot size rounded below the broker min-lot and the leg
 **never traded**. Seven symbols were dead ([MODEL_SPEC §6](../../model/v3/MODEL_SPEC.md)):
 
@@ -100,7 +100,7 @@ v3 replaces this with the **full-map eurq**, applied **unconditionally to all 33
 (`USD→EURUSD, JPY→EURJPY, GBP→EURGBP, CHF→EURCHF, NZD→EURNZD, CAD→EURCAD, NOK→EURNOK, SEK→EURSEK`;
 [EA_V3_DESIGN §4 `FedConvert.mqh`](../../model/v3/EA_V3_DESIGN.md)). **FMA3-RECON-4 Run 1 confirmed all 7
 revived symbols trade (> 0 deals each)** on MT5 — the unconditional full-map eurq works end-to-end. These
-are all v3.4-only lines, so their revival adds the crosses/index the federation's breadth was designed to
+are all Satellite-only lines, so their revival adds the crosses/index the blend's breadth was designed to
 carry but had been silently missing under v1/v2.
 
 ---
@@ -113,9 +113,9 @@ held fraction to the model's target `fed_frac·s` — has **median `after/want` 
 
 | Run | Preset | Dial | Seed → v3 equity | v3/model | Rejects | Fidelity (median after/want) |
 |---|---|---|---|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s=1.0 | €10k → €391,873 | **0.84** | 0 | 1.000 (**33/33 symbols**) |
-| 2 | `FED_V3_IC` | s=1.6 | €10k → €2,552,962 | **0.66** | 0 (after volume-limit fix) | 1.000 |
-| 3 | `FED_V3_FTMO` | s=0.7 | €100k → €1,265,541 | **0.95** | 0 | 1.000 (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s=1.0 | €10k → €391,873 | **0.84** | 0 | 1.000 (**33/33 symbols**) |
+| 2 | `FABLE_IC` | s=1.6 | €10k → €2,552,962 | **0.66** | 0 (after volume-limit fix) | 1.000 |
+| 3 | `FABLE_FTMO` | s=0.7 | €100k → €1,265,541 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 **Run 1 (parity, s=1.0) is the composition proof:** all 33 symbols trade, 0 rejects, fidelity 1.000. Where
 v3 can place the order it holds precisely `fed_frac·s` — so any equity gap is pure, named friction, not an

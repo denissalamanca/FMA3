@@ -45,9 +45,9 @@ measured, re-entry spread cost measured. **Bar:** shipped FTMO point must
 beat the FMA3-009 ship by ≥ +8pp gross CAGR at the ≤ 0.05 survival bar.
 
 ### FMA3-010 — FTMO-specific (w, s) joint grid
-The federation w becomes preset-specific (config-only; both parent books
+The blend w becomes preset-specific (config-only; both parent books
 internally unchanged). Evidence seed: the w56 drift probe at s=0.5 PASSED
-everything (P(breach) 0.0069) — v3.4-tilt suppresses exactly the dip days
+everything (P(breach) 0.0069) — Satellite-tilt suppresses exactly the dip days
 that bind. Pre-registered grid: w ∈ {0.40, 0.50, 0.60, 0.70} × s ∈ {0.5,
 0.6, 0.7, 0.8, 0.9, 1.0} evaluated under model v3 + the breaker (if FMA3-008
 adopted), top-down by expected yield, full probe walk at the candidate.
@@ -66,7 +66,7 @@ the funded dial through the challenge, else DECLINE (one dial is simpler).
 
 ### Deliverables at campaign end
 Updated PRESETS.md + registry rows · re-shipped FTMO dial + DASHBOARD_FTMO
-regeneration · an FTMO_STRATEGY.md package doc (v7 standard) with the yield-
+regeneration · an FTMO_STRATEGY.md package doc (Core standard) with the yield-
 vs-IC comparison table and the guardian-EA spec (built only on adoption) ·
 whitepaper addendum.
 

@@ -10,7 +10,7 @@ path, so the warmup cascade cancels in the OWN-vs-JOINT difference.
                     v7_book_frac_1h convention: standalone-equity leverage,
                     each leg carries only its own accumulated sub-account).
   F_joint[inst,h] = sum_legs lots_leg*contract*mid*eurq * W_leg / eqc_leg
-                    (constant federated leverage: each leg sized off its share
+                    (constant blended leverage: each leg sized off its share
                     W_leg of JOINT equity, eq_joint cancels).
 
 The only structural difference is the equity DENOMINATOR per leg (standalone

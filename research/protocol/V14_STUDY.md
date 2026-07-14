@@ -19,8 +19,8 @@ alive.
 
 ## 1. Study question
 
-The federation's structural premise — that the two parent books are
-complementary (daily ρ ≈ 0.35, disjoint drawdown troughs, federation DD
+The blend's structural premise — that the two parent books are
+complementary (daily ρ ≈ 0.35, disjoint drawdown troughs, blend DD
 sub-additive in the parents') — is currently evidenced ONLY on 2020–2025 plus
 4 forward months (2026H1). **Does the complementarity hold on 2015–2019, five
 years that predate every FMA3 design decision?**
@@ -31,10 +31,10 @@ changes any 2020–25 number.
 
 2020–25 calibration values (already published, `research/outputs/
 composite_benchmark.json` M-0 — restated here so the 2015–19 read has a fixed
-reference): ρ_full = +0.351; yearly ρ ∈ [0.115, 0.460]; v3.4's DD state at
-v7's trough (2021-05-23) = 0.23%; v7's DD state at v3.4's trough (2022-02-10)
-= 3.90%; each book's mean return on the other's 10 worst days = −2.93% (v3.4
-on v7's) / −1.41% (v7 on v3.4's).
+reference): ρ_full = +0.351; yearly ρ ∈ [0.115, 0.460]; Satellite's DD state at
+Core's trough (2021-05-23) = 0.23%; Core's DD state at Satellite's trough (2022-02-10)
+= 3.90%; each book's mean return on the other's 10 worst days = −2.93% (Satellite
+on Core's) / −1.41% (Core on Satellite's).
 
 ## 2. What this study is NOT
 
@@ -52,7 +52,7 @@ on v7's) / −1.41% (v7 on v3.4's).
 
 ## 3. Data readiness map (measured 2026-07-10, schema-level checks only)
 
-### 3.1 v7 book — NSF5 `cache/bars_1m_ext` (10 instruments, `<SYM>_2015_2025_1m.parquet`, Duka schema, tz-naive TRUE UTC)
+### 3.1 Core book — NSF5 `cache/bars_1m_ext` (10 instruments, `<SYM>_2015_2025_1m.parquet`, Duka schema, tz-naive TRUE UTC)
 
 Feed construction (NSF5 `mt5/reconcile/v72/build_extended_bars.py`): 2015–2019
 portion = Duka **bid-only M1** from `/Users/dsalamanca/vs_env/data/extended/`
@@ -61,7 +61,7 @@ from the real 2020–25 bars**, `n_ticks=1` everywhere, concatenated with the
 real 2020–25 Duka bars. Verified 2026-07-10: all 10 files present; pre-2020
 portions have `n_ticks` uniformly 1 and a single constant `spread_mean`.
 
-| v7 sleeve | Instrument(s) | Ext coverage | Verdict |
+| Core sleeve | Instrument(s) | Ext coverage | Verdict |
 |---|---|---|---|
 | BOOK_XAU | XAUUSD | 2015-01-01 → | **BUILDABLE-WITH-CAVEAT** (synthetic constant spread) |
 | BOOK_USTEC | USTEC → **USA500 proxy** | USA500 2015-01-02 → ; USTEC ABSENT from bars_1m_ext (raw USTEC M1 2015–2020 exists unbuilt in `data/extended/`) | **BUILDABLE-WITH-CAVEAT** (proxy corr 0.89, the NSF5 lock_v5 / FMA3-FWD convention; committed here — no mid-study switch to a fresh USTEC build) |
@@ -89,12 +89,12 @@ to 2015 for FX/gold/index; the same upstream files feed FMA2's
 research_cache_ext, which passed FMA2's own adjudicated pre-period runs).
 **What is NOT trustworthy:** (a) pre-2020 execution costs (constant synthetic
 spread, `n_ticks=1` — any liquidity-gated logic sees a degenerate feed);
-(b) ANY book-level v7 number from the ext pipeline until its 2020–25 anchor
+(b) ANY book-level Core number from the ext pipeline until its 2020–25 anchor
 reconciles. Diagnosis of the anchor is NSF5-side prerequisite work and is NOT
-part of this study; the study simply refuses to produce a v7-side 2015–19
+part of this study; the study simply refuses to produce a Core-side 2015–19
 number until the Phase-0 gate (§4) passes.
 
-### 3.2 v3.4 book — FMA2 `research_cache_ext` (34 syms, `<SYM>_1h.parquet`, 2015-01-02 → 2020-12-31, tz-naive broker server time, ASSIGNED per-class spreads)
+### 3.2 Satellite book — FMA2 `research_cache_ext` (34 syms, `<SYM>_1h.parquet`, 2015-01-02 → 2020-12-31, tz-naive broker server time, ASSIGNED per-class spreads)
 
 Verified 2026-07-10: 34/37 universe symbols present (missing SOLUSD, XRPUSD,
 XPTUSD — none load-bearing pre-2020; SOL launches 2020); USTEC and USA500 both
@@ -102,7 +102,7 @@ present 2015+; BTCUSD from 2017-05-08, ETHUSD from 2017-12-12. Spreads are
 ASSIGNED per asset class (`build_cache_2015.py` REL_SPREAD) on single-price
 sources — edge-persistence grade, explicitly NOT worst-mark.
 
-| v3.4 sleeve (F3-cap weight) | Ext coverage | Verdict |
+| Satellite sleeve (F3-cap weight) | Ext coverage | Verdict |
 |---|---|---|
 | meanrev (0.110) | full | **BUILDABLE-WITH-CAVEAT** (assigned spreads) |
 | carry_breakout (0.046) | full | **BUILDABLE-WITH-CAVEAT** |
@@ -115,28 +115,28 @@ sources — edge-persistence grade, explicitly NOT worst-mark.
 
 Proven path: FMA2 `research/run_oos_2015.py` already ran the sleeve set on
 this exact cache (v2.0 pre-period one-shot, book Sharpe 0.93) — the machinery
-works; v1.4 re-composes it with the v3.4 F3-cap weights (`eval_v34_pin_s10.py`
+works; v1.4 re-composes it with the Satellite F3-cap weights (`eval_v34_pin_s10.py`
 V2_CAPS + MAG@0.05, `ensemble.combine`, NO renormalise, ×SCALE 10,
 `apply_hard_limits`) and the hourly fast-sim `core.simulate` instead of the 1m
 engine.
 
-**Selection disclosure (honesty, committed up front):** the v3.4 book is not
+**Selection disclosure (honesty, committed up front):** the Satellite book is not
 fully design-blind on 2015–19. (a) `mag_xau` was ADOPTED because of its
 2015–19 gauntlet performance (Stage-2 Sharpe 0.62 on this window); (b) the F3
-conviction caps that set the v3.4 weights used 2015–19 durability evidence
+conviction caps that set the Satellite weights used 2015–19 durability evidence
 (crisis cap set down on 2015–19 Sharpe −0.10). The study's claims are about
-FEDERATION-LEVEL co-movement, which neither selection targeted, but the
+BLEND-LEVEL co-movement, which neither selection targeted, but the
 contamination is disclosed in the report verbatim as written here.
 
-### 3.3 Federation coverage windows (committed)
+### 3.3 Blend coverage windows (committed)
 
-- **W-A (headline) 2015-01-02 → 2019-12-31**: v7 = core-5 (no S1_ETH /
+- **W-A (headline) 2015-01-02 → 2019-12-31**: Core = core-5 (no S1_ETH /
   BTC_REP before their data starts; crypto sleeves enter at the 2018-01-01
-  crypto re-split calendar); v3.4 = 8 sleeves with crypto_smart contributing
+  crypto re-split calendar); Satellite = 8 sleeves with crypto_smart contributing
   only from its data start. Coverage disclosed in the report as a per-sleeve
   first/last-date table (§5 N6).
 - **W-B (secondary) 2018-01-01 → 2019-12-31**: both books at full sleeve
-  complement (v7 full-7, v3.4 full-8).
+  complement (Core full-7, Satellite full-8).
 
 Refutation triggers (§6) are evaluated on **both** windows; either window can
 refute (a falsification attempt maximises its own chance of failing).
@@ -150,14 +150,14 @@ breach, tail, or shippable-scale numbers are produced.
   iteration on the PIPELINE is allowed here because no 2015–19 number exists
   yet; the instant any 2015–19 number is produced, Phase-1 one-shot discipline
   applies):**
-  - **A1 (v7):** the ext pipeline (NSF5 `v72/extended_run.py` conventions,
+  - **A1 (Core):** the ext pipeline (NSF5 `v72/extended_run.py` conventions,
     read-only reuse) run on the 2020–2025 portion of `bars_1m_ext` must
     reproduce the pinned R10 close-mark panel — CAGR 108.50%, DDrel 18.84% —
     within **|ΔCAGR| ≤ 3pp AND |ΔDDrel| ≤ 2pp**. Known state at commit: FAILS
-    (71%/44%); the NSF5-side diagnosis must land first. A1 failure ⇒ the v7
-    side and the federation measurements are **BLOCKED**; the study does not
+    (71%/44%); the NSF5-side diagnosis must land first. A1 failure ⇒ the Core
+    side and the blend measurements are **BLOCKED**; the study does not
     run and 2015–19 is not consumed by FMA3.
-  - **A2 (v3.4):** the v3.4-composition hourly fast-sim on FMA2
+  - **A2 (Satellite):** the Satellite-composition hourly fast-sim on FMA2
     `research_cache` (2020–25, 37 syms) must land in the documented Tier-0
     fast-sim band vs the 1m pin (CAGR 88.66%, maxDD 21.67% worst-mark):
     **CAGR ∈ [0.95×, 1.18×] of pin = [84.2%, 104.6%] AND close-mark daily
@@ -166,11 +166,11 @@ breach, tail, or shippable-scale numbers are produced.
   - Tolerances are reconciliation gates, not knobs: a Phase-0 failure is a
     BLOCKED verdict, never a licence to widen the bands.
 - **Phase 1 — one shot.** Build both books' 2015–19 daily equity curves in
-  the SAME conventions that passed Phase 0 (v7: 10-instrument ext feed, USA500
+  the SAME conventions that passed Phase 0 (Core: 10-instrument ext feed, USA500
   proxy, extended re-split EDGES from 2015-01-01, crypto EDGES from
-  2018-01-01, R10 close-mark band_sim panel; v3.4: F3-cap composition ×10,
+  2018-01-01, R10 close-mark band_sim panel; Satellite: F3-cap composition ×10,
   hard limits, hourly fast-sim on research_cache_ext, daily close resample).
-- **Federation bookkeeping (on top, no engine):** static w = 0.70 (the shipped
+- **Blend bookkeeping (on top, no engine):** static w = 0.70 (the shipped
   v1.0 split), virtual sub-accounts seeded (0.70, 0.30), each compounding its
   own book's daily returns, NO rebalancing (the shipped book is static),
   E_fed = E_v7 + E_v34. Scale/leverage is irrelevant to ρ and to the DD
@@ -189,18 +189,18 @@ identically to `scripts/derive_composite.py` M-0:
 
 - **N1** ρ_daily_full between the two parent books, on W-A and on W-B.
 - **N2** ρ_daily by calendar year, 2015…2019.
-- **N3** On-worst-days: v3.4's mean daily return on v7's 10 worst days and
+- **N3** On-worst-days: Satellite's mean daily return on Core's 10 worst days and
   vice versa, plus the two 10-day tables (date, both books' returns) — per
   window W-A and W-B.
 - **N4** Co-drawdown: each book's own DD state on the date of the other's
   window trough, plus both trough dates — per window.
-- **N5** DD relation: maxDD(v7), maxDD(v3.4), maxDD(fed static-w70), the
+- **N5** DD relation: maxDD(Core), maxDD(Satellite), maxDD(fed static-w70), the
   weighted-sum reference w·DD_v7 + (1−w)·DD_v34, and the sub-additivity gap
   min(parent DDs) − DD_fed — per window.
 - **N6** Coverage table: per sleeve per book, first/last active date and
   days present in each window (the honesty disclosure that scopes every claim).
 
-Explicitly excluded: parent or federation CAGR / Sharpe / quarterly P&L /
+Explicitly excluded: parent or blend CAGR / Sharpe / quarterly P&L /
 breach / tail on 2015–19. If a future question needs them, that is a new
 pre-registration.
 
@@ -221,7 +221,7 @@ Verdict semantics:
 - **CONFIRMATION** (no trigger fires): a robustness paragraph in the
   whitepaper, quoting N1–N6 with the §3 coverage caveats verbatim. No number
   anywhere else changes.
-- **REFUTATION** (any trigger fires): an honest downgrade of the federation's
+- **REFUTATION** (any trigger fires): an honest downgrade of the blend's
   forward expectation in the whitepaper + a **scale review opened as its own
   versioned item** (the review is a new pre-registration; nothing is re-picked
   inside v1.4). 2020–25 numbers unchanged.
@@ -230,8 +230,8 @@ Verdict semantics:
 - **BLOCKED** (Phase-0 anchor fails): the study does not run, no 2015–19
   number is produced or looked at, the ledger entry records BLOCKED with the
   failing anchor values, and the NSF5 anchor diagnosis becomes the
-  prerequisite work item. Partial unblocking is NOT allowed (no "v3.4-side
-  only" study: the study question is the federation, and a one-book run would
+  prerequisite work item. Partial unblocking is NOT allowed (no "Satellite-side
+  only" study: the study question is the blend, and a one-book run would
   consume the window's one-shot value).
 
 Either result is valuable; neither changes 2020–25 numbers. (ROADMAP.md v1.4,
@@ -245,7 +245,7 @@ NSF5's F3/durability evidence — no fresh-data ethics issue (ROADMAP.md v1.4),
 but it is logged: **ledger entry FMA3-007 (reserved)** — measurement /
 falsification study, no adoption decision, one Phase-1 evaluation. Engine
 ledger cost: Phase 0 = 2 anchor reproductions on already-mined 2020–25 data
-(not selection); Phase 1 = 1 federation measurement on 2015–19.
+(not selection); Phase 1 = 1 blend measurement on 2015–19.
 
 ## 8. Runner contract
 
@@ -264,7 +264,7 @@ ledger cost: Phase 0 = 2 anchor reproductions on already-mined 2020–25 data
 Expected runtime (documented, not yet measured): Phase 0 A2 ≈ 5–15 min
 (hourly fast-sim, 37 syms × 6y); Phase 0 A1 ≈ 15–45 min (NSF5 sleeve builds on
 10 × 6y 1m bars); Phase 1 ≈ 20–60 min (both books, 2015–19 + ext EDGES);
-federation bookkeeping ≈ seconds. Total ≈ 45–120 min, single process, several
+blend bookkeeping ≈ seconds. Total ≈ 45–120 min, single process, several
 GB RAM. **Must not run while the pre-registered H-RISK/H-TAIL queue is
 alive.**
 

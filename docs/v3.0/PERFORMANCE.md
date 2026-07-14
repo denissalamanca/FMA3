@@ -1,7 +1,7 @@
 # V3.0 performance analysis
 
 **v3.0 is the faithful-executor release.** v1.0 shipped the **model** — a Python record-engine book
-(the static federation of the v7.0 band book at capital share w = 0.70 and the v3.4 fixed-fraction
+(the static blend of the Core band book at capital share w = 0.70 and the Satellite fixed-fraction
 book at 0.30, run through FMA2's 1-minute worst-mark single cross-margined account engine). v3.0
 ships the **EA that provably executes that model on MT5** (`FableFederation_V3.ex5`, sha
 `740da0ff…`), plus the honest deployable reality: the dials, the three physical constraints, and the
@@ -23,7 +23,7 @@ NOT read a model number as a deployable promise.** Structure and mechanics in
 
 ## Headline — the model of record (two dials, frozen)
 
-The IC and FTMO dashboards are the **same federated blend at two scale dials `s`** through the same
+The IC and FTMO dashboards are the **same blended book at two scale dials `s`** through the same
 1m worst-mark engine ([MODEL_SPEC](../../model/v3/MODEL_SPEC.md)):
 
 | Preset | Seed | Dial | Final equity | CAGR | MaxDD (worst-mark) | Sharpe | Extras |
@@ -52,9 +52,9 @@ Three tester runs, IC Markets account 11078280, 1m-OHLC, HEDGING, 1:500 for repr
 
 | Run | Preset | Dial | Seed | v3 equity | Model | v3/model | Rejects | Fidelity (median after/want) |
 |---|---|---|---:|---:|---:|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84×** | 0 | **1.000** (33/33 symbols) |
-| 2 | `FED_V3_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66×** | 0¹ | **1.000** |
-| 3 | `FED_V3_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95×** | 0 | **1.000** (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84×** | 0 | **1.000** (33/33 symbols) |
+| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66×** | 0¹ | **1.000** |
+| 3 | `FABLE_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95×** | 0 | **1.000** (0 volume-capped) |
 
 ¹ After the volume-limit fix (sha `740da0ff…`): 0 rejects, €2,552,961.62 (physical cap). The
 pre-fix build spun on volume-limited legs (retried the un-holdable excess every bar); the clamp
@@ -65,7 +65,7 @@ removes the spin and the equity is unchanged, because the cap is physical.
 1. **v3 holds the model's exact target position.** `after/want` — v3's held fraction over the
    model's target fraction — has **median 1.000, p10 = 1.000** in all three runs. Where v3 *can*
    place the order, it holds precisely `fed_frac·s`.
-2. **The v34 sleeve is alive.** All 33 symbols trade, including the 7 that were silently dead in
+2. **The Satellite sleeve is alive.** All 33 symbols trade, including the 7 that were silently dead in
    v1/v2 via an `EurPerQuote` quote-currency bug (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK,
    EURSEK) — v3's unconditional full-map `eurq` (8 quote currencies) revives them end-to-end.
 3. **The breaker works.** FTMO fired **28×** (model 26) on the previous-server-day-close anchor +
@@ -152,7 +152,7 @@ volume, sets the IC dial*. Volume is a large-account / high-leverage capacity co
 | Preset | Ship dial | Basis | Status |
 |---|---|---|---|
 | **IC** | **s = 1.6** | EUR 2.55M @ 1:30, min ML **121%** (vs IC's 50% stop-out, owner's ML≥110% floor), worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12; PROVISIONAL** pending real-tick intra-bar min-ML confirm (>110%) |
-| **FTMO** | **s ≈ 0.5** RECOMMENDED | sweep ret/DD 4.78, worst-DD **7.8%** vs s0.7's 13.3%; warm-COVID flag says s0.7 breaches the −10% rule | **PROVISIONAL** pending a 1:100 confirm run (FED_V3_FTMO_S04/05) |
+| **FTMO** | **s ≈ 0.5** RECOMMENDED | sweep ret/DD 4.78, worst-DD **7.8%** vs s0.7's 13.3%; warm-COVID flag says s0.7 breaches the −10% rule | **PROVISIONAL** pending a 1:100 confirm run (FABLE_FTMO_S04/05) |
 
 The IC decision reverses the pre-v3 "not deployable at 1:30" flag: v3's self-limiting margin cap
 makes s=1.6 liquidation-safe at retail 1:30 (min ML 121%, ~11pp over the owner's floor). The final
@@ -181,7 +181,7 @@ crisis flag; margin is a non-issue at 1:100, so the FTMO −10%/−5% rules do t
   favours s=0.5. Do not deploy s=0.7 on FTMO on the strength of the 0.95× reproduction alone.
 - **The crisis tail is engine-relative and the deployable tail is unknown.** The 8.12% IC crisis
   tail is a 1m worst-mark number; the parents' measured tick↔1m gap on COVID is ~6.5× (35.6% vs
-  ~5.5% for v7). No tick run of the federation exists — MT5 real-tick on the owner's machine is the
+  ~5.5% for Core). No tick run of the blend exists — MT5 real-tick on the owner's machine is the
   arbiter, not this document.
 - **Friction compounds with leverage and is real.** The 0.95× → 0.84× → 0.66× ladder is spread,
   commission, volume caps, and margin — priced by the tester, not assumed away. Every gap is a named

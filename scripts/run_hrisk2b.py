@@ -29,7 +29,7 @@ sys.path.insert(0, str(_FMA3 / "engine"))
 sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE  # noqa: E402
-from run_hrisk1 import static_fed  # noqa: E402
+from run_hrisk1 import static_blend  # noqa: E402
 
 S_GRID = (0.4, 0.5, 0.6, 0.7, 0.8)
 W_PROBES = (0.56, 0.84)
@@ -130,7 +130,7 @@ def main() -> int:
         probe_ok = True
         for wp in W_PROBES:
             lbl = f"hrisk2b_probe_w{int(wp*100)}_s{int(round(cand*100))}"
-            r = RE.run_record(static_fed(wp) * cand, label=lbl,
+            r = RE.run_record(static_blend(wp) * cand, label=lbl,
                               verbose=False, initial=100_000.0,
                               run_bootstrap=False)
             sc = score(r["curves"]["equity"], r["curves"]["worst"])

@@ -3,7 +3,7 @@
 **The operator's plan for the MT5 demo forward-test of FMA3 v3.0 — the release where, for the first
 time, there IS a single FMA3 EA.** v1.0 shipped the *model* (a Python 1-minute worst-mark record
 engine) executed live as two parent EA stacks plus a capital split. v3.0 ships
-[`FableFederation_V3`](../../mt5/ea/FableFederation_V3.mq5) — one binary that *provably executes that
+[`FableFederation_V3`](../../mt5/ea/FableBook.mq5) — one binary that *provably executes that
 model* by replaying a precomputed, already-netted 33-symbol `fed_frac` stream and sizing each symbol
 off account **balance**. This doc says exactly what to deploy (one EA, two presets, one stream), how
 the two shipped dials map onto the single `InpScale` knob, what fingerprints to watch, the
@@ -51,12 +51,12 @@ physical constraints (below), not a defect.
 
 | Run | Preset | Dial | v3 equity | Model | v3/model | Rejects | Fidelity (median `after/want`) |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s=1.0 | **€391,873** | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
-| 2 | `FED_V3_IC` | s=1.6 | **€2,552,962** | €3,872,872 | **0.66** | 0 (after volume-limit fix) | 1.000 |
-| 3 | `FED_V3_FTMO` | s=0.7 | **€1,265,541** | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s=1.0 | **€391,873** | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
+| 2 | `FABLE_IC` | s=1.6 | **€2,552,962** | €3,872,872 | **0.66** | 0 (after volume-limit fix) | 1.000 |
+| 3 | `FABLE_FTMO` | s=0.7 | **€1,265,541** | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 **VERDICT (FMA3-RECON-4): v3 is the faithful executor.** All 33 symbols trade — including the 7
-v34-sleeve legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) that were silently dead in
+Satellite-sleeve legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) that were silently dead in
 v1/v2 via the EurPerQuote quote-currency bug — now revived by v3's unconditional full-map eurq. The
 FTMO breaker fired **28** times vs the model's 26 (v3's worst-mark is marginally more sensitive —
 conservative). Where v3 *can* place the order it holds precisely `fed_frac·s`; every euro of the
@@ -105,24 +105,24 @@ capacity concern only; it never binds at FTMO scale (Run 3, 0 volume caps).
    min-ML headroom differs; see the dials).
 2. **Install the stream.** The unified fed_frac stream lives at
    [`research/outputs/mt5/FMA3_fed_frac_v3.csv`](../../research/outputs/mt5/FMA3_fed_frac_v3.csv).
-   Regenerate + install with `python3 scripts/export_fed_frac_v3.py --install` (copies to MT5
+   Regenerate + install with `python3 scripts/export_book_frac_v3.py --install` (copies to MT5
    `Common\Files`). The exporter **hard-fails** unless (a) the re-parsed matrix reproduces
    `static_fed(0.70)` to < 1e-12 and (b) `--verify-engine` reproduces €3,872,872 (IC) and €1,332,404
    (FTMO) to the euro. Record the printed file **sha256 `d00b614b…`** in the RECON ledger row — the
    EA's header hash-gate rejects a stream whose config hash ≠ `51a7541cc2aaa593`.
-3. **Compile the EA.** Build `FableFederation_V3.mq5` + `Include/FMA3v3/` in MetaEditor (expect
+3. **Compile the EA.** Build `FableBook.mq5` + `Include/FMA3v3/` in MetaEditor (expect
    **0 errors / 0 warnings**); confirm the `.ex5` sha256 is **`740da0ff…`** and record it. A changed
    `.ex5` hash re-opens all reconciliation gates (RECONCILIATION §Standing test).
 4. **Market Watch — the 33-symbol union + the 8 EUR crosses.** The stream is already broker-mapped
-   (`USA500=US500; DAX=DE40` applied at emit); the v7 US-index sleeve trades **USTEC** (`InpUS500=USTEC`
+   (`USA500=US500; DAX=DE40` applied at emit); the Core US-index sleeve trades **USTEC** (`InpUS500=USTEC`
    upstream). Ensure the 8 conversion crosses resolve: `EURUSD, EURJPY, EURGBP, EURCHF, EURNZD,
    EURCAD, EURNOK, EURSEK` (the full-map eurq; a missing cross makes any leg quoted in that currency
    skip-loud). Any symbol that fails `SymbolSelect` logs a WARN and simply does not size.
 5. **Attach + load the preset.** Attach to an **M1 24/7-clock chart** (ETHUSD or BTCUSD — crypto so
    the H1 causal boundary ticks over weekends), enable AutoTrading, load the preset:
-   - **IC:** [`FED_V3_IC.set`](../../mt5/ea/presets/FED_V3_IC.set) — `InpScale=1.6`,
+   - **IC:** [`FABLE_IC.set`](../../mt5/ea/presets/FABLE_IC.set) — `InpScale=1.6`,
      `InpInitial=10000`, `InpDailyStopX=0.0` (breaker off).
-   - **FTMO:** [`FED_V3_FTMO.set`](../../mt5/ea/presets/FED_V3_FTMO.set) — `InpScale=0.7`,
+   - **FTMO:** [`FABLE_FTMO.set`](../../mt5/ea/presets/FABLE_FTMO.set) — `InpScale=0.7`,
      `InpInitial=100000`, `InpDailyStopX=3.0` (daily breaker).
    Both keep the engine constants byte-fixed: `InpMarginCap=0.9`, `InpRebalBand=0.25`,
    `InpMagicBase=3900000` (one magic per symbol, `+idx+1`).
@@ -145,7 +145,7 @@ dial.** The two shipped presets and their deployment status:
 | Preset | Ship dial | Account / leverage | Reproduced equity | Margin fingerprint | Status |
 |---|---|---|---:|---|---|
 | **IC** | **s = 1.6** | €10k / **1:30** | **€2,552,962** (0.66× record) | **min ML 121%** (IC stop-out 50%; ~11pp over the ML≥110% floor); worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12, PROVISIONAL** — pending a real-tick intra-bar **min-ML > 110%** confirm |
-| **FTMO** | **s ≈ 0.5 (recommended)** | €100k / **1:100** | (sweep) ret/DD **4.78**, worst-DD **7.8%** | margin a non-issue at 1:100; the −10%/−5% rules govern | **PROVISIONAL** — pending a 1:100 confirm run (`FED_V3_FTMO_S04/05`) |
+| **FTMO** | **s ≈ 0.5 (recommended)** | €100k / **1:100** | (sweep) ret/DD **4.78**, worst-DD **7.8%** | margin a non-issue at 1:100; the −10%/−5% rules govern | **PROVISIONAL** — pending a 1:100 confirm run (`FABLE_FTMO_S04/05`) |
 
 Three honest notes on those dials:
 
@@ -158,11 +158,11 @@ Three honest notes on those dials:
   puts ret/DD at its peak **s=0.5** (4.78, worst-DD 7.82%) vs s=0.7's (4.05, 13.33%); the warm-COVID
   honesty flag says s=0.7 + the 3% breaker **breaches the −10% rule by 7.5–10.8pp** in a warm-start
   crisis (crisis-safe dial ≈ s0.30–0.35). So the demo runs **s≈0.5** — safer DD, same clean 0.95×
-  fidelity class, and volume never binds at €100k. `FED_V3_FTMO.set` (s=0.7) stays the *dashboard-
-  reproduction* preset; `FED_V3_FTMO_S05.set` is the deployment candidate.
+  fidelity class, and volume never binds at €100k. `FABLE_FTMO.set` (s=0.7) stays the *dashboard-
+  reproduction* preset; `FABLE_FTMO_S05.set` is the deployment candidate.
 - **The stream is dial-agnostic — `s` is NOT baked into the file.** One `FMA3_fed_frac_v3.csv` serves
   both presets; changing the dial is a one-line preset edit, never a re-export or rebuild. The
-  s-sweep presets already exist: `FED_V3_IC_S06/07/08.set`, `FED_V3_FTMO_S04/05.set`.
+  s-sweep presets already exist: `FABLE_IC_S06/07/08.set`, `FABLE_FTMO_S04/05.set`.
 
 ---
 
@@ -216,7 +216,7 @@ fidelity, ML trough, reject count** — are first-class.
 | **Position fidelity** (the defining v3 test) | per bar, per symbol, `after/want` ≈ **1.000** (RECON-4 median 1.000, p10 1.000, all 3 runs) — v3 holds precisely `fed_frac·s` | sustained `after/want` drift off 1.0 on a symbol that is NOT volume-capped → the EA is not executing the model; audit the EA vs spec **first** (RECONCILIATION §Suspect 1) |
 | **ML trough** (the survival signal, not DD%) | IC s=1.6 @ 1:30: **min ML 121%** across the whole backtest (stop-out 50%). FTMO s=0.7: min ML **376%**, median **1346%** | IC live min ML trending toward the owner's **110%** floor → the intra-bar wick the real-tick run is checking; ML toward 50% is liquidation proximity |
 | **Reject count** | **0** at both deployable dials (Runs 1 & 3, and Run 2 after the volume-limit clamp) | ANY nonzero `rejects` in `fma3v3_health.csv` → STOP and diagnose. Volume-limited spin (the pre-fix Run 2 pathology, 51,346 reject spins) or min-lot at small scale are the first suspects |
-| **Symbol coverage** (v34 revival) | all **33** symbols place ≥1 deal — including the 7 revived legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) | any of the 33 silent for the session → a `SymbolSelect` / eurq-cross failure (the exact v1/v2 dead-sleeve signature) |
+| **Symbol coverage** (Satellite revival) | all **33** symbols place ≥1 deal — including the 7 revived legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) | any of the 33 silent for the session → a `SymbolSelect` / eurq-cross failure (the exact v1/v2 dead-sleeve signature) |
 | **FTMO breaker cadence** | fires **~26–28×** over the sample, on the **previous server-day CLOSE** anchor + worst-mark `eq_w`; flatten-all + halt to next rollover | breaker firing far more/less often, or anchoring on the wrong day → the Guardian re-anchor logic; a fire that does not flatten every leg |
 | **Equity vs the friction class** | IC **0.66×**, PARITY **0.84×**, FTMO **0.95×** of the record — the friction ratio is the honest yardstick, NOT the €3.87M | live equity materially *above* its friction class (e.g. IC > 0.66×) → an over-leveraging or accounting error, investigate — a real account cannot beat a frictionless model (RECONCILIATION Gate 1) |
 | **Compounding base** | sizing tracks `ACCOUNT_BALANCE` (realized cash), re-derived every M1 bar; the 0.25 band suppresses churn | sizing off equity (floating included) or failing to re-size intra-hour → the biggest IC-fidelity lever (EA build-log fix #2) |
@@ -242,7 +242,7 @@ per-preset; IC and FTMO reconcile on separate runs against separate thresholds).
    diagnose. These are execution/plumbing faults, not market signals.
 3. **IC — min ML approaches the owner's 110% floor** (the real-tick intra-bar test): this is the
    *provisional* condition on s=1.6. If real-tick min ML holds > 110%, s=1.6 is confirmed; if it
-   dips below, **step the IC dial down** the pre-built ladder (`FED_V3_IC_S08/07/06.set`, s=0.8→0.7→0.6)
+   dips below, **step the IC dial down** the pre-built ladder (`FABLE_IC_S08/07/06.set`, s=0.8→0.7→0.6)
    — a one-line preset edit, no rebuild. **Never step s up.**
 4. **IC — worst-mark DD ≥ the owner's 30% ceiling** (band 20–30%; model worst 22.58%): halt new
    entries and INVESTIGATE — no scale-up rescue, no re-tune.
@@ -285,7 +285,7 @@ per-preset; IC and FTMO reconcile on separate runs against separate thresholds).
   `eq_w` never falls below 0.5·margin_used (IC worst DD 22.6%, FTMO 13.3% — nowhere near ~50%), so the
   omission is immaterial to the reproduction; RECON-4 asserts it. Live-crisis fidelity may later demand
   the exact engine stop-out be added.
-- **The frozen stream ends 2025-12-31.** Live trading past it needs a forward v7-signal recompute +
+- **The frozen stream ends 2025-12-31.** Live trading past it needs a forward Core-signal recompute +
   stream extension (documented, not built) — the demo runs on the frozen 2020–2025 replay until then.
 - **RECONCILED ≠ VALIDATED.** RECON-4 certifies *engine fidelity* (the record engine and the MT5
   engine execute the same frozen model faithfully). It is structurally incapable of detecting
@@ -307,8 +307,8 @@ actually filling on the demo.
 ## Before real capital (deferred hardening — do NOT do during the demo)
 
 - **Complete the real-tick stage** (staged validation #5): the IC 1:30 intra-bar min-ML > 110% confirm
-  and the FTMO 1:100 sweep (`FED_V3_FTMO_S04/05`) — each a fresh `FMA3-RECON-N` ledger entry.
-- **Fix the stale `FED_V3_IC_S07/S06/S08` preset header comments** (they carry the s=1.6 IC header text
+  and the FTMO 1:100 sweep (`FABLE_FTMO_S04/05`) — each a fresh `FMA3-RECON-N` ledger entry.
+- **Fix the stale `FABLE_IC_S07/S06/S08` preset header comments** (they carry the s=1.6 IC header text
   while setting a lower `InpScale`) so a live operator is never misled by a preset banner.
 - **Decide the scaling lever** (higher tier vs N parallel accounts) *before* the book approaches
   ~€2M/s, not during it.
@@ -343,8 +343,8 @@ outstanding real-tick confirms and the scaling decision, not an automatic conseq
 · [`EA_V3_DESIGN.md`](../../model/v3/EA_V3_DESIGN.md) ·
 [`RECON4_RESULTS.md`](../../model/v3/RECON4_RESULTS.md) ·
 [`research/protocol/RECONCILIATION.md`](../../research/protocol/RECONCILIATION.md) (FMA3-RECON-4) ·
-[`mt5/ea/FableFederation_V3.mq5`](../../mt5/ea/FableFederation_V3.mq5) (`.ex5` sha `740da0ff…`) ·
-[`scripts/export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py) (stream sha `d00b614b…`) ·
+[`mt5/ea/FableBook.mq5`](../../mt5/ea/FableBook.mq5) (`.ex5` sha `740da0ff…`) ·
+[`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py) (stream sha `d00b614b…`) ·
 [`scripts/sweep_s_volcap.py`](../../scripts/sweep_s_volcap.py) · presets `mt5/ea/presets/FED_V3_*.set`.
 Config `51a7541cc2aaa593`, `w_v7 = 0.70`. All model numbers are in-sample RECORD reads; MT5 real-tick +
 live demo are the remaining falsification tests; achievable equity is 0.66–0.95× the record by

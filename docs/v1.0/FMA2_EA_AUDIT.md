@@ -1,10 +1,10 @@
-# FMA2 EA-stack audit — tester-ready punch list for the v3.4 sub-book MT5 run
+# FMA2 EA-stack audit — tester-ready punch list for the Satellite sub-book MT5 run
 
 **Audited 2026-07-10.** Scope: the whole `FableMultiAssets2/ea/` tree (Python brain, MQL5 executor,
 tester variant, watchdog, tests, bridge configs), `FMA2/docs/v2.0/EA_MONITORING_SPEC.md`,
 `FMA2/docs/v3.4/{DEMO,PREPROD,RECONCILIATION}.md`, and the FMA3 intel
 (`research/intel/v34-code.json`, `registries-deadends.json`). Every claim below is cited to a file;
-parents were read only. Purpose: answer *"can the v3.4 sub-book run in the MT5 Strategy Tester, and
+parents were read only. Purpose: answer *"can the Satellite sub-book run in the MT5 Strategy Tester, and
 what exactly stands between here and (a) that run, (b) the live demo"* — the run being the missing
 half of the IC k-calibration (`research/protocol/DEMO_PREREGISTRATION.md` §5).
 
@@ -110,7 +110,7 @@ Same executor, byte-equivalent live path (verified by diff: the 5 includes diffe
 guards/namespacing, the `FableMA2_V34_` runtime-file prefix, a compiled
 `FABLE_MA2_CONFIG_HASH "48c09199fbf83d82"` constant, an `MQL_TESTER` DST shim, and two benign
 compile fixes). When `InpTesterReplay=true`: `OnInit` loads the frozen CSV from `Common/Files`
-(**hard-fails INIT on config-hash mismatch**), seeds `CommandsDefault` + the shipped v3.4 hard-limit
+(**hard-fails INIT on config-hash mismatch**), seeds `CommandsDefault` + the shipped Satellite hard-limit
 caps; `OnTick` detects new H1 bars and swaps in the just-closed hour's frozen rows
 (O(rows) forward cursor; empty hour = keep-last-good, mirroring live), then runs the *exact same*
 guard + rebalance + persistence sequence as live `OnTimer`. Diagnostics: one crash-safe
@@ -158,7 +158,7 @@ tester has no external Python process, no shared live comms loop, and `OnTimer`-
 against a brain that isn't running would produce nothing. FMA2 knew this and built around it. The
 three options, assessed:
 
-**(a) Pure-MQL5 port of the v3.4 signal set — REJECT.**
+**(a) Pure-MQL5 port of the Satellite signal set — REJECT.**
 Effort **L** (weeks: 7 sleeves + mag_xau, EWMA/Donchian/z-machinery, cross-sleeve grid semantics,
 then a *second* reconciliation of MQL5-signals-vs-Python-signals before you can even measure
 execution). It violates the architecture invariant ("signals are computed once, in Python" —
@@ -176,20 +176,20 @@ operational, not engineering: **GUI compile (F7), Market-Watch symbol prep, test
 30 symbols × every-tick — expect a long run), log collection.** No FMA2 code changes; the parents
 stay read-only.
 
-**(c) Skip the tester; calibrate the v3.4 slice's k on demo data — LEGAL INTERIM, NOT THE ANSWER.**
-`DEMO_PREREGISTRATION.md` §5.1 pre-authorizes exactly this asymmetry ("if the v3.4 tester harness
-is not ready at deploy, k is measured first on the v7 stack + the live demo curve, and the
-federation k is completed when the v3.4 tick run exists"). But: the demo window has no guaranteed
-crisis, so **k_tail — the number the whole exercise exists for** (v7 precedent: 35.6% tick vs ~7%
+**(c) Skip the tester; calibrate the Satellite slice's k on demo data — LEGAL INTERIM, NOT THE ANSWER.**
+`DEMO_PREREGISTRATION.md` §5.1 pre-authorizes exactly this asymmetry ("if the Satellite tester harness
+is not ready at deploy, k is measured first on the Core stack + the live demo curve, and the
+blend k is completed when the Satellite tick run exists"). But: the demo window has no guaranteed
+crisis, so **k_tail — the number the whole exercise exists for** (Core precedent: 35.6% tick vs ~7%
 record) — is unmeasurable from a calm demo; and the harness *is* ready, so invoking the fallback
 buys almost nothing. Effort saved ≈ one compile + one long tester run. Use (c) only as the
 pre-registered interim if the tester run drags past deploy day.
 
 **Verdict: option (b), which is not a build but a run.**
 
-**One open decision — the dial.** The staged run is at the v3.4 *native* scale 10 (hash-gated to
+**One open decision — the dial.** The staged run is at the Satellite *native* scale 10 (hash-gated to
 `48c09199fbf83d82`, matching the official pin `v34_s10_pin_1m.json`, DD 21.67%). The FMA3 protocol
-(§5.1) says "at the deployed dials" — for the IC preset (s=1.6, FMA3-004c) the v3.4 stack deploys
+(§5.1) says "at the deployed dials" — for the IC preset (s=1.6, FMA3-004c) the Satellite stack deploys
 at `GLOBAL_SCALE = 3.0×1.6 = 4.80` (a 16-equivalent per sub-capital). Two defensible routes:
 
 - **Run-1 (do now): staged scale-10.** Zero new artifacts; k_dd = tick-worst-DD ÷ 21.67% and k_tail
@@ -224,7 +224,7 @@ and it produces a usable k); decide on Run-2 after seeing Run-1's retention and 
 | T4 | Run: Expert `FableMultiAsset2_V34`, symbol EURUSD H1 (chart only), model **every tick based on real ticks**, 2020.01.01–2025.12.31, deposit €10,000 EUR, **hedging** account (EA hard-fails INIT on netting — by design), preset `FableMultiAsset2_V34_S10_IC.set` | M (wall-clock heavy: 6y × 30 sym × every-tick) | owner machine |
 | T5 | Collect: `Common/Files/FableMA2_V34_tester_run.log` (INIT banner, WARN/ALERT stream, `OnTester` RESULT line), agent-sandbox `FableMA2_V34_events.csv`, tester HTML/XML report + deal history | S | owner machine → FMA3 |
 | T6 | Reconcile the run into the retention read: retention vs the 88.66% pin, `volume_rejects` (must be 0), forced-exit hit rate, guard fires, margin profile. Write-up lands FMA3-side (parents read-only): extend `FMA3/docs/v1.0/RECONCILIATION.md` + the DEMO_PREREGISTRATION §5 addendum; flag to the owner that FMA2's own `docs/v3.4/RECONCILIATION.md` §C wants the same content when FMA2 is writable | M | FMA3-side |
-| T7 | Compute the v3.4-stack **k_dd** (tick worst-mark maxDD ÷ 0.2167) and **k_tail** (tick COVID-window relative DD ÷ record crisis tail) from the report/deal history; may need a small equity-curve rebuild script from the exported deals | S–M | FMA3-side wrapper (`scripts/`) |
+| T7 | Compute the Satellite-stack **k_dd** (tick worst-mark maxDD ÷ 0.2167) and **k_tail** (tick COVID-window relative DD ÷ record crisis tail) from the report/deal history; may need a small equity-curve rebuild script from the exported deals | S–M | FMA3-side wrapper (`scripts/`) |
 | T8 | *(Optional, strict deployed-dial)* Regenerate replay at `GLOBAL_SCALE=4.80` in a deploy copy: scale change → new stamped hash → update `FABLE_MA2_CONFIG_HASH` (FableCommon.mqh, tester copy) + `EXPECTED_HASH` (export_mt5_replay.py) → re-export (frozen parquets only) → recompile → rerun T4–T7 at the deployed sizing | M | owner deploy copy (FMA2-repo change if parents become writable) |
 
 **Nothing in T1–T7 touches FMA2 source, the record engine, or the 1m cache.** The tester run is on
@@ -238,7 +238,7 @@ the owner's MT5, which the busy-engine rule does not constrain.
 | D2 | **EA bar exporter** (closed H1 bars per symbol → `ea/bridge/bars/<SYM>_1h.csv` per `data_feed.py`'s provisional schema), or an equivalent VPS-side feed writer. Without it the live brain cannot compute fresh targets past the frozen cache — the demo would trade an increasingly stale book | M | **FMA2-repo engineering** |
 | D3 | **Kill-switch consumption in the EA** (poll `kill_switch.json` on timer; obey `HALT_FLATTEN` / `HALT_NO_NEW_ENTRIES` / `RESUME`-only-clears-halt semantics per RUNBOOK §1.1). The entire watchdog escalation ladder (fallbacks #3/#4, drills §9) is inert until this exists | S–M | **FMA2-repo engineering** |
 | D4 | **Comms contract alignment**: EA heartbeat filename (`heartbeat.json` → `heartbeat_ea.json` or watchdog config), a `broker_snapshot.json`/`broker_positions.json` writer (EA-side; also unblocks brain `reconcile.py`'s broker leg), and one guard-event stream the watchdog actually reads (`events.csv`/`alerts.jsonl` vs expected `guard_events.jsonl`) | M | **FMA2-repo engineering** (+ watchdog config) |
-| D5 | **FMA3 deploy artifacts** (DEMO.md "What does NOT exist yet" #8, updated to the shipped preset): v7 preset copy with `InpRisk = 5.6×1.6 = 8.96`; v3.4 deploy copy with `GLOBAL_SCALE = 4.80`; record the re-stamped deploy hash; dated DEMO_PREREGISTRATION §2 addendum (preset, s*, bands, k arithmetic) | S | **FMA3-side** |
+| D5 | **FMA3 deploy artifacts** (DEMO.md "What does NOT exist yet" #8, updated to the shipped preset): Core preset copy with `InpRisk = 5.6×1.6 = 8.96`; Satellite deploy copy with `GLOBAL_SCALE = 4.80`; record the re-stamped deploy hash; dated DEMO_PREREGISTRATION §2 addendum (preset, s*, bands, k arithmetic) | S | **FMA3-side** |
 | D6 | **`n_ticks` liquidity guard** (v2.1 owed; consumes D2's bars in `guards_engine.py`) — pre-real-capital, not demo-start | S–M (after D2) | FMA2-repo |
 | D7 | Doc-drift pass: RUNBOOK magic map 920001-7 → 8400001-8, gold cap 1.0×E → structural 1.80×E, "scale 9→7" wording; `tests/README.md` count; `EA_MONITORING_SPEC.md` §3 OPS-8 "re-normalized" → cash-park (code already cash-parks) | S | FMA2-repo housekeeping |
 | D8 | Watchdog §9 drills (all six escalation paths), reference-schema upgrade (`protocol_notes.md` #2), NSF5 EA-reliability P1/P2 — **pre-live, not pre-demo** (both parents' standing lists) | M | FMA2/NSF5-repo |
@@ -263,7 +263,7 @@ slippage bar, weekly realized-w attribution.
    wall-clock; the four guard fixes are already in the compiled EA; the config-hash gate is active
    in replay mode; no parent-repo writes, no record-engine time, no 1m-cache loads.
 2. **Extract k from it** (T6–T7): per-stack `k_dd = tick_worstDD / 0.2167`, `k_tail` on the 2020Q1
-   window, against the official pin — the cleanest ratio the protocol allows. Pair with the v7
+   window, against the official pin — the cleanest ratio the protocol allows. Pair with the Core
    stack's own tester numbers (NSF5's presets exist; that side is the parents' standard practice)
    for the joint k, then run the §5.3 re-pick on the registered IC grid (s ∈ {…1.6…}: largest s
    with record-DD(s)×k_dd ≤ 30% and record-tail(s)×k_tail ≤ 30%). k can only cut the dial — if

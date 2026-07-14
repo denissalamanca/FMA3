@@ -98,6 +98,5 @@
   "pass_gate_deltas_le_1e-9_vs_quoted_pin": false,
   "pass_gate_deltas_le_1e-9_vs_fullprec_pin": true,
   "pass": true,
-  "runtime_sec": 637.6,
-  "pass_note": "overall pass uses the full-precision recorded pin (FMA2/research/outputs/v34_s10_pin_1m.json): dCAGR/dMaxDD/dSharpe exactly 0.0, dFinalEUR 5.82e-11. vs the 4dp-quoted task constant 449707.7453 the dFinalEUR is -3.35e-05 \u2014 pure quoting precision of the constant, not an engine divergence. cells_nonzero=132454 are all <=4.20e-14 (last-ulp accumulation from the 7 sleeve steppers, each <=2.5e-14 vs golden); 0 cells exceed the 1e-12 gate."
+  "runtime_sec": 249.2
 }

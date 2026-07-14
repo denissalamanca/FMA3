@@ -21,8 +21,8 @@ VOLCAP = {"XAUUSD": 10.0, "SOLUSD": 1000.0, "ETHUSD": 100.0, "US30": 12.0, "EURC
 def _one(args):
     s, initial, stop, cap = args
     import record_engine_ext as REX
-    from reproduce import static_fed
-    fed = static_fed(0.70)
+    from reproduce import static_blend
+    fed = static_blend(0.70)
     r = REX.run_record_ext(fed * s, initial=initial, daily_stop_x=stop,
                            volume_limit=(VOLCAP if cap else None),
                            label=f"sweep_s{s}_{'cap' if cap else 'raw'}",

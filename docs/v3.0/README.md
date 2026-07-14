@@ -2,8 +2,8 @@
 
 FMA3 v3.0 is the release where **the model stops being a promise and becomes a
 thing that provably runs**. v1.0 shipped the **model** — a Python 1-minute
-worst-mark record-engine book (federated NSF5 v7.0 band book at capital share
-**w = 0.70** + FMA2 v3.4 fixed-fraction book at 0.30, 33 netted symbols).
+worst-mark record-engine book (a blended NSF5 Core band book at capital share
+**w = 0.70** + FMA2 Satellite fixed-fraction book at 0.30, 33 netted symbols).
 v3.0 ships the **EA that provably EXECUTES that model on MT5**
 (`FableFederation_V3.ex5`, sha `740da0ff…`), plus the **honest deployable
 reality**: two dials, three physical constraints, and the measured friction
@@ -35,7 +35,7 @@ are pinned in [`model/v3/PINNED_INPUTS.md`](../../model/v3/PINNED_INPUTS.md).
 
 ## The v3 EA — why replay, not compute-live
 
-The federation share weights `fed_frac[h,k] = f7·(w·a_h/j) + f34·((1−w)·b_h/j)`
+The blend share weights `fed_frac[h,k] = f7·(w·a_h/j) + f34·((1−w)·b_h/j)`
 (with `j = w·a_h + (1−w)·b_h`, `a_h`/`b_h` each book's FROZEN native standalone
 equity multiple) depend on **frozen native curves a live s-levered account
 cannot reconstruct** — so compute-live (v1/v2) provably diverges whenever s ≠ 1,
@@ -63,11 +63,11 @@ constraint**, not a defect. Full record:
 
 | Doc | What it is |
 |---|---|
-| **[STRATEGY.md](STRATEGY.md)** | The "what & why" for v3 — the frozen 33-symbol netted book, the `fed_frac` bookkeeping formula, why the a/j·b/j share weights force **replay over compute-live**, the v34-sleeve revival (7 symbols the EurPerQuote bug silently killed in v1/v2), and the two-dial (IC / FTMO) split. |
+| **[STRATEGY.md](STRATEGY.md)** | The "what & why" for v3 — the frozen 33-symbol netted book, the `fed_frac` bookkeeping formula, why the a/j·b/j share weights force **replay over compute-live**, the Satellite-sleeve revival (7 symbols the EurPerQuote bug silently killed in v1/v2), and the two-dial (IC / FTMO) split. |
 | **[PERFORMANCE.md](PERFORMANCE.md)** | The canonical performance read — both frozen dials, the friction ladder (0.95× @ s0.7 → 0.84× @ s1.0 → 0.66× @ s1.6), the volume-limit s-sweep (FMA3-024, cap cost 0–6% @ €10k, 17–40% @ €1M), and the deployable-dial reframe (margin, not volume, sets the IC dial at 1:30). |
 | **[VALIDATION.md](VALIDATION.md)** | The execution-validation battery — the exact reproduction chain (`reproduce.py` to the euro), FMA3-RECON-4 position-level fidelity (after/want median 1.000), the volume-limit sweep, the 1:30 margin finding, and sign-off status. |
 | **[RECONCILIATION.md](RECONCILIATION.md)** | The FMA3-RECON-4 map — the 3 MT5 runs, position fidelity (median 1.000, all runs), 0 rejects on deployable dials, the 28-vs-26 breaker-fire delta, and each equity gap attributed to its named physical cause. Standing record per `research/protocol/RECONCILIATION.md`. |
-| **[TRADE_CHARACTERISTICS.md](TRADE_CHARACTERISTICS.md)** | The 33-symbol federated book — composition (8 v7 + 31 v34, 6 netted), the v34 revival, per-symbol trade profiles from RECON-4, the volume-capped symbols (XAUUSD/SOLUSD/ETHUSD), and monitoring flags. |
+| **[TRADE_CHARACTERISTICS.md](TRADE_CHARACTERISTICS.md)** | The 33-symbol blended book — composition (8 Core + 31 Satellite, 6 netted), the Satellite revival, per-symbol trade profiles from RECON-4, the volume-capped symbols (XAUUSD/SOLUSD/ETHUSD), and monitoring flags. |
 | **[EA_AUDIT.md](EA_AUDIT.md)** | The executor's anatomy — the unified replay stream, per-symbol sizing/magic map, full-map eurq, the FTMO breaker mechanics, the 3-reviewer adversarial pass + fixes, and what v3 **discards** from the v1/v2 stack and why (frozen inside `frac7`). Mirrors `model/v3/EA_V3_DESIGN.md` at package depth. |
 | **[DEMO.md](DEMO.md)** | The honest deployable reality + forward-test plan — the three physical constraints (friction, `SYMBOL_VOLUME_LIMIT`, broker margin), the ~€2M/s capacity ceiling, the two scaling levers (higher-tier account · N parallel accounts at €C/N), the owner-leverage dials (IC 1:30 s=1.6 min ML 121%; FTMO 1:100 s≈0.5), and the **live-horizon gap** (v3 replays a frozen stream ending 2025-12-31; live trading needs a forward generator — not yet built). |
 | **[DASHBOARD_IC.html](DASHBOARD_IC.html)** · **[DASHBOARD_FTMO.html](DASHBOARD_FTMO.html)** · **[DASHBOARD.html](DASHBOARD.html)** | The visual scorecards — IC + FTMO per-preset (model record **plus** the v3 deployed reality, PROVISIONAL banner) and the combined overview. Self-contained; open in any browser. Ship per update. |
@@ -85,10 +85,10 @@ the euro and carries its own honesty flags.
 | Doc | What it is |
 |---|---|
 | **[../../model/v3/README.md](../../model/v3/README.md)** | The stable model of record — both dials, the reproduce command, the look-alike warnings, the v1→v2→v3 EA relationship. |
-| **[../../model/v3/MODEL_SPEC.md](../../model/v3/MODEL_SPEC.md)** · [PINNED_INPUTS.md](../../model/v3/PINNED_INPUTS.md) | The full federation math + engine constants + breaker · the exact frozen input artifacts. |
+| **[../../model/v3/MODEL_SPEC.md](../../model/v3/MODEL_SPEC.md)** · [PINNED_INPUTS.md](../../model/v3/PINNED_INPUTS.md) | The full blend math + engine constants + breaker · the exact frozen input artifacts. |
 | **[../../model/v3/RECON4_RESULTS.md](../../model/v3/RECON4_RESULTS.md)** | The execution reconciliation in research depth — 3 runs, fidelity, the three physical constraints, the scaling levers, the deployment-dial decisions. |
 | **[../../research/protocol/RECONCILIATION.md](../../research/protocol/RECONCILIATION.md)** | The standing protocol — every new EA run earns a recorded FMA3-RECON-N entry before deploy. |
-| **[../../scripts/export_fed_frac_v3.py](../../scripts/export_fed_frac_v3.py)** · [sweep_s_volcap.py](../../scripts/sweep_s_volcap.py) | Builds the unified replay stream · the volume-cap s-sweep behind the capacity ceiling. |
+| **[../../scripts/export_book_frac_v3.py](../../scripts/export_book_frac_v3.py)** · [sweep_s_volcap.py](../../scripts/sweep_s_volcap.py) | Builds the unified replay stream · the volume-cap s-sweep behind the capacity ceiling. |
 
 **Single source of truth (code):** [`model/v3/reproduce.py`](../../model/v3/reproduce.py)
 (self-contained; inlines the blend, depends only on `engine/` + the four frozen

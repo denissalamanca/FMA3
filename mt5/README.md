@@ -1,14 +1,14 @@
 # FMA3 `mt5/` — IC preset pack + sub-book tester protocol
 
-**What this is:** everything needed to run the **v7 sub-book MT5 real-tick tester run tonight**
-at the IC preset dial, plus the offline federation-combination step. Per the EA split decision
+**What this is:** everything needed to run the **Core sub-book MT5 real-tick tester run tonight**
+at the IC preset dial, plus the offline blend-combination step. Per the EA split decision
 (ROADMAP.md, owner 2026-07-10): **EA-IC = the parents' stock EAs exactly as validated, config-only
 — ZERO new EA code.** The EA is NSF5 `mt5/ea/FableMultiAsset1_V7.mq5` (the "PortfolioV7" EA — its
 runtime logs are named `portfolio_v7_*`), compiled untouched.
 
-**Why two runs + arithmetic:** the MT5 Strategy Tester runs ONE EA per pass. The FMA3 federation
+**Why two runs + arithmetic:** the MT5 Strategy Tester runs ONE EA per pass. The Fable book
 is operationally two parent stacks (docs/v1.0/DEMO.md), so the tester protocol is **two separate
-sub-book runs** (v7 now; v3.4 pending its EA audit — §d) combined **offline** by
+sub-book runs** (Core now; Satellite pending its EA audit — §d) combined **offline** by
 [`scripts/combine_tester_reports.py`](../scripts/combine_tester_reports.py) (deterministic
 arithmetic; the construction is already Python-validated — §c).
 
@@ -16,9 +16,9 @@ Files here:
 
 | File | What |
 |---|---|
-| `presets/V7_FMA3IC_R896.set` | v7 sub-book at the **IC dial `InpRisk=8.96`** — byte-identical to NSF5 `mt5/presets/FableMultiAsset1_V7_CORE7BAND_R8_IC.set` except line 1 |
-| `presets/V7_FMA3FTMO.set` | v7 sub-book at the **current FTMO dial `InpRisk=2.24`** — ⚠️ provisional; the FTMO campaign is re-shipping the dial (FMA3-005c), and see the clip warning in §Dimensional check |
-| `../scripts/combine_tester_reports.py` | consumes the tester exports → federation curve + k ratios |
+| `presets/V7_FMA3IC_R896.set` | Core sub-book at the **IC dial `InpRisk=8.96`** — byte-identical to NSF5 `mt5/presets/FableMultiAsset1_V7_CORE7BAND_R8_IC.set` except line 1 |
+| `presets/V7_FMA3FTMO.set` | Core sub-book at the **current FTMO dial `InpRisk=2.24`** — ⚠️ provisional; the FTMO campaign is re-shipping the dial (FMA3-005c), and see the clip warning in §Dimensional check |
+| `../scripts/combine_tester_reports.py` | consumes the tester exports → blend curve + k ratios |
 
 > ⚠️ **Do NOT use `presets/FableMultiAsset1_V7_FMA3IC_R128.set`** (found in this directory,
 > other-session artifact). It mixes conventions: `InpRisk=12.8` is the €7k-sub-account dial but
@@ -35,7 +35,7 @@ Files here:
 
 Formula (docs/v1.0/DEMO.md §"The two risk dials", generic-in-s form in
 research/protocol/DEMO_PREREGISTRATION.md §2): **`InpRisk = 8 × 0.70 × s = 5.6·s`**
-(v7 native R8 anchor × capital share w=0.70 × global scale s).
+(Core native R8 anchor × capital share w=0.70 × global scale s).
 
 - DEMO.md derived it at **v1.0's s=1.1 → `InpRisk = 6.16`**. That document predates the preset
   fork and is *not wrong* — same formula, different s.
@@ -64,7 +64,7 @@ the full `8 × 0.70 × s`** (not €7,000 at `InpRisk = 8·s`). Justification:
 
 ---
 
-## (a) The v7 sub-book run — click-by-click (tonight)
+## (a) The Core sub-book run — click-by-click (tonight)
 
 1. **Files:** copy `FableMultiAsset1_V7.mq5` (READ-ONLY source: NSF5 `mt5/ea/`) into the MT5
    `MQL5/Experts/`, compile in MetaEditor (F7, 0 errors). Copy `presets/V7_FMA3IC_R896.set`
@@ -102,15 +102,15 @@ the full `8 × 0.70 × s`** (not €7,000 at `InpRisk = 8·s`). Justification:
 
 ## (b) Expected fingerprints — what the record engine predicts at `InpRisk=8.96`
 
-**Derivation (engine-free — no record-engine pass, no 1m-cache load):** the pinned v7 native
+**Derivation (engine-free — no record-engine pass, no 1m-cache load):** the pinned Core native
 curve `research/outputs/v7_book_equity_1m.parquet` (R8 anchor, €10k, byte-reconciled per
 fma3_v1_pin.json provenance), minute returns × **1.12** (= 0.70 × 1.6, the same
 final-matrix-scaling as `strategy_fma3.py::construction`), recompounded on both close- and
 worst-mark columns. Validation of the method: at scale 1.0 it reproduces the
-DEMO_PREREGISTRATION §3 B3 v7 row **exactly** (mean +5.90%/mo, vol 6.90%, 13/72 neg, worst
+DEMO_PREREGISTRATION §3 B3 Core row **exactly** (mean +5.90%/mo, vol 6.90%, 13/72 neg, worst
 −9.22% 2022-05, best +22.92% 2021-03, band [−11.89%, +23.68%]).
 
-**Record-engine prediction, v7 sub-book @ dial 8.96, IC 1m, 2020-01-02 → 2025-12-31, €10k:**
+**Record-engine prediction, Core sub-book @ dial 8.96, IC 1m, 2020-01-02 → 2025-12-31, €10k:**
 
 | Metric | Record (1m) prediction |
 |---|---|
@@ -138,7 +138,7 @@ use FMA3's pinned conventions: years = days/365.25 and `run_hfed1_lib.crisis_tai
 - **Equity DD** prints deeper than record: R8 measured 21.2% MT5 vs 19.51% record
   (k_dd ≈ 1.09) → expect **~23–24%** tester equity-DD at this dial. Fine vs the 30% ceiling.
 - **COVID tail is the number being measured**, not a pass/fail: precedent k_tail ≈ 5–6.5
-  (v7 @ R10: 35.6% tick vs ~5.5–7.2% record, COMPOSITE_BENCHMARK.md). A tick tail of 30%+ in
+  (Core @ R10: 35.6% tick vs ~5.5–7.2% record, COMPOSITE_BENCHMARK.md). A tick tail of 30%+ in
   the 2020 window is *expected* and is exactly what feeds the k re-pick — do not panic-stop
   the calibration on it.
 - The **2026 portion** of the run (2026-01 → latest) has **no record reference** (record window
@@ -172,7 +172,7 @@ deploy-time addendum:
 
 ---
 
-## (c) Offline federation combination
+## (c) Offline blend combination
 
 **Arithmetic** (the deployed two-EA model — each stack compounds its OWN internal seeds on the
 shared account, docs/v1.0/DEMO.md "What does NOT exist yet" item 2, so EUR P&L is additive):
@@ -189,10 +189,10 @@ disclosed shared-equity-coupling measurement (RECONCILIATION.md), not an error.
 **Script:**
 
 ```bash
-# tonight (v7 only — federation marked pending):
+# tonight (Core only — federation marked pending):
 python3 scripts/combine_tester_reports.py --v7 research/outputs/mt5/v7_ic_tester.html
 
-# once the v3.4 tester run exists:
+# once the Satellite tester run exists:
 python3 scripts/combine_tester_reports.py \
     --v7  research/outputs/mt5/v7_ic_tester.html \
     --v34 research/outputs/mt5/v34_ic_tester.html          # --preset ic (default)
@@ -202,23 +202,23 @@ Accepts MT5 HTML tester reports (deals-table balance curve + the summary's tick-
 "Equity Drawdown Maximal" as the k_dd numerator) or any `time,equity` CSV (e.g. the decisions
 CSV `utc_time/acct_equity` columns — then worst-mark falls back to close-basis and the output
 says so). Writes `research/outputs/mt5/combine_results.json` + `federation_curve.csv` and
-prints the paste-ready block. Record references embedded: v7 @ 8.96 (table above), federation
+prints the paste-ready block. Record references embedded: Core @ 8.96 (table above), the Fable book
 @ s=1.6 (hrisk1_results.json: CAGR 170.2%, maxDD_worst 22.58%, tail 8.12%); `--preset ftmo`
 switches to the s=0.4 references (hrisk2: CAGR 30.7%, maxDD_worst 5.99%).
 
 ---
 
-## (d) v3.4 sub-book — PLACEHOLDER (pending the EA audit)
+## (d) Satellite sub-book — PLACEHOLDER (pending the EA audit)
 
-The v3.4 stack (FMA2 Python brain + `FableExecutor.mq5`) has **never had a Strategy
+The Satellite stack (FMA2 Python brain + `FableExecutor.mq5`) has **never had a Strategy
 Tester/tick run** (FMA2 `docs/v3.4/RECONCILIATION.md` §C — OPEN) and its EA audit is not
 cleared. Until it is:
 
-- k is measured on the **v7 stack only** — the pre-registered interim asymmetry
-  (DEMO_PREREGISTRATION §5.1); the federation k completes when the v3.4 tick run exists.
-- When it clears: v3.4 tester run at **`GLOBAL_SCALE = 10 × 0.30 × 1.6 = 4.80`** (IC preset)
+- k is measured on the **Core stack only** — the pre-registered interim asymmetry
+  (DEMO_PREREGISTRATION §5.1); the Fable book k completes when the Satellite tick run exists.
+- When it clears: Satellite tester run at **`GLOBAL_SCALE = 10 × 0.30 × 1.6 = 4.80`** (IC preset)
   on the same window/account conventions, then re-run the combiner with `--v34`.
-- Do NOT approximate the v3.4 slice by scaling v7 — different book, different tail.
+- Do NOT approximate the Satellite slice by scaling Core — different book, different tail.
 
 ---
 
@@ -265,6 +265,6 @@ fractions by 0.70·s without re-clipping; the EA at `InpRisk = 5.6·s` re-applie
 + `docs/v7/DEMO.md`/`PERFORMANCE.md`; FMA3 `docs/v1.0/DEMO.md` (dial arithmetic),
 `research/protocol/PRESETS.md` (FMA3-004c/005c), `research/protocol/DEMO_PREREGISTRATION.md`
 (§2 dial table, §3 B1/B3, §5 k protocol), `research/outputs/v7_book_equity_1m.parquet` (the
-scaled-prediction source), `hrisk1_results.json` / `hrisk2_results.json` (federation record
+scaled-prediction source), `hrisk1_results.json` / `hrisk2_results.json` (the Fable book record
 references). All record numbers are in-sample IC 2020–25, 1m worst-mark; the tick run this
 protocol drives is the falsification test, not a formality.*

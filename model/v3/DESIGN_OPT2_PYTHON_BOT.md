@@ -1,6 +1,6 @@
 # Option 2 — Standalone Python Bot (faithful live executor of the v3 stable model)
 
-**Goal:** ONE deployable Python unit on a VPS that runs both sub-book sims, blends them into the v3 model, and trades MT5 **directly** (MetaTrader5 Python API) — deleting the fragile Python→CSV→MQL5 *target* handoff of [`FORWARD_GENERATOR_SPEC.md`](FORWARD_GENERATOR_SPEC.md). This is an **alternative** to Option 1 (`FableFederation_V3.mq5`) / the hybrid generator, not a replacement of that design. The bot reproduces the model of [`MODEL_SPEC.md`](MODEL_SPEC.md) — `fed[h,k] = f7·(w·a_h/j) + f34·((1−w)·b_h/j)`, `w=0.70`, `j=w·a_h+(1−w)·b_h` — and sizes `lots_k = fed·s·BALANCE/unit_k` on 33 netted symbols. Owner constraints: (a) consume the LIVE feed for the sub-book sims; (b) do not modify the FORWARD_GENERATOR design.
+**Goal:** ONE deployable Python unit on a VPS that runs both sub-book sims, blends them into the v3 model, and trades MT5 **directly** (MetaTrader5 Python API) — deleting the fragile Python→CSV→MQL5 *target* handoff of [`FORWARD_GENERATOR_SPEC.md`](FORWARD_GENERATOR_SPEC.md). This is an **alternative** to Option 1 (`FableBook.mq5`) / the hybrid generator, not a replacement of that design. The bot reproduces the model of [`MODEL_SPEC.md`](MODEL_SPEC.md) — `fed[h,k] = f7·(w·a_h/j) + f34·((1−w)·b_h/j)`, `w=0.70`, `j=w·a_h+(1−w)·b_h` — and sizes `lots_k = fed·s·BALANCE/unit_k` on 33 netted symbols. Owner constraints: (a) consume the LIVE feed for the sub-book sims; (b) do not modify the FORWARD_GENERATOR design.
 
 Three framing corrections are load-bearing and are baked into this design rather than argued around:
 
@@ -34,14 +34,14 @@ Two stacked, partly-unmeasurable fidelity gaps therefore exist and must be named
 | **Blend** (`static_fed` / `blend_static`) | **Reusable as-is** | Pure pandas, no state conflict; forward drift of a_h,b_h already supported. |
 | **f34[h] live** (`target_engine.build_book(rebuild=True)`) | **Reusable, wiring only** | Runs hourly today, bit-identical to pin, causal by construction. |
 | **b_h shadow** (`record_engine_ext._run_chunk`) | **Feasible, incremental ✅** | Pure carry integrator; hour-stepping is arithmetically identical to the quarter batch. Needs terminal-carry capture + bit-identity proof. |
-| **f7/eq7 → a_h** (v7 extractor) | **Feasible but heavy, NO incremental step ❌** | Path-dependent band re-splits; the repo's one sanctioned `NotImplementedError`. Interim = full warm re-extract ~10–25 min/hr. **Cost grows without bound** (§4). |
+| **f7/eq7 → a_h** (Core extractor) | **Feasible but heavy, NO incremental step ❌** | Path-dependent band re-splits; the repo's one sanctioned `NotImplementedError`. Interim = full warm re-extract ~10–25 min/hr. **Cost grows without bound** (§4). |
 | **Live tick→bar feed** (`copy_ticks_range` → bid+ask 1m OHLC) | **Feasible, real data-engineering cost** | Must be ticks, not `copy_rates` (bid-only cannot reconstruct worst-side extremes). |
 | **"ONE process"** | **Infeasible** | `lock_v5` shared-global poisoning → multiprocess mandatory. |
 | **"No downloaded history"** | **Infeasible as worded** | Warm seed is unavoidable; reframe to frozen-seed + live-forward. |
 | **Sole trader, no on-terminal backstop** | **Doubtful for FTMO / live-money** | Retail MT5 has no passive dead-man; every substitute is an active poller that dies with the bot. GuardianEA required. |
 | **Windows/Wine deployment** | **Constraint, not a code choice** | `MetaTrader5` is Windows-only; this mac's Wine terminal cannot `import MetaTrader5`. |
 
-**Net:** the execution layer's feasibility must **not** greenlight Option 2. Every upstream blocker (no live producer for 3 of 4 inputs, the v7 hourly re-sim, warm shadows, silent splice corruption) is inherited **unchanged** from Option 1, and Option 2 *adds* a live-safety layer whose cost equals or exceeds the hybrid's tail-reader.
+**Net:** the execution layer's feasibility must **not** greenlight Option 2. Every upstream blocker (no live producer for 3 of 4 inputs, the Core hourly re-sim, warm shadows, silent splice corruption) is inherited **unchanged** from Option 1, and Option 2 *adds* a live-safety layer whose cost equals or exceeds the hybrid's tail-reader.
 
 ---
 
@@ -49,7 +49,7 @@ Two stacked, partly-unmeasurable fidelity gaps therefore exist and must be named
 
 ### 3.1 Process / module topology (resolves lock_v5)
 
-`lock_v5.py:38` sets `ACCOUNT['stop_out_level']=1e-9` on import into the **same** `config.settings` object the v34 stack binds; `record_engine_ext.simulate_account_1m_ext` asserts `==0.5`, `extract_positions.py:134` asserts `==1e-9`. The two shadows require **contradictory values of one shared mutable global in one interpreter**. Flipping it mid-process is unsafe (v7 anchor reproduction is gated on `1e-9`; lock_v5 may set further noliq state). Process isolation is therefore **structural, not a discipline choice.**
+`lock_v5.py:38` sets `ACCOUNT['stop_out_level']=1e-9` on import into the **same** `config.settings` object the Satellite stack binds; `record_engine_ext.simulate_account_1m_ext` asserts `==0.5`, `extract_positions.py:134` asserts `==1e-9`. The two shadows require **contradictory values of one shared mutable global in one interpreter**. Flipping it mid-process is unsafe (Core anchor reproduction is gated on `1e-9`; lock_v5 may set further noliq state). Process isolation is therefore **structural, not a discipline choice.**
 
 ```
                     ┌──────────────────────────────────────────┐
@@ -61,12 +61,12 @@ Two stacked, partly-unmeasurable fidelity gaps therefore exist and must be named
                     │  - MT5 EXECUTOR — SOLE order writer        │
                     │  - state ledger + reconcile-on-start      │
                     │  - heartbeat → GuardianEA                 │
-                    │  - import-blocklist assert (never v7)     │
+                    │  - import-blocklist assert (never Core)   │
                     └───┬───────────────┬──────────────┬────────┘
         disk handoff    │               │              │  MT5 IPC (serialized, single thread)
                     ┌───▼────┐     ┌────▼─────┐   ┌────▼──────────┐
                     │proc-A  │     │ proc-B   │   │ MT5 terminal  │
-                    │ v7     │     │ v34 brain│   │ + GuardianEA  │
+                    │ Core   │     │ Sat brain│   │ + GuardianEA  │
                     │ shadow │     │ + b_h    │   │ (equity-only, │
                     │ →eq7,f7│     │ →f34,b_h │   │  OnTick guard)│
                     └────────┘     └──────────┘   └───────────────┘
@@ -76,9 +76,9 @@ Two stacked, partly-unmeasurable fidelity gaps therefore exist and must be named
         WATCHDOG (separate host, own MT5 login) — armed independent flatten channel
 ```
 
-- **proc-A (v7 / a_h):** imports NSF5 (`lock_v5` sets `1e-9` here and *only* here). Full warm re-extract via `extract_positions` → `eq7[h]`, `frac7[h]` (8-leg band book). Writes `v7_out.parquet` + carry `(cur, seed, last-trigger, eqc anchor)`.
-- **proc-B (v34 / b_h):** imports FMA2 brain + `record_engine_ext` (`stop_out==0.5`). `target_engine.build_book(rebuild=True)` → `f34[h]`; `_run_chunk(balance0,lots0,entry0, tgt=f34[h])` steps the b_h shadow. Writes `v34_out.parquet` + carry `(balance,lots[],entry[])`.
-- **proc-0 (orchestrator):** **never imports the v7 stack** (enforce with an import-blocklist assert at boot — not by convention). Reads both parquets, ratio-chains the seed, runs `static_fed`, and is the **sole MT5 order writer**. MT5 calls are a process-global, non-thread-safe singleton, so **every** `order_send`/read is serialized through one executor thread.
+- **proc-A (Core / a_h):** imports NSF5 (`lock_v5` sets `1e-9` here and *only* here). Full warm re-extract via `extract_positions` → `eq7[h]`, `frac7[h]` (8-leg band book). Writes `v7_out.parquet` + carry `(cur, seed, last-trigger, eqc anchor)`.
+- **proc-B (Satellite / b_h):** imports FMA2 brain + `record_engine_ext` (`stop_out==0.5`). `target_engine.build_book(rebuild=True)` → `f34[h]`; `_run_chunk(balance0,lots0,entry0, tgt=f34[h])` steps the b_h shadow. Writes `v34_out.parquet` + carry `(balance,lots[],entry[])`.
+- **proc-0 (orchestrator):** **never imports the Core stack** (enforce with an import-blocklist assert at boot — not by convention). Reads both parquets, ratio-chains the seed, runs `static_fed`, and is the **sole MT5 order writer**. MT5 calls are a process-global, non-thread-safe singleton, so **every** `order_send`/read is serialized through one executor thread.
 - Handoff is on-disk atomic (tmp+fsync+rename), matching the spec's proc-A/B/C mandate.
 
 **One deployable unit; internally 3 processes + GuardianEA + off-host watchdog. Never present it as "one process."**
@@ -90,15 +90,15 @@ Two stacked, partly-unmeasurable fidelity gaps therefore exist and must be named
 - The **same ticks** reduce to the 1h mid cache (`build_ext_cache.hourly_from_1m`: mid=(bid+ask)/2, `rel_spread=(ask_c−bid_c)/mid_c`, resample 1h) that the FMA2 brain reads. One ingestion feeds *both* the 1m bid/ask shadows and the 1h brain cache — sims and signal share one feed. Genuine strength of the single-unit design.
 
 **Warmup is a FROZEN seed, not live.** Cold-starting fabricates crisis behavior (the COVID k≈4.7 stop-out warmup artifact — *the* landmine). The 2020–2025 warm state ships to the VPS as an immutable asset:
-- **v34:** the kernel carry `(balance, lots[], entry[])` at 2025-12-31 23:59. A one-time full warm batch must be run to **surface and persist** this carry — `simulate_account_1m_ext` currently *drops* it.
-- **v7:** the ~2.1 GB frozen 1m bid/ask history (needed at runtime for the hourly re-extract) + `(cur, seed, last-trigger, eqc anchor)`.
+- **Satellite:** the kernel carry `(balance, lots[], entry[])` at 2025-12-31 23:59. A one-time full warm batch must be run to **surface and persist** this carry — `simulate_account_1m_ext` currently *drops* it.
+- **Core:** the ~2.1 GB frozen 1m bid/ask history (needed at runtime for the hourly re-extract) + `(cur, seed, last-trigger, eqc anchor)`.
 - **Splice sidecar** `{a_last, b_last, boundary_stamp=2025-12-31T23:00, eq7_base=10000, eq34_base=10000}`, sampled from `static_fed` at the hour-**OPEN** asof (empirically `a_last=53.0979` at 23:00, **not** the 53.2230 23:59 mark — getting this wrong silently corrupts every forward weight).
 
 **Symbol namespaces must reconcile** (three of them): model (`USA500/USTEC/DAX`), broker (`US500/DE40/USTEC`), Duka proxy (`USA500`-for-`USTEC`). The live bot applies the **inverse** broker→model map and prices **real USTEC** — the USA500 proxy is a Duka-holdout artifact and would be a permanent per-hour divergence (corr 0.89). Confirm the broker quotes all 37 + all 8 EUR crosses before capital; a missing EUR cross freezes that currency's `eurq` (the exact FxConverter defect the ext engine now raises on). Confirm **broker server tz == IC-feed server tz** (daily break at hour 0 = 17:00 ET) or the 2025/2026 splice gets a per-bar discontinuity.
 
 ### 3.3 Main loop + cadence
 
-Model convention: hour-h signal executes held over hour h+1. A closed M1 bar appears only at `h+1:00:00+` (seconds of settle). Because the bot IS the trader, there is **no CSV append, no FedReplay tail-read, no D2 (h+2) race** — the only irreducible lag is compute latency Δ, dominated by the v7 re-sim, during which the first Δ minutes of h+1 trade on stale `fed[h−1]`.
+Model convention: hour-h signal executes held over hour h+1. A closed M1 bar appears only at `h+1:00:00+` (seconds of settle). Because the bot IS the trader, there is **no CSV append, no FedReplay tail-read, no D2 (h+2) race** — the only irreducible lag is compute latency Δ, dominated by the Core re-sim, during which the first Δ minutes of h+1 trade on stale `fed[h−1]`.
 
 ```
 every M1 close (execution cadence, poll ~1-5s):
@@ -157,7 +157,7 @@ Out-of-process `order_send` introduces ack-loss and split-brain the in-process E
 
 ---
 
-## 4. The v7 re-sim — cost, bound, and the crisis-correlated killer
+## 4. The Core re-sim — cost, bound, and the crisis-correlated killer
 
 The interim full warm re-extract (inject live bars into `bt._BARS_CACHE[(inst,False)]` + `bt._PREP_CACHE.clear()`, the `prime_2026` pattern) is **feasible for launch but not a sane steady state.** Adversarial findings, folded in:
 
@@ -172,7 +172,7 @@ The interim full warm re-extract (inject live bars into `bt._BARS_CACHE[(inst,Fa
 2. **Bound the re-sim window.** Prove (bit-identity over an overlap) that a fixed-length warm re-run — warm indicator seed from a frozen pre-2020 state + a capped rolling window still covering all live triggers — reproduces the full-from-2020 path. Re-run only that window each hour so cost stops growing.
 3. **Atomic gated snapshot.** Freeze one all-40-symbol snapshot at the boundary; refuse to start hour h until every band symbol AND every EUR cross has a settled h:59 bar. On any gap, leave hour h **ABSENT** (keep-last-good) rather than re-sim on an inconsistent tail. Alarm on N consecutive misses.
 4. **Size infra honestly + hard wall-clock stop.** Pinned non-burstable vCPU for proc-A; a hard-stop well before the next boundary that aborts to keep-last-good rather than cascade the lag. Instrument per-cycle runtime + trigger-count so overrun is visible before it spirals.
-5. **Treat the resumable v7 stepper as a steady-state LAUNCH-BLOCKER-FOR-STEADY-STATE, not an optional nicety.** The interim full re-extract is a demo crutch with a hard replacement mandate; it is not sane past a few months. It must be proven bit-identical before use — you pay the expensive warm path once to certify the cheap one. Keep it OFF the launch critical path but ON the roadmap with a deadline.
+5. **Treat the resumable Core stepper as a steady-state LAUNCH-BLOCKER-FOR-STEADY-STATE, not an optional nicety.** The interim full re-extract is a demo crutch with a hard replacement mandate; it is not sane past a few months. It must be proven bit-identical before use — you pay the expensive warm path once to certify the cheap one. Keep it OFF the launch critical path but ON the roadmap with a deadline.
 
 ---
 
@@ -186,7 +186,7 @@ Ranking on safety surface: **on-terminal EA > hybrid CSV >> sole Python bot.** T
 | **FTMO daily breaker only in-bot** | Bot dies mid-drawdown → account can breach the daily loss and hard 10% rule with nothing watching. **Sharpest killer.** | Breaker in GuardianEA `OnTick`, redundant breaker in off-host watchdog. |
 | **Terminal crash / IPC desync (split-brain)** | `positions_get` returns empty/stale → bot misreads as FLAT → **double-entry** on 33 netted legs. | Terminal-liveness every loop; HOLD-never-flat; idempotent submission + post-send verify. |
 | **Silent trade-disable (10027 / API flag)** | `order_send` fails silently; data reads keep working; a naive breaker logs "flattened" and latches false-safe while bleeding. | Poll `trade_allowed`; verify state after every action; escalate to watchdog; never latch on unverified flatten. |
-| **Guard-loop starvation** | 10–25 min v7 re-extract (can hang) sharing a process/thread with the guard freezes the time-critical breaker. | Hard process isolation (already forced by lock_v5); guard never shares proc with the re-sim; MT5 calls serialized with backpressure. |
+| **Guard-loop starvation** | 10–25 min Core re-extract (can hang) sharing a process/thread with the guard freezes the time-critical breaker. | Hard process isolation (already forced by lock_v5); guard never shares proc with the re-sim; MT5 calls serialized with backpressure. |
 | **Polling-latency breaker miss** | 1–5 s poll misses the worst-mark instant an `OnTick` EA catches → fires late. | Breaker on-terminal (OnTick), not in the poll loop. |
 | **24/7 crypto + weekend stranding** | Generator-down + bot death over a weekend = 48h+ unmanaged exposure on netted BTC/ETH/XAU. | Guardian force-flatten on stale-hold beyond a time bound (risk-policy decision). |
 
@@ -225,10 +225,10 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 **Verification ladder (Python-only where possible, else forward):**
 1. **Blend self-check** — parsed matrix reproduces `static_fed(0.70)` to <1e-12 (as the exporter does today).
 2. **b_h bit-identity** — the incremental `_run_chunk` stepper byte-reproduces `v34_s10_pin_curve.parquet` over a historical overlap *before* one live hour is trusted.
-3. **v7 bounded-window bit-identity** — the capped re-run reproduces the full-from-2020 path over an overlap.
+3. **Core bounded-window bit-identity** — the capped re-run reproduces the full-from-2020 path over an overlap.
 4. **Splice hard gate** — re-derived `eq7[boundary]` == frozen `a_last` denominator each cycle.
 5. **Same-feed daily warm reconcile** — regenerate the last N hours via the warm batch on the SAME broker feed; diff <1e-12; reseed-from-batch on drift. **Never** reconcile against the IC batch.
-6. **Forward evidence** — live/demo hours logged as 2026 out-of-sample, NOT as a reconciled record (§8). Extend expiring tables (`v5_sleeves._OPEX_WK` → 2026-02-20, `costs.POLICY_RATES` USD → 2025-12-11) or the v7 S6 sleeve silently goes flat.
+6. **Forward evidence** — live/demo hours logged as 2026 out-of-sample, NOT as a reconciled record (§8). Extend expiring tables (`v5_sleeves._OPEX_WK` → 2026-02-20, `costs.POLICY_RATES` USD → 2025-12-11) or the Core S6 sleeve silently goes flat.
 
 **Lost validation gate (accept it):** RECON-4's fast Strategy-Tester reproduction of €3,872,872 / €1,332,404 is **unavailable** to a Python bot. The execution path it newly owns can only be argued **forward**, so a divergence takes weeks of live demo to surface instead of a tester run. Plan a self-built bar-replay harness as the closest substitute.
 
@@ -236,11 +236,11 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 
 ## 8. Build plan (phased; realistic monitored demo ~4–8 weeks)
 
-1. **v34 side first (Phase 1, ~1–2 wk).** Wire brain rebuild for f34; build the b_h forward driver over `_run_chunk` incl. the one-time terminal-carry capture; **prove byte-repro of `v34_s10_pin_curve` on the overlap before trusting one live hour.** Right proving ground — no runtime history once seeded. Emit to scratch.
-2. **v7 isolated worker (Phase 2, ~1–2 wk).** Interim full warm re-extract off a live-fed cache (real USTEC, frozen 2020–2025 1m history on disk, pinned historical cache) + the **ratio-chained splice sidecar** (highest-severity item — test against the daily reconcile) + `static_fed` blend + config-hash gate + boundary-denominator assert + atomic gated snapshot + daily warm reconcile.
+1. **Satellite side first (Phase 1, ~1–2 wk).** Wire brain rebuild for f34; build the b_h forward driver over `_run_chunk` incl. the one-time terminal-carry capture; **prove byte-repro of `v34_s10_pin_curve` on the overlap before trusting one live hour.** Right proving ground — no runtime history once seeded. Emit to scratch.
+2. **Core isolated worker (Phase 2, ~1–2 wk).** Interim full warm re-extract off a live-fed cache (real USTEC, frozen 2020–2025 1m history on disk, pinned historical cache) + the **ratio-chained splice sidecar** (highest-severity item — test against the daily reconcile) + `static_fed` blend + config-hash gate + boundary-denominator assert + atomic gated snapshot + daily warm reconcile.
 3. **Live MT5 execution + safety (Option-2-specific, ~1–2 wk+).** Port `V7Core` exec primitives + the **GuardianEA** (equity-only), netting/margin/volume caps, filling-mode negotiation, retcode fail-safe, reconcile-on-start, idempotent submission, terminal-liveness/HOLD-never-flat, watchdog/reconnect, atomic ledger, broker-resident SL per entry. Run the full RUNBOOK §9 drill suite on demo.
 4. **Deploy the non-account-terminating IC preset first** (s band 0.6–0.8, margin-bound — **not** s=1.6). Do **not** put the FTMO account on a sole-bot with the breaker only in-bot. Cut the FTMO dial to ~s0.30–0.35 and augment the breaker before any FTMO capital.
-5. **Resumable v7 stepper** — separate, hard research item; OFF the launch critical path but ON the roadmap with a deadline (§4 makes it a steady-state blocker).
+5. **Resumable Core stepper** — separate, hard research item; OFF the launch critical path but ON the roadmap with a deadline (§4 makes it a steady-state blocker).
 
 ---
 
@@ -249,7 +249,7 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 - **Does the live broker quote all 37 model symbols + all 8 EUR crosses, incl. real USTEC / DE40 / US500?** A missing leg silently drops from the shadow; a missing EUR cross freezes `eurq` (FxConverter raises).
 - **Broker server timezone == IC-feed server tz (17:00 ET break)?** If not, the 2025/2026 splice has a per-bar discontinuity → book falls into keep-last-good.
 - **Does the broker allow API/algo trading on the account tier**, and is the high-leverage (1:500 hedging) login available for the s=1.6 reproduction (deployment stays 1:30 → s 0.6–0.8)?
-- **Can a bounded-window v7 re-run be proven bit-identical to the full-from-2020 path?** If not, the unbounded-growth re-sim has no exit and the resumable stepper becomes a hard launch dependency, not a roadmap item.
+- **Can a bounded-window Core re-run be proven bit-identical to the full-from-2020 path?** If not, the unbounded-growth re-sim has no exit and the resumable stepper becomes a hard launch dependency, not a roadmap item.
 - **What is the real 33-symbol order-sweep round-trip on the target VPS?** Sets whether M1-resize is achievable or must be relaxed to a named deviation.
 - **Windows VPS vs Wine+rpyc** — does the port of the numba/pandas stack + 2.1 GB frozen cache to Windows land cleanly, or does the Wine bridge's added failure surface dominate?
 - **Weekend/stranding policy** — does the guardian force-flatten netted crypto after a bounded stale-hold, or hold? (risk-policy decision, not a default).
@@ -260,7 +260,7 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 ## 10. What makes this hard / when this is the wrong choice
 
 **What makes it hard** is entirely **upstream and shared with Option 1** — the Python choice deletes only the CSV/MQL5 *target* handoff, not the mountain:
-- 3 of 4 model inputs (f7, eq7→a_h, eq34→b_h) have no live producer; the v7 side is path-dependent with the repo's one sanctioned `NotImplementedError`, so the interim is a growing-cost hourly re-sim.
+- 3 of 4 model inputs (f7, eq7→a_h, eq34→b_h) have no live producer; the Core side is path-dependent with the repo's one sanctioned `NotImplementedError`, so the interim is a growing-cost hourly re-sim.
 - Warm shadows are non-negotiable (COVID cold-start artifact).
 - The ratio-chained splice seed is a silent, catastrophic corruption surface that passes its own self-check.
 - Option 2 *adds* a live-safety layer (netting, margin, breaker, fills, volume caps, reconcile, watchdog) whose cost equals or exceeds the hybrid's tail-reader — and most of that cost hides in doing it *safely*.
@@ -268,10 +268,10 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 **When this is the wrong choice:**
 - **For the FTMO / any funded live-money account, if the owner refuses the on-terminal GuardianEA.** Retail MT5 has no passive dead-man; a sole-bot leaves the account-terminating rule enforced only by a process that dies in the crisis. Ship an on-terminal EA (Option 1) or keep the GuardianEA — do not run FTMO sole-bot.
 - **If the fast Strategy-Tester reproduction gate is considered essential.** A Python bot cannot drive it; you accept forward-only validation and a weeks-long divergence-detection latency.
-- **If a bounded v7 re-run cannot be proven** and steady-state CPU duty / lag death-spiral is unacceptable — then the resumable stepper must exist first, which is a hard, open research item.
+- **If a bounded Core re-run cannot be proven** and steady-state CPU duty / lag death-spiral is unacceptable — then the resumable stepper must exist first, which is a hard, open research item.
 - **If the deployment cannot be a Windows (or robust Wine) host with a pinned non-burstable vCPU** — the whole brain+executor+breaker stack pins to one Windows terminal, a concentrated failure domain.
 
-**Honest one-liner:** Option 2 is the *right substrate* — the model, blend, target engine, and account kernel are already Python, so a one-unit bot cleanly deletes the handoff the owner wants gone — and its execution layer is the *low-risk* part. But its feasibility must **not** greenlight the project: it inherits every upstream blocker unchanged from Option 1 and adds a live-safety layer whose cost equals or exceeds the hybrid's. Keep a target-less guardian on the terminal, isolate the three model processes, pin the historical re-run and bound the v7 window, ratio-chain the seed, and validate forward.
+**Honest one-liner:** Option 2 is the *right substrate* — the model, blend, target engine, and account kernel are already Python, so a one-unit bot cleanly deletes the handoff the owner wants gone — and its execution layer is the *low-risk* part. But its feasibility must **not** greenlight the project: it inherits every upstream blocker unchanged from Option 1 and adds a live-safety layer whose cost equals or exceeds the hybrid's. Keep a target-less guardian on the terminal, isolate the three model processes, pin the historical re-run and bound the Core window, ratio-chain the seed, and validate forward.
 
 ---
 
@@ -279,6 +279,6 @@ The **only** sanctioned feedback is error-correction of a shadow against *its ow
 - `mt5/ea/Include/FMA3/V7Core.mqh` — exec primitives (SendSplit L480, DesiredLots L510–550, HeldNet/CollectTickets/CloseAll/ReducePos L555–620); `Guardian.mqh` — breaker (→ GuardianEA)
 - `model/v3/EA_V3_DESIGN.md` (sizing 4.1, breaker 4.3), `model/v3/reproduce.py::static_fed`, `model/v3/run_forward_oneshot.py::blend_static` (+ the L402 `NotImplementedError`)
 - `engine/record_engine_ext.py` — `_run_chunk`/`_run_chunk_stop` (b_h kernel), `simulate_account_1m_ext`
-- `engine/v7_bridge/extract_positions.py` — v7 extractor (path-dependent blocker), `bt._BARS_CACHE`/`_PREP_CACHE` priming
+- `engine/v7_bridge/extract_positions.py` — Core extractor (path-dependent blocker), `bt._BARS_CACHE`/`_PREP_CACHE` priming
 - `engine/build_ext_cache.py::hourly_from_1m` — 1m→1h reduction (shared feed)
 - `/Users/dsalamanca/vs_env/FableMultiAssets2/ea/brain/target_engine.py` — f34 live; `ea/bridge/reconcile.py` — reconcile discipline

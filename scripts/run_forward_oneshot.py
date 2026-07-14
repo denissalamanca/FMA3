@@ -14,9 +14,9 @@ forward-test criteria are pre-registered. Two hard gates enforce that:
 WHAT IT DOES (when finally run)
 -------------------------------
 1. Loads the LOCKED configuration from the CLI-supplied JSON (nothing about
-   the winning federation is hardcoded here — the winner is decided by the
+   the winning blend is hardcoded here — the winner is decided by the
    pre-registered experiment ladder and frozen into the config file).
-2. Builds the 2026H1 federation matrix from the PARENTS' forward positions:
+2. Builds the 2026H1 blend matrix from the PARENTS' forward positions:
      v3.4 side — rebuilt in-process (see FMA2-SIDE LOADER below) or loaded
                  from a parquet named in the config;
      v7 side  — loaded from a parquet named in the config (see V7 SIDE).
@@ -36,14 +36,14 @@ CONFIG SCHEMA (all load-bearing keys REQUIRED — no silent defaults)
                                           # blend_forward() BEFORE writing
                                           # FORWARD_TEST.md — this driver
                                           # exits on unknown mechanisms.
-  "w_v7":             float in [0,1],     # capital share of the v7 book
+  "core_weight":             float in [0,1],     # capital share of the v7 book
   "scale_mult":       float,              # H-FED-3 global scale multiplier
   "subequity_weighting": "constant" | "simulated",
       # constant : blend weights fixed at (w, 1-w) across 2026H1
       # simulated: each parent's forward matrix is first run ALONE through
       #            the ext engine on 2026H1 (seeded w*initial / (1-w)*initial)
       #            and blend weights drift with the realized sub-curves —
-      #            the exact H-FED-1 bookkeeping (run_hfed1.build_fed_frac)
+      #            the exact H-FED-1 bookkeeping (run_hfed1.build_book_frac)
   "ustec_policy":     "proxy" | "drop",   # USTEC has no Duka 2026 feed.
       # proxy: keep USTEC exposure, priced on USTEC_PROXY_USA500_1m.parquet
       #        (USA500 prices — an explicit, documented approximation)
@@ -79,7 +79,7 @@ So the loader:
      eval_v34_pin_s10.build_c2 does (V2_CAPS + mag@0.05, x SCALE 10,
      apply_hard_limits with the structural gold cap);
   c. GATES the rebuild: on the 2020-2025 grid the re-run matrix must match
-     the pinned construction (books.build_v34_frac_1h) to <=1e-9 — proving
+     the pinned construction (books.build_sat_frac_1h) to <=1e-9 — proving
      both that the re-run reproduces the frozen artifacts and that the 2026
      extension did not perturb history. Aborts otherwise;
   d. restores core.CACHE and clears the caches again.
@@ -306,7 +306,7 @@ def build_v34_forward_frac() -> tuple[pd.DataFrame, dict]:
     t0 = time.time()
     print("[v34-loader] pinned 2020-2025 construction (baseline for the "
           "overlap gate) ...", flush=True)
-    baseline = books.build_v34_frac_1h()
+    baseline = books.build_sat_frac_1h()
 
     build_fwd_hourly_cache()
     standard_cache = core.CACHE
@@ -497,16 +497,16 @@ def restrict_to_forward(frac: pd.DataFrame, tradable: list[str]
 # ---------------------------------------------------------------------------
 # Federation blend (static — the H-FED-1 bookkeeping)
 # ---------------------------------------------------------------------------
-def blend_static(frac7: pd.DataFrame, frac34: pd.DataFrame, w: float,
+def blend_static(core_frac: pd.DataFrame, sat_frac: pd.DataFrame, w: float,
                  a: pd.Series | None = None, b: pd.Series | None = None
                  ) -> pd.DataFrame:
     """Capital-weighted blend of the parents' fraction matrices.
 
-    Port of scripts/run_hfed1.py::build_fed_frac (the pre-registered H-FED-1
-    mechanics): joint target = frac7 * (w*A_h/J_h) + frac34 * ((1-w)*B_h/J_h)
+    Port of scripts/run_hfed1.py::build_book_frac (the pre-registered H-FED-1
+    mechanics): joint target = core_frac * (w*A_h/J_h) + sat_frac * ((1-w)*B_h/J_h)
     with A/B the parents' normalized sub-curves sampled causally at hour h
     and J = w*A + (1-w)*B. With a=b=None the weights are constant (A=B=1)."""
-    hours = frac7.index.union(frac34.index)
+    hours = core_frac.index.union(sat_frac.index)
     if a is None or b is None:
         wa = pd.Series(w, index=hours)
         wb = pd.Series(1.0 - w, index=hours)
@@ -516,11 +516,11 @@ def blend_static(frac7: pd.DataFrame, frac34: pd.DataFrame, w: float,
         j_h = w * a_h + (1.0 - w) * b_h
         wa = w * a_h / j_h
         wb = (1.0 - w) * b_h / j_h
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    return (f7.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
-            + f34.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    return (f_core.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
+            + f_sat.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
 
 
 def monthly_returns(eq: pd.Series) -> dict[str, float]:
@@ -547,10 +547,10 @@ def main(argv: list[str]) -> int:
     tradable = fwd_tradable_symbols(cfg["ustec_policy"])
     bar_files = fwd_bar_files(tradable, cfg["ustec_policy"])
 
-    frac7_full, v7_info = load_v7_forward_frac(cfg)
-    frac34_full, v34_info = load_v34_forward_frac(cfg)
-    frac7, drop7 = restrict_to_forward(frac7_full, tradable)
-    frac34, drop34 = restrict_to_forward(frac34_full, tradable)
+    core_frac_full, v7_info = load_v7_forward_frac(cfg)
+    sat_frac_full, v34_info = load_v34_forward_frac(cfg)
+    core_frac, drop7 = restrict_to_forward(core_frac_full, tradable)
+    sat_frac, drop34 = restrict_to_forward(sat_frac_full, tradable)
 
     sub_runs = {}
     a = b = None
@@ -558,11 +558,11 @@ def main(argv: list[str]) -> int:
         print("[oneshot] parent sub-runs for causal blend weights ...",
               flush=True)
         r7 = RX.run_record_ext(
-            frac7, start_quarter=FWD_QUARTERS[0], end_quarter=FWD_QUARTERS[1],
+            core_frac, start_quarter=FWD_QUARTERS[0], end_quarter=FWD_QUARTERS[1],
             bar_files=bar_files, initial=w * initial,
             label="fwd_v7_alone", verbose=True, run_bootstrap=False)
         r34 = RX.run_record_ext(
-            frac34, start_quarter=FWD_QUARTERS[0],
+            sat_frac, start_quarter=FWD_QUARTERS[0],
             end_quarter=FWD_QUARTERS[1], bar_files=bar_files,
             initial=(1.0 - w) * initial,
             label="fwd_v34_alone", verbose=True, run_bootstrap=False)
@@ -573,7 +573,7 @@ def main(argv: list[str]) -> int:
                              ("cagr", "maxdd_worst", "maxdd_close", "sharpe",
                               "final_equity", "n_trades", "quarterly")}
 
-    fed = blend_static(frac7, frac34, w, a, b) * float(cfg["scale_mult"])
+    fed = blend_static(core_frac, sat_frac, w, a, b) * float(cfg["scale_mult"])
     if cfg["combined_hard_limits"]:
         hl = cfg["combined_hard_limits"]
         fed = E.apply_hard_limits(fed, gold_cap=float(hl["gold_cap"]),

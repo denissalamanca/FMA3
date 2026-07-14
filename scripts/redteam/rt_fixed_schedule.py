@@ -2,7 +2,7 @@
 """rt_fixed_schedule — PROTOCOL.md §6(b) / §5.3: the fixed-schedule ablation.
 
 The NSF5 house discriminator for schedule-dependent winners, run on WINNERS
-only (never as a rescue for failures): freeze the federation re-split dates
+only (never as a rescue for failures): freeze the blend re-split dates
 from the winner's recorded events list and re-run the record engine with
 those dates as UNCONDITIONAL edges — no band-trigger logic.
 

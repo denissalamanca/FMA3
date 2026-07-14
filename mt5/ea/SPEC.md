@@ -1,4 +1,4 @@
-# FableFederation_V1 — architecture spec (FMA3 federation EA)
+# FableFederation_V1 — architecture spec (FMA3 blend EA)
 
 **Status: SPEC, 2026-07-10.** This document is the build contract for the ONE new FMA3 EA that
 supersedes the two-parent-EA deployment (owner decision tonight). Companion:
@@ -7,14 +7,14 @@ supersedes the two-parent-EA deployment (owner decision tonight). Companion:
 
 Ground rules (owner, non-negotiable):
 
-1. **v7 sleeves + band logic transplant VERBATIM** from NSF5
+1. **Core sleeves + band logic transplant VERBATIM** from NSF5
    `mt5/ea/FableMultiAsset1_V7.mq5` (PROVEN: IC real-tick runs 53/54 today, €10k→€631k @R12.8 /
-   €398k @R8.96). No "improvements". Parity gate **G1**: v7-only mode reproduces run 54.
-2. **The v3.4 side is a NEW consumption layer only.** Signals STAY IN PYTHON. Tester mode reads a
+   €398k @R8.96). No "improvements". Parity gate **G1**: Core-only mode reproduces run 54.
+2. **The Satellite side is a NEW consumption layer only.** Signals STAY IN PYTHON. Tester mode reads a
    frozen-targets replay CSV (hash-gated); live mode reads a Python-brain targets file. The FMA2
    EA/replay stack **never worked correctly** per owner ground truth — it is a REFERENCE for file
    formats only (`FMA3/docs/v1.0/FMA2_EA_AUDIT.md`), never a code base to build on.
-3. **Federation bookkeeping = fresh-seed virtual sub-books at w = 0.70/0.30**, each sub-book's
+3. **Blend bookkeeping = fresh-seed virtual sub-books at w = 0.70/0.30**, each sub-book's
    capital compounding on its own P&L (the FMA3 v1.0 construction —
    `docs/v1.0/STRATEGY.md` §4, `strategy_fma3.py`, PROTOCOL §5.7 anti-coupling).
 4. **FTMO guardian module, config-gated** (`InpDailyStopX`, 0 = off). Gate **G4**: off ⇒
@@ -28,10 +28,10 @@ Ground rules (owner, non-negotiable):
 FMA3/mt5/ea/
   FableFederation_V1.mq5          main: inputs, OnInit/OnTick/OnDeinit orchestration only
   Include/FMA3/
-    V7Core.mqh                    the VERBATIM v7 transplant (sleeves, signals, band/harvest,
+    V7Core.mqh                    the VERBATIM Core transplant (sleeves, signals, band/harvest,
                                   ledger, sizing, execution primitives, logging) — see
                                   TRANSPLANT_V7.md for the function-by-function inventory
-    Federation.mqh                F3_* sub-book ledgers: v34 realized/floating attribution by
+    Federation.mqh                F3_* sub-book ledgers: Satellite realized/floating attribution by
                                   magic range, virtual book equities, bookkeeping invariant log
     V34Replay.mqh                 F3_* tester loader: frozen-targets CSV, config-hash gate,
                                   forward cursor, keep-last-good (format §3)
@@ -45,16 +45,16 @@ FMA3/mt5/ea/
   presets/                        .set files (matrix §7)
 ```
 
-Naming law: **everything transplanted keeps its v7 name and body byte-for-byte** (only the
+Naming law: **everything transplanted keeps its Core name and body byte-for-byte** (only the
 runtime file-name prefix changes, `portfolio_v7_*` → `fma3_fed_*`, and the two seams in
 TRANSPLANT_V7.md §3). **Everything new is `F3_`-prefixed** (functions, globals `g_f3*`, inputs
-per §7) so collisions with v7 identifiers are impossible without touching v7 code.
+per §7) so collisions with Core identifiers are impossible without touching Core code.
 
-Driver model (from v7, unchanged): attach to a 24/7 M1 clock chart (ETHUSD or BTCUSD), one pass
-per new M1 bar; hedging account required (v7 `OnInit` check stays). The v3.4 pass appends after
-the v7 sleeve loop inside the same bar pass. The guardian check is the only per-tick logic and
+Driver model (from Core, unchanged): attach to a 24/7 M1 clock chart (ETHUSD or BTCUSD), one pass
+per new M1 bar; hedging account required (Core `OnInit` check stays). The Satellite pass appends after
+the Core sleeve loop inside the same bar pass. The guardian check is the only per-tick logic and
 sits before the new-bar early-return (§6). Magic ranges keep both parents' conventions and
-cannot collide: v7 `InpMagicBase=360000` → 360001..360012 (verbatim); v3.4
+cannot collide: Core `InpMagicBase=360000` → 360001..360012 (verbatim); Satellite
 `InpMagicBaseV34=8400000` → 8400001..8400008, sleeve order fixed as FMA2 `brain_config.SLEEVES`:
 `meanrev, carry_breakout, seasonal, intraday, crisis, trend_v2, crypto_smart, mag_xau`.
 
@@ -62,13 +62,13 @@ Mode switches (all config, one binary):
 
 | Input | Meaning |
 |---|---|
-| `InpEnableV7` (default true) | run the v7 book |
-| `InpEnableV34` (default true) | run the v3.4 consumption layer |
-| `InpV34TesterReplay` (auto-true in tester) | v3.4 source = frozen CSV vs live brain file |
+| `InpEnableV7` (default true) | run the Core book |
+| `InpEnableV34` (default true) | run the Satellite consumption layer |
+| `InpV34TesterReplay` (auto-true in tester) | Satellite source = frozen CSV vs live brain file |
 | `InpDailyStopX` (default 0 = off) | FTMO guardian |
 
-`g_f3FedActive = (InpEnableV34 && InpEnableV7)` — the single flag that switches the v7
-book-equity seam (§5.3). With `InpEnableV34=false` the EA takes the byte-identical v7 code path
+`g_f3FedActive = (InpEnableV34 && InpEnableV7)` — the single flag that switches the Core
+book-equity seam (§5.3). With `InpEnableV34=false` the EA takes the byte-identical Core code path
 (G1).
 
 ---
@@ -79,11 +79,11 @@ All runs: IC Markets EU demo login (Raw, EUR, hedging), model **every tick based
 ticks**, deposit **EUR 10,000**, clock chart ETHUSD M1, per `mt5/README.md` §(a). Collect the
 HTML report + `Common\Files` CSVs for each.
 
-### G1 — v7 parity (the transplant is verbatim)
+### G1 — Core parity (the transplant is verbatim)
 
 - **Preset:** `FED_G1_V7ONLY_R896.set` = run 54's exact config re-expressed
   (`InpEnableV34=false`, `InpDailyStopX=0`, `InpRisk=8.96`, `InpInitial=10000.0`, band
-  0.25/1.75/5, `InpEqualWeight=true`, `InpUS500=USTEC`, all other v7 inputs as
+  0.25/1.75/5, `InpEqualWeight=true`, `InpUS500=USTEC`, all other Core inputs as
   `presets/V7_FMA3IC_R896.set`).
 - **Run:** one full pass 2020-01-01 → 2025-12 (same window as run 54).
 - **PASS:** final equity equals run 54 **to the cent (€398,368.75)**; identical total deal
@@ -93,7 +93,7 @@ HTML report + `Common\Files` CSVs for each.
   the gate.
 - Health row: `volume_rejects=0` (plumbing STOP otherwise, DEMO.md rule 7).
 
-### G2 — v3.4 replay consumption layer
+### G2 — Satellite replay consumption layer
 
 Three parts:
 
@@ -102,32 +102,32 @@ Three parts:
   journal). Restore file → INIT succeeds and logs `loaded N rows … hash=… scale=…`.
 - **G2b (full replay, long):** preset `FED_G2_V34ONLY_S10.set` (`InpEnableV7=false`,
   `InpV34Mult=1.0` i.e. native scale-10 file unscaled), window 2020-01-02 → 2025-12-31.
-  **PASS:** run completes; tester CAGR ≥ **0.85 × 88.66%** (the v3.4 record pin,
+  **PASS:** run completes; tester CAGR ≥ **0.85 × 88.66%** (the Satellite record pin,
   `v34_s10_pin_1m.json` — the parents' B1 retention bar); `volume_rejects=0`; equity-DD
-  reported (feeds the v3.4 k, no pass/fail on it — the COVID tail is the measurement, not a
+  reported (feeds the Satellite k, no pass/fail on it — the COVID tail is the measurement, not a
   gate, cf. `k_calibration_v7.json` note).
 - **G2c (loader semantics, minutes on a 1-week window):** an hour with no rows keeps the
   last-good target vector (logged `REPLAY keep-last-good`); within a populated hour a symbol
   absent from the rows is flattened; `flat_at_server_hour`/`no_entry_after_hour` honored
   (verify one seasonal 06:00 flatten and one intraday 21:00 flatten in the deal list).
 
-### G3 — federation bookkeeping
+### G3 — blend bookkeeping
 
 - **Preset:** `FED_IC.set` (§7), both books on, guardian off. One full pass 2020→2025-12.
 - **PASS (bookkeeping invariants, checked from `fma3_fed_books.csv` daily rows):**
   1. `E_v7_virtual + E_v34_virtual − InpInitial = ACCOUNT_EQUITY` within **±0.5%** of equity at
      every daily mark (the residual = margin/stop-out coupling the record engine prices; a
      drift beyond that is an attribution bug);
-  2. v7 re-split (`REBAL`) events reseed **only** v7 sleeves from **v7 virtual book equity** —
-     no v34 P&L in any v7 seed (grep: every REBAL row's book equity equals the same row's
+  2. Core re-split (`REBAL`) events reseed **only** Core sleeves from **Core virtual book equity** —
+     no Satellite P&L in any Core seed (grep: every REBAL row's book equity equals the same row's
      `E_v7_virtual`);
-  3. the v7 band re-split **dates** match the G1 run's dates exactly (anti-coupling: v7's
-     trigger state never sees v34 P&L — the ±€128 chaos lesson, STRATEGY.md §4.5). A date
+  3. the Core band re-split **dates** match the G1 run's dates exactly (anti-coupling: Core's
+     trigger state never sees Satellite P&L — the ±€128 chaos lesson, STRATEGY.md §4.5). A date
      diff is a FAIL unless traced to a shared-margin order rejection, which must be logged;
   4. no (symbol, magic) is ever touched by both layers (magic ranges disjoint by
      construction; assert in `OnInit`).
-- **Report read (not pass/fail):** combined curve vs the federation record reference at s=1.6
-  (`hrisk1_results.json`: CAGR 170.2%, maxDD_worst 22.58%, tail 8.12%) → the federation k, via
+- **Report read (not pass/fail):** combined curve vs the blend record reference at s=1.6
+  (`hrisk1_results.json`: CAGR 170.2%, maxDD_worst 22.58%, tail 8.12%) → the blend k, via
   `scripts/combine_tester_reports.py` conventions.
 
 ### G4 — guardian no-op + function
@@ -139,13 +139,13 @@ Three parts:
 - **G4b (function, short):** same window, `InpDailyStopX=2.0`. **PASS:** on every server day
   where equity ≤ dayAnchor×0.98: all positions (both books' magics) flattened on that tick,
   `GUARD_STOP` logged with anchor/equity, zero order sends until the next server day, and a
-  `GUARD_RESUME` row at the rollover. v7 ledger seeds are NOT reseeded by the guardian (the
+  `GUARD_RESUME` row at the rollover. Core ledger seeds are NOT reseeded by the guardian (the
   flatten realizes P&L into the existing quarter ledger; band logic self-heals next bar —
   verify no spurious REBAL on the stop day).
 
 ---
 
-## 3. v3.4 replay-file format (tester mode) — the FMA3 version
+## 3. Satellite replay-file format (tester mode) — the FMA3 version
 
 Format is carried over from the FMA2 tester loader **as a file format** (audit §1.3; loader
 semantics re-implemented fresh in `V34Replay.mqh` — no FMA2 code reuse).
@@ -158,14 +158,14 @@ Data rows:        ts_server_epoch,symbol,exposure_frac,sleeve[,flat_at_server_ho
 - **Location:** `Common\Files\FMA3_v34_replay.csv` (`FILE_COMMON` — tester agents see it).
   Input `InpV34ReplayFile` for the name.
 - **Header:** key=value tokens, order-free. `config_hash` MUST equal the compiled constant
-  `F3_V34_CONFIG_HASH = "48c09199fbf83d82"` (the v3.4 book hash, `strategy_fma3.py` parents.v34)
+  `F3_V34_CONFIG_HASH = "48c09199fbf83d82"` (the Satellite book hash, `strategy_fma3.py` parents.v34)
   or `OnInit` hard-fails (`INIT_FAILED`) — G2a. `global_scale` is an echo, logged; the file is
   ALWAYS the native scale-10 book — the deployment dial lives in the EA (`InpV34Mult`, §5.2),
   so ONE frozen artifact serves every preset (this deliberately supersedes the FMA2 Run-2
   "regenerate + restamp per dial" pattern, audit §3).
 - **Rows:** ts-ascending. `ts_server_epoch` = the H1 bar-open **server wall clock interpreted as
   seconds-since-1970 with NO timezone shift** (matches `iTime()` semantics exactly; e.g.
-  2020-01-02 00:00 server = 1577923200). `exposure_frac` = signed fraction of the v3.4
+  2020-01-02 00:00 server = 1577923200). `exposure_frac` = signed fraction of the Satellite
   **sub-book equity**, already ×10 and hard-limit/cap-distributed by the Python book — the EA
   never re-derives, only multiplies by `InpV34Mult`. `sleeve` (mandatory in the FMA3 version —
   no `DefaultSleeveForSymbol` guessing; XAUUSD is 4-way ambiguous) maps to magic via the fixed
@@ -177,7 +177,7 @@ Data rows:        ts_server_epoch,symbol,exposure_frac,sleeve[,flat_at_server_ho
   populated hour, a (symbol, sleeve) not listed = target 0 (flatten-by-omission).
 - **12-decimal fracs** (`%.12f`) so leg sums re-verify against the Python book at 1e-9.
 
-**Regeneration script contract** (`FMA3/scripts/export_v34_replay.py`, NEW, FMA3-side):
+**Regeneration script contract** (`FMA3/scripts/export_sat_replay.py`, NEW, FMA3-side):
 
 1. Reads the pinned Python book ONLY — `FMA2 ea/brain/target_engine.build_book(rebuild=False)`
    on frozen parquets via read-only import (exactly the audited exporter's data path; no 1m
@@ -217,7 +217,7 @@ Data rows:        ts_server_epoch,symbol,exposure_frac,sleeve[,flat_at_server_ho
 }
 ```
 
-  `exposure` = signed fraction of the v3.4 sub-book equity at native scale 10 (identical
+  `exposure` = signed fraction of the Satellite sub-book equity at native scale 10 (identical
   convention to the replay CSV; the EA applies `InpV34Mult`). Magic derived EA-side from the
   fixed sleeve table — the file carries no magics (one fewer thing to drift).
 - **Validation on read (every M1 pass, cheap mtime check first):**
@@ -228,20 +228,20 @@ Data rows:        ts_server_epoch,symbol,exposure_frac,sleeve[,flat_at_server_ho
   3. `seq` must strictly increase; ≤ last-accepted ⇒ ignore silently (normal re-read).
 - **Staleness rule:** if `bar_time_server` is older than `InpV34StaleMin` (default **150**
   minutes = 2 signal bars + slack) against `TimeTradeServer()`:
-  **HOLD** — keep all held v3.4 positions untouched, suppress new entries and target changes,
+  **HOLD** — keep all held Satellite positions untouched, suppress new entries and target changes,
   still honor `flat_at_server_hour` forced exits (risk-reducing), and alert once per episode
-  (`V34_STALE` row + `Alert()`), with a `V34_RESUME` row when a fresh file lands. The v7 book
+  (`V34_STALE` row + `Alert()`), with a `V34_RESUME` row when a fresh file lands. The Core book
   is unaffected.
 - **Failure behavior (missing file at init, unparseable, hash-rejected):** same HOLD + alert
   posture. **Never flatten on data failure alone** — flattening is the guardian's job (§6) or
   the owner's. No halt-latch: recovery is automatic on the next valid file.
 
 Tester note: in the Strategy Tester `InpV34TesterReplay` forces the CSV source; the live reader
-is compiled but unreachable (mirrors v7's `g_live` pattern).
+is compiled but unreachable (mirrors Core's `g_live` pattern).
 
 ---
 
-## 5. Federation bookkeeping — algorithm and the dial reconciliation
+## 5. Blend bookkeeping — algorithm and the dial reconciliation
 
 ### 5.1 The construction being implemented
 
@@ -252,32 +252,32 @@ cross-book rebalancing ever, and neither book's internal trigger state may see t
 
 ### 5.2 How the (w, 1−w) split is carried — the reconciliation (READ THIS)
 
-The transplanted v7 code seeds its sleeve ledger as `g_seed[n] = InpInitial × W[n]`
+The transplanted Core code seeds its sleeve ledger as `g_seed[n] = InpInitial × W[n]`
 (`FableMultiAsset1_V7.mq5:1169`) and sizes as `lots = VBalance(n) × |m(R)| / unit_eur`
 (`:604,:610` with `:742`), i.e. notional ∝ `InpRisk × InpInitial`. Two mathematically
-equivalent ways to put the v7 book on a 0.70 sub-account at global scale s
+equivalent ways to put the Core book on a 0.70 sub-account at global scale s
 (dimensional identity `R·E` invariant: **8.96 × 10,000 ≡ 12.8 × 7,000**):
 
-| Convention | Seeds | v7 dial | v3.4 frac multiplier | Status |
+| Convention | Seeds | Core dial | Satellite frac multiplier | Status |
 |---|---|---|---|---|
 | **(A) w-in-the-dial** (SHIPPED) | both virtual books seed at the FULL `InpInitial` | `InpRisk = 8·w·s = 5.6·s` (= **8.96** @ IC s=1.6) | `InpV34Mult = (1−w)·s` (= **0.48** @ IC) | proven — run 54 IS this operating point |
-| (B) w-in-the-seed | v7 book `w·InpInitial` = €7k, v34 book `(1−w)·InpInitial` = €3k | `InpRisk = 8·s` (= 12.8 @ IC) | `InpV34Mult = s` (= 1.6) | REJECTED for shipping |
+| (B) w-in-the-seed | Core book `w·InpInitial` = €7k, Satellite book `(1−w)·InpInitial` = €3k | `InpRisk = 8·s` (= 12.8 @ IC) | `InpV34Mult = s` (= 1.6) | REJECTED for shipping |
 
 **(A) ships.** Reasons, in force order:
 
-1. **Run-54 fidelity.** v7's per-sleeve clips are ABSOLUTE and do not rescale with the dial
+1. **Run-54 fidelity.** Core's per-sleeve clips are ABSOLUTE and do not rescale with the dial
    (gold donch ±6 `:384-385`, night [0,6] `:387`, USTEC ±6/Monday [0,10] `:400-401`, S6
    [0,6] `:366`, BTC [0,1.2] `:457` — `mt5/README.md` "Dimensional check"). (A) at R8.96
    reproduces the exact clip-binding behavior the owner just validated twice; (B) at R12.8
    binds the caps harder and diverges from both run 54 and the record pin (which scales
    already-clipped R8 fracs by w·s without re-clipping).
-2. **G1 is free.** v7-only parity mode and federation mode use the SAME seeds and dial — the
-   v7 book in federation is behaviorally run 54 modulo shared margin.
+2. **G1 is free.** Core-only parity mode and blend mode use the SAME seeds and dial — the
+   Core book in the blend is behaviorally run 54 modulo shared margin.
 3. It is the deployment convention the FMA3 v1.0 package already locked
    (`docs/v1.0/DEMO.md` deployment item 2; `mt5/README.md` §c: both stacks seeded €10k, "each
    dial already carrying w·s", `E_fed = E_v7 + E_v34 − 10,000`).
 
-Scale-invariance (STRATEGY.md §4.4: v7 band triggers are slot RATIOS; v3.4 positions are
+Scale-invariance (STRATEGY.md §4.4: Core band triggers are slot RATIOS; Satellite positions are
 equity FRACTIONS) is what makes (A) ≡ (B) in return space; what is NOT invariant (clip
 binding, min-lot quantization) is exactly why the proven point (A) wins. The w=0.70/0.30
 fresh-seed split of the v1.0 construction is thus carried **in the dials, in return space**,
@@ -286,16 +286,16 @@ is why the guardian and margin reality read the REAL account (§5.4, §6).
 
 ### 5.3 The ledgers (exact)
 
-**v7 book — the transplanted ledger, untouched:** `g_seed[]/g_realized[]` per sleeve,
-`UpdateRealized()` folds history deals by magic (`:725-741`; v3.4 magics fall outside
+**Core book — the transplanted ledger, untouched:** `g_seed[]/g_realized[]` per sleeve,
+`UpdateRealized()` folds history deals by magic (`:725-741`; Satellite magics fall outside
 `InpMagicBase+1..+12` and are skipped by the existing range check `:733-734` — verbatim code
-already federation-safe). Sleeve capital = `VBalance(n) = g_seed[n]+g_realized[n]`.
+already blend-safe). Sleeve capital = `VBalance(n) = g_seed[n]+g_realized[n]`.
 
-**v7 virtual book equity** (new, `Federation.mqh`):
+**Core virtual book equity** (new, `Federation.mqh`):
 `E_v7 = Σ_{n: W[n]>0} (VBalance(n) + FloatingPnL(n))` — at seed exactly `InpInitial`.
 
-**THE ONE SEAM:** v7's re-split reseeds from `preEquity = AccountInfoDouble(ACCOUNT_EQUITY)`
-(`QuarterRebalance` `:872`). In federation the account contains v34 P&L ⇒ using it would couple
+**THE ONE SEAM:** Core's re-split reseeds from `preEquity = AccountInfoDouble(ACCOUNT_EQUITY)`
+(`QuarterRebalance` `:872`). In the blend the account contains Satellite P&L ⇒ using it would couple
 the books (banned). Replacement:
 
 ```mql5
@@ -306,15 +306,15 @@ double preEquity = g_f3FedActive ? F3_V7BookEquity()            // virtual sub-b
 `BandTriggered()`/`HarvestTriggered()` already read per-sleeve `VBalance+FloatingPnL` ratios —
 no seam, verbatim, and invariant to the convention choice.
 
-**v3.4 book (new):** `g_f3Seed34 = InpInitial` (convention A), `g_f3Realized34` accumulated
+**Satellite book (new):** `g_f3Seed34 = InpInitial` (convention A), `g_f3Realized34` accumulated
 from history deals with magic ∈ [8400001, 8400008] (same cursor pattern as `UpdateRealized`,
 own cursor), `F3_V34Floating()` by magic range.
 `E_v34 = g_f3Seed34 + g_f3Realized34 + F3_V34Floating()`. Never reseeded (no re-split exists in
-the v3.4 book; fixed-fraction by construction).
+the Satellite book; fixed-fraction by construction).
 
-**v3.4 sizing (the order loop, `V34Exec.mqh`):** per target leg
+**Satellite sizing (the order loop, `V34Exec.mqh`):** per target leg
 `desired_lots = sign(frac) × RoundLots(sym, |frac × InpV34Mult| × E_v34 / unit_eur)` with
-`unit_eur = px × contract × EurPerQuote(sym)` (v7's `:601-624` primitives, incl. the
+`unit_eur = px × contract × EurPerQuote(sym)` (Core's `:601-624` primitives, incl. the
 `InpMarginCap` margin clamp and `SYMBOL_VOLUME_LIMIT` guard, reused as-is with
 `balance = E_v34`); diff vs `HeldNet(sym, magic)` with the same 0.25 relative band
 (`InpRebalBand`); same-sign delta / reversal-close+reopen / flatten logic mirroring
@@ -350,14 +350,14 @@ Config: `InpDailyStopX` (percent, **0 = off**), `InpGuardAnchorMode` (fixed: FTM
      the transplanted `CloseAll` per (symbol, magic) — market-closed symbols retried each tick
      while halted (crypto is 24/7; FX session gaps are the only wait);
   2. latch `g_f3Halted = true` until the next server-day rollover — while halted NO order path
-     runs (v7 sleeve loop and v34 exec both gated), signal recomputes still run (state stays
+     runs (Core sleeve loop and Satellite exec both gated), signal recomputes still run (state stays
      warm);
   3. log `GUARD_STOP` (anchor, equity, x) to the decisions CSV + `Alert()`; `GUARD_RESUME` at
      rollover.
 - **Ledger interaction:** the flatten realizes P&L into both books' normal deal attribution
-  (v7's `UpdateRealized` + F3 v34 cursor) — NO reseed, NO band-clock reset (H-FED-2 corollary:
-  v7's min-gap clock never resets on a federation-level event). Next day the v7 sleeves re-open
-  toward their targets through the verbatim `ExecSleeve` path; v34 re-opens on its next target
+  (Core's `UpdateRealized` + F3 Satellite cursor) — NO reseed, NO band-clock reset (H-FED-2 corollary:
+  Core's min-gap clock never resets on a blend-level event). Next day the Core sleeves re-open
+  toward their targets through the verbatim `ExecSleeve` path; Satellite re-opens on its next target
   application.
 - **Restart hardening (live):** anchor + halt latch persisted in the F3 state file so a
   terminal restart inside a halted day stays halted.
@@ -370,7 +370,7 @@ s below 0.5 as of tonight's log).
 
 ## 7. Preset matrix
 
-All presets share the v7 core block verbatim from `presets/V7_FMA3IC_R896.set` (band 0.25/1.75/5,
+All presets share the Core core block verbatim from `presets/V7_FMA3IC_R896.set` (band 0.25/1.75/5,
 `InpEqualWeight=true`, sleeve enables FXTUJ/AU/EU=false + S6/BTC=true, `InpUS500=USTEC`, IC
 symbol names) unless stated.
 
@@ -382,14 +382,14 @@ symbol names) unless stated.
 | `FED_FTMO.set` | true | true | **2.24** (=5.6×0.4) ⚠️ | **0.12** (=0.30×0.4) ⚠️ | 3.0 (placeholder) | FTMO deploy candidate |
 
 ⚠️ FTMO dials are **provisional twice over**: (1) FMA3-005c s=0.4 is being re-shipped
-(`ftmo_campaign.log` tonight: s=0.5 not probe-robust, walking down); (2) the v7 low-dial clip
+(`ftmo_campaign.log` tonight: s=0.5 not probe-robust, walking down); (2) the Core low-dial clip
 divergence stands — at `InpRisk=2.24` cap-pinned components run up to ~3.6× heavier than the
 scaled-frac record validation (`mt5/README.md` "Dimensional check", carried in the preset header
 comment). Do not deploy FTMO before the campaign re-ships the dial AND sets `InpDailyStopX`.
 
-IC dials verify against the locked formula (`DEMO_PREREGISTRATION` §2): v7 `8×0.70×s`, v34
+IC dials verify against the locked formula (`DEMO_PREREGISTRATION` §2): Core `8×0.70×s`, Satellite
 `10×0.30×s` with the ×10 native already in the file ⇒ `InpV34Mult = 0.30×s`. Both fork dials
-remain provisional pending the k re-pick (the v3.4 tick leg of `k_calibration_v7.json` is what
+remain provisional pending the k re-pick (the Satellite tick leg of `k_calibration_v7.json` is what
 G2b/G3 finally measure).
 
 ---
@@ -399,7 +399,7 @@ G2b/G3 finally measure).
 See [`TRANSPLANT_V7.md`](TRANSPLANT_V7.md) — function-by-function disposition (verbatim /
 renamed-constant / seam), with the three integration seams line-cited: sub-book capital vs
 `InpInitial` (§5.2 resolution: `InpInitial` stays — convention A), the `QuarterRebalance`
-preEquity seam, and the guardian + v34 insertion points in `OnTick`.
+preEquity seam, and the guardian + Satellite insertion points in `OnTick`.
 
 ---
 

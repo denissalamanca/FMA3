@@ -57,7 +57,7 @@ sys.path.insert(0, str(_FMA3 / "engine"))
 sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine_ext as RX  # noqa: E402
-from run_hrisk1 import static_fed  # noqa: E402
+from run_hrisk1 import static_blend  # noqa: E402
 from ftmo_model_v3 import score_v3  # noqa: E402
 
 W_LOCKED, W_PROBES = 0.70, (0.56, 0.84)
@@ -148,7 +148,7 @@ def main() -> int:
 
     # ---- 0. IDENTITY GATE ------------------------------------------------
     ref = pd.read_parquet(OUT / "hrisk2_s40_curve.parquet")
-    fed70 = static_fed(W_LOCKED)
+    fed70 = static_blend(W_LOCKED)
     for tag, xval in (("none", None), ("x10", 10.0)):
         r = RX.run_record_ext(fed70 * 0.4, label=f"hftmo1_gate_{tag}",
                               verbose=False, initial=INITIAL,
@@ -220,7 +220,7 @@ def main() -> int:
         for wp in W_PROBES:
             lbl = (f"hftmo1_probe_w{int(wp*100)}_s{int(round(s*100))}"
                    f"_x{int(round(x*10))}")
-            row = run_cell(static_fed(wp), s, x, lbl, None)
+            row = run_cell(static_blend(wp), s, x, lbl, None)
             b08["probes"][lbl] = row
             probe_ok = probe_ok and row["compliant"]
             if not probe_ok:

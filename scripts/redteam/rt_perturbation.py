@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """rt_perturbation — PROTOCOL.md §6(a): parameter-perturbation grid.
 
-Takes the winning federation config out of an H-FED results JSON, perturbs
+Takes the winning blend config out of an H-FED results JSON, perturbs
 each STRUCTURAL parameter one at a time (PROTOCOL §5.3: any adopted lever
 gets ±20% parameter perturbation), and re-runs the engine of record per
 perturbation.  Reports the full metric surface.
@@ -65,9 +65,9 @@ def build_perturbations(cfg: FedConfig
     flatter the fragility verdict.
     """
     out: list[tuple[str, FedConfig | None, str]] = []
-    for tag, w2 in (("w_down20", cfg.w_v7 * 0.8), ("w_up20", cfg.w_v7 * 1.2)):
+    for tag, w2 in (("w_down20", cfg.core_weight * 0.8), ("w_up20", cfg.core_weight * 1.2)):
         if 0.0 < w2 < 1.0:
-            out.append((tag, replace(cfg, w_v7=w2), ""))
+            out.append((tag, replace(cfg, core_weight=w2), ""))
         else:
             out.append((tag, None, f"w'={w2:.4f} outside (0, 1)"))
     if cfg.kind == "band":

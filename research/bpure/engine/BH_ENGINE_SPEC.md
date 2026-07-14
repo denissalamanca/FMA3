@@ -1,7 +1,7 @@
-# BH_ENGINE_SPEC — v34 native standalone account equity (b_h), scalar per-bar spec
+# BH_ENGINE_SPEC — Satellite native standalone account equity (b_h), scalar per-bar spec
 
 Stage 6 of the B-pure port. This document is the field-for-field spec of the
-1-minute cross-margined account engine that produces the v34 native standalone
+1-minute cross-margined account engine that produces the Satellite native standalone
 equity curve. The MQL5 `V34EquityNative` must be written from THIS document;
 the pure-python scalar reference is `bh_stepper.py` (same directory).
 
@@ -26,7 +26,7 @@ the pure-python scalar reference is `bh_stepper.py` (same directory).
   Sharpe `1.8543172985943566`, final `EUR 449707.7452664526`, n_trades from run.
 * **Book input**: `golden/book.parquet` — hourly target matrix, 49,379 rows ×
   31 symbols, values = signed notional exposure as FRACTION OF JOINT ACCOUNT
-  EQUITY (scale s=1.0 of the v34 s10 book — scale already baked in).
+  EQUITY (scale s=1.0 of the Satellite s10 book — scale already baked in).
 * **b_h consumption** (`model/v3/reproduce.py::load_inputs/static_fed`):
   `b = eq_close / eq_close.iloc[0]` (normalize to 1.0 at t0 = first 1m bar),
   then `b_h(hour) = b asof-ffilled onto the hourly union grid, fillna 1.0`

@@ -1,7 +1,7 @@
 # V3.0 strategy design — the what & why
 
 The authoritative "what + why" for the FMA3 **v3.0 — faithful-executor release**. v1.0 shipped the
-**model**: a Python record-engine book (federated blend, config hash **`51a7541cc2aaa593`**,
+**model**: a Python record-engine book (blended book, config hash **`51a7541cc2aaa593`**,
 locked 2026-07-10). v3.0 ships the **EA that provably executes that model on MT5**, plus the honest
 deployable reality — the dials, the three physical constraints, and the friction that separates a
 frictionless record from a live account.
@@ -13,9 +13,9 @@ engine constants), [`PINNED_INPUTS.md`](../../model/v3/PINNED_INPUTS.md) (frozen
 [`RECON4_RESULTS.md`](../../model/v3/RECON4_RESULTS.md) (the execution reconciliation). The
 strategy-selection decision trail (why two books, why `w = 0.70`, why static, the grids) is
 unchanged from v1.0 and lives in **[../v1.0/STRATEGY.md](../v1.0/STRATEGY.md)** — cross-linked here,
-not re-litigated. The MT5 executor is `mt5/ea/FableFederation_V3.mq5`
+not re-litigated. The MT5 executor is `mt5/ea/FableBook.mq5`
 (`FableFederation_V3.ex5`, sha `740da0ff…`); the stream exporter is
-[`scripts/export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py); the reconciliation protocol
+[`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py); the reconciliation protocol
 is [`research/protocol/RECONCILIATION.md`](../../research/protocol/RECONCILIATION.md).
 
 **All model figures are in-sample record reads (IC 2020-25). MT5 real-tick + live demo are the
@@ -26,7 +26,7 @@ remaining falsification tests. Achievable equity is 0.66–0.95× the record dep
 
 ## 1. What v3.0 is
 
-**v3.0 = the model of v1.0, now with a proven executor.** The model is unchanged: one federated
+**v3.0 = the model of v1.0, now with a proven executor.** The model is unchanged: one blended
 blend, config **`51a7541cc2aaa593`**, `w_v7 = 0.70`, the matrix `static_fed(0.70) × s` run through
 the 1-minute worst-mark record engine. What is new in v3.0 is `FableFederation_V3` — an EA that
 holds the model's **exact** target position on MT5, so every euro of gap between the EA and the
@@ -58,13 +58,13 @@ equity is less than the record (§8).
 
 ---
 
-## 2. Design philosophy — a federation of two frozen books
+## 2. Design philosophy — a blend of two frozen books
 
 The strategy design is **inherited from v1.0 unchanged** and is summarized here; the full grids,
 red-team battery, and selection rules are in **[../v1.0/STRATEGY.md](../v1.0/STRATEGY.md)**.
 
 **FMA3 = ONE cross-margined account running BOTH frozen parent books side by side as virtual
-sub-accounts** — the NSF5 **v7.0 band book** at capital share `w = 0.70`, and the FMA2 **v3.4
+sub-accounts** — the NSF5 **Core band book** at capital share `w = 0.70`, and the FMA2 **Satellite
 fixed-fraction book** at `1 − w = 0.30` — with NO cross-book rebalancing and a single global scale
 `s` on the blended fraction matrix. Neither parent's sleeves, parameters, or internal mechanics were
 touched. Both parents arrive **frozen** (IC 2020-25 was their development sample); the FMA3 protocol
@@ -72,11 +72,11 @@ therefore licenses a **structural-only** design space — capital split `w`, reb
 combined caps, global scale — one lever per version, every bar pre-registered, **DECLINE by
 default**.
 
-Federation is the *one* open channel because every sleeve-level path between the parents is formally
-closed (band → v3.4 flips −7.31pp under fixed-notional; FMA2 → v7 is 0-for-10). The thesis is
+Blend is the *one* open channel because every sleeve-level path between the parents is formally
+closed (band → Satellite flips −7.31pp under fixed-notional; FMA2 → Core is 0-for-10). The thesis is
 **structural complementarity, not correlation**: daily-return ρ = +0.351, drawdown troughs disjoint,
-each book's worst year the other's relative refuge. Quoted honestly, v3.4 returns **−2.9%** across
-v7's ten worst days — **a softener, not a hedge**. The single number `w = 0.70` is the pre-registered
+each book's worst year the other's relative refuge. Quoted honestly, Satellite returns **−2.9%** across
+Core's ten worst days — **a softener, not a hedge**. The single number `w = 0.70` is the pre-registered
 H-FED-1 grid winner (beats *both* parents on DD and Sharpe simultaneously — diversification the
 leverage dial cannot buy), and the no-rebalance decision keeps the disjoint troughs intact (all four
 rebalance cadences DECLINED). All of that is v1.0 material; v3.0 changes none of it.
@@ -89,14 +89,14 @@ Two economically distinct, separately validated books, blended into one netted t
 
 | Sub-book | Cols | Native mechanics (untouched) | Native standalone anchor | Seed share |
 |---|---|---|---|---|
-| **v7.0 band book** (NSF5) | **8 net** | slot-equity sleeves, `BAND_SYM_25` re-split, H9 delta-resize; R8 anchor extraction | `a` = `v7_book_equity_1m.parquet` native 1m equity multiple | **0.70** |
-| **v3.4 book** (FMA2) | **31** | fixed-fraction × GLOBAL_SCALE 10, F3 caps, structural gold cap 1.80 pre-applied, cash-park | `b` = `v34_s10_pin_curve.parquet` native 1m equity multiple | **0.30** |
+| **Core band book** (NSF5) | **8 net** | slot-equity sleeves, `BAND_SYM_25` re-split, H9 delta-resize; R8 anchor extraction | `a` = `v7_book_equity_1m.parquet` native 1m equity multiple | **0.70** |
+| **Satellite book** (FMA2) | **31** | fixed-fraction × GLOBAL_SCALE 10, F3 caps, structural gold cap 1.80 pre-applied, cash-park | `b` = `v34_s10_pin_curve.parquet` native 1m equity multiple | **0.30** |
 
-- v7's 8 net cols: AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD.
+- Core's 8 net cols: AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD.
 - The union is **33 distinct symbols**; **6 are shared** (BTCUSD, ETHUSD, EURGBP, USDJPY, USTEC,
   XAUUSD) and are **NETTED** into one net column each.
 - `a` and `b` are each book's **own standalone** equity path — **NOT** the joint account, **NOT**
-  levered by `s`, **NO** federation friction. This is the single most load-bearing fact for the
+  levered by `s`, **NO** blend friction. This is the single most load-bearing fact for the
   executor (§5.2).
 
 **The blend (`static_fed`, w = 0.70)** — the exact joint target fraction at hour *h*, symbol *k*:
@@ -146,7 +146,7 @@ the blend live.** This is why v1/v2 diverged and v3 does not.
 
 ### 5.1 What v3 does
 
-The exporter [`scripts/export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py) emits the
+The exporter [`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py) emits the
 unified, **already-netted** `fed_frac` stream — for every hour *h* and every symbol *k* of the
 33-symbol union, the net target fraction `fed[h,k] = f7·(w·a_h/j) + f34·((1−w)·b_h/j)`, i.e. exactly
 the `static_fed(0.70)` matrix from `model/v3/reproduce.py`. `s` is **not** baked in — it is the EA
@@ -156,7 +156,7 @@ map (`USA500=US500; DAX=DE40`) applied at emit. The exporter **hard-fails** unle
 matrix reproduces `static_fed(0.70)` to <1e-12 and (b) the record engine on the stream prints
 €3,872,872 at s=1.6 and €1,332,404 at s=0.7 — the file is provably the model or it does not ship.
 
-`FableFederation_V3.mq5` then replays that stream. **The per-bar sizing loop** (re-sized every M1
+`FableBook.mq5` then replays that stream. **The per-bar sizing loop** (re-sized every M1
 bar, executing hour *h*'s row):
 
 ```
@@ -175,11 +175,11 @@ Key properties, all matching the record engine (§4):
 - **Sizes off `ACCOUNT_BALANCE`** (realized cash), not equity — compounding is automatic as the base
   grows with realized P&L.
 - **`InpScale` is the dial** — the *only* knob that differs IC↔FTMO. One binary, two presets
-  (`FED_V3_IC.set` s=1.6; `FED_V3_FTMO.set` s=0.7 + breaker; `FED_V3_PARITY_S10.set` s=1.0 sanity).
+  (`FABLE_IC.set` s=1.6; `FABLE_FTMO.set` s=0.7 + breaker; `FABLE_PARITY_S10.set` s=1.0 sanity).
 - **ONE net position + ONE magic per symbol** (netting ratified by owner) — the 6 shared symbols are
   already summed in the stream, so the EA holds a single net order per symbol.
 - **Full-map eurq, unconditional** — the promoted `F3_EurPerQuoteV34` prices *every* symbol via the
-  full EUR-cross map; this revived the 7 v34 legs that v1/v2 silently killed (§7).
+  full EUR-cross map; this revived the 7 Satellite legs that v1/v2 silently killed (§7).
 - **FTMO daily breaker** (`InpDailyStopX`, 0=off for IC, 3.0 for FTMO): on server-day rollover,
   anchor = carried **previous-day CLOSE** equity (day 1 = balance); each M1 bar, if worst-mark `eq_w`
   (via `OrderCalcProfit` bar low/high) ≤ `anchor·(1−x/100)` → flatten all, halt (targets→0) until
@@ -194,7 +194,7 @@ levered by `s` cannot reconstruct those weights from its own equity.** Its reali
 to compute the blend live must *estimate* `a`,`b` from account state, and that estimate drifts from
 the frozen truth the instant `s ≠ 1` — and **both shipped dials are s≠1** (1.6 and 0.7).
 
-Replaying the precomputed blend sidesteps this entirely: the frozen `a`,`b` and the v7 band re-splits
+Replaying the precomputed blend sidesteps this entirely: the frozen `a`,`b` and the Core band re-splits
 are all baked into the stream offline, at s=1, once. Replay is therefore the **only faithful path** —
 it dissolves the reseed / floating-double-count / pooled-redistribution divergence classes *by
 construction*, not by tuning.
@@ -204,9 +204,9 @@ construction*, not by tuning.
 Because it replays a precomputed blend, v3 **throws away the entire v1/v2 signal + sizing stack**:
 
 - **No `V7Core` band logic** — the band re-splits are frozen inside `frac7`.
-- **No `QuarterRebalance` / per-book reseed / `VBalance`** — v1/v2 sized v7 off a pooled quarterly
+- **No `QuarterRebalance` / per-book reseed / `VBalance`** — v1/v2 sized Core off a pooled quarterly
   `VBalance` with a floating double-count; gone.
-- **No `e34`** — v1/v2 sized v34 off a stagnant own-sub-equity `e34`; replaced by the shared
+- **No `e34`** — v1/v2 sized Satellite off a stagnant own-sub-equity `e34`; replaced by the shared
   `ACCOUNT_BALANCE`.
 - **No `InpReseedBalance` / `InpIndepReseed` / `InpV34JointSizing`** — obsolete.
 - **`InpV34EurQuoteFix` → unconditional** — the full-map eurq is now always on.
@@ -225,11 +225,11 @@ The shipped model configuration (`strategy_fma3.py`, hash **`51a7541cc2aaa593`**
 | Parameter | Value | Meaning / provenance |
 |---|---|---|
 | `structure` | **static_federation** | H-FED-1 winner; H-FED-2 declined (v1.0 §6) |
-| `w_v7` | **0.70** | v7.0 band-book capital share, grid winner by rule (v1.0 §5) |
+| `w_v7` | **0.70** | Core band-book capital share, grid winner by rule (v1.0 §5) |
 | dial `s` (IC) | **1.6** | InpScale IC preset — compounding, seed €10,000 |
 | dial `s` (FTMO) | **0.7** | InpScale FTMO preset — + daily breaker x=3.0%, seed €100,000 |
-| parent A operating point | v7.0 core7 band, **R8 anchor extraction** | `frac7`/`a` frozen inputs |
-| parent B operating point | v3.4 @ **GLOBAL_SCALE 10** | `frac34`/`b`, gold cap 1.80 pre-applied |
+| parent A operating point | Core core7 band, **R8 anchor extraction** | `frac7`/`a` frozen inputs |
+| parent B operating point | Satellite @ **GLOBAL_SCALE 10** | `frac34`/`b`, gold cap 1.80 pre-applied |
 | cross-book rebalance | **none** | the split is a seed; realized share drifts |
 | shared-symbol handling | **NETTED** | 6 shared symbols summed to one net col each; 33 union |
 | executor | **replay** `FMA3_fed_frac_v3.csv` (fmt=3) | `FableFederation_V3.ex5` sha `740da0ff…` |
@@ -249,10 +249,10 @@ declines new to v3:
 
 | Tried | Result | Why declined |
 |---|---|---|
-| **v1/v2 compute-live sizing** | v7 off `VBalance` (pooled quarterly reseed, floating double-count), v34 off `e34` (stagnant own sub-equity) | **DECLINED** — cannot reconstruct the frozen `w·a/j`, `(1−w)·b/j` share weights; provably diverges whenever s≠1, and both dials are s≠1 |
-| **Per-book / v7-only compute-live probe** (`_ab` artifacts) | separate own-joint probe curves | not the model's input; the model's v7 input is `v7_book_frac_1h.parquet` (no `_ab`) |
-| **3-branch eurq with `1/EURUSD` catch-all** (v1/v2) | 7 v34 legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) mispriced ~117×/~10× below min-lot and never traded | **replaced** by the unconditional full-map eurq; RECON-4 confirms all 33 symbols now trade |
-| **Per-symbol split of shared legs** | keep v7-vs-v34 attribution on the 6 shared symbols | **declined (owner-ratified)** — v3 nets to one position/magic per symbol; attribution stays recoverable offline from the pre-net `f7`,`f34` rows if ever needed |
+| **v1/v2 compute-live sizing** | Core off `VBalance` (pooled quarterly reseed, floating double-count), Satellite off `e34` (stagnant own sub-equity) | **DECLINED** — cannot reconstruct the frozen `w·a/j`, `(1−w)·b/j` share weights; provably diverges whenever s≠1, and both dials are s≠1 |
+| **Per-book / Core-only compute-live probe** (`_ab` artifacts) | separate own-joint probe curves | not the model's input; the model's Core input is `v7_book_frac_1h.parquet` (no `_ab`) |
+| **3-branch eurq with `1/EURUSD` catch-all** (v1/v2) | 7 Satellite legs (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) mispriced ~117×/~10× below min-lot and never traded | **replaced** by the unconditional full-map eurq; RECON-4 confirms all 33 symbols now trade |
+| **Per-symbol split of shared legs** | keep Core-vs-Satellite attribution on the 6 shared symbols | **declined (owner-ratified)** — v3 nets to one position/magic per symbol; attribution stays recoverable offline from the pre-net `f7`,`f34` rows if ever needed |
 | **Joint 0.5·margin_used stop-out in the EA** | never triggers in-sample (IC worst DD 22.6%, FTMO 13.3% vs the ~50% it needs) | **deferred** — v3 delegates to the broker stop-out; RECON-4 asserts `eq_w` never falls below 0.5·margin_used, proving the omission immaterial |
 
 ---
@@ -273,7 +273,7 @@ physical* constraint the record engine does not model — not an EA defect. Test
 **What is proven:**
 1. **v3 holds the model's EXACT target position** — `after/want` median 1.000 in all three runs.
    Where v3 can place the order, it holds precisely `fed_frac·s`.
-2. **The v34 sleeve is alive** — all 33 symbols trade, including the 7 that were dead in v1/v2; the
+2. **The Satellite sleeve is alive** — all 33 symbols trade, including the 7 that were dead in v1/v2; the
    unconditional full-map eurq works end-to-end.
 3. **The breaker works** — FTMO fired 28× on the previous-day-close anchor + worst-mark `eq_w` (the
    +2 vs the model's 26 is v3's worst-mark being marginally more conservative).
@@ -322,7 +322,7 @@ same golden reference (per [`RECONCILIATION.md`](../../research/protocol/RECONCI
 |---|---|---|
 | `python3 strategy_fma3.py \| grep config_hash` | prints the locked config hash | `51a7541cc2aaa593` |
 | `python3 model/v3/reproduce.py` (~8–9 min) | the model rebuilds from the blend + frozen inputs | asserts **€3,872,872** (IC) and **€1,332,404** (FTMO), exits non-zero on any drift |
-| `python3 scripts/export_fed_frac_v3.py` | the replay stream *is* the model | re-parse reproduces `static_fed(0.70)` to <1e-12 **and** record engine on the stream = €3,872,872 / €1,332,404 |
+| `python3 scripts/export_book_frac_v3.py` | the replay stream *is* the model | re-parse reproduces `static_fed(0.70)` to <1e-12 **and** record engine on the stream = €3,872,872 / €1,332,404 |
 | MT5 tester on `FableFederation_V3.ex5` (sha `740da0ff…`) + presets | the EA holds the model's exact position | FMA3-RECON-4: position fidelity median 1.000; equity 0.66–0.95× the record |
 
 The staged validation protocol runs exporter self-check → headless compile (0/0) → 1m-OHLC smoke
@@ -356,7 +356,7 @@ run **only after** the 1m-OHLC smoke passes.
   stop-out; RECON-4 asserts `eq_w` never falls below the threshold in either preset, proving the
   omission immaterial in-sample. Live-crisis fidelity may require adding the exact engine stop-out
   later.
-- **The frozen stream ends 2025-12-31.** Live trading past it needs a forward v7-signal recompute +
+- **The frozen stream ends 2025-12-31.** Live trading past it needs a forward Core-signal recompute +
   stream extension (documented, not built).
 - **The −2.9% softener is not a hedge** (inherited from v1.0). The thesis is disjoint weak periods,
   not negative correlation; a regime that correlates the books removes the DD benefit.

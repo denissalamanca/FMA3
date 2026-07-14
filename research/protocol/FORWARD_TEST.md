@@ -7,7 +7,7 @@ outcome (PROTOCOL.md §4); there is no second look, no re-run with fixes, no
 
 ## Configuration under test
 
-FMA3 v1.0 exactly as locked (`strategy_fma3.py`, static federation w=0.70,
+FMA3 v1.0 exactly as locked (`strategy_fma3.py`, static blend w=0.70,
 s=1.1, config-hashed) — **fresh start**: sub-books seeded at (0.70, 0.30) of
 €10,000 on 2026-01-01, mirroring how a live deployment would begin. No
 carry-over of 2020–25 book state (beyond signal warm-up from history, which
@@ -29,7 +29,7 @@ the fwd caches provide by construction).
 ## Honest expectations (stated before looking)
 
 In-sample CAGR +101.4% would imply ≈ +26% over the window; the honest forward
-discount (v3.4's own retired-selection convention, Sharpe ~1.2–1.5 vs 2.47
+discount (Satellite's own retired-selection convention, Sharpe ~1.2–1.5 vs 2.47
 in-sample) implies ≈ +10–20%; 4-month volatility at s=1.1 ≈ ±24%. A negative
 window is therefore entirely possible for a healthy book.
 
@@ -55,10 +55,10 @@ window is therefore entirely possible for a healthy book.
 
 ## Execution plan (after the v1.0 pin reproduces)
 
-1. Re-extract the v7 band book on the fwd feed (Duka + USA500 proxy,
+1. Re-extract the Core band book on the fwd feed (Duka + USA500 proxy,
    2020→2026-04, warm-started) — its 2026 native curve + fraction matrix.
 2. Rebuild FMA2 sleeves on `research_cache_fwd` (their own forward-
-   confirmation harness convention) — the v3.4 2026 fraction matrix.
-3. Federation matrix for 2026H1 at (0.70, 0.30) fresh seed, s=1.1.
+   confirmation harness convention) — the Satellite 2026 fraction matrix.
+3. Blend matrix for 2026H1 at (0.70, 0.30) fresh seed, s=1.1.
 4. One run of `scripts/run_forward_oneshot.py` (gated on this file).
 5. Verdict against F1–F4, registry entry, whitepaper section.

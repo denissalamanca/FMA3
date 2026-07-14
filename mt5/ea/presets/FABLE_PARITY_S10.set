@@ -1,0 +1,22 @@
+; FABLE_PARITY_S10 - FableBook s=1.0 sanity point.
+; At s=1.0 the net_frac IS the target exposure fraction (fraction == exposure),
+; so the per-bar position-level check (held-fraction-of-balance == net_frac) reads
+; cleanly with no dial rescale. Seed EUR10,000, breaker OFF. Use for the
+; position-level fidelity assert (EA_V3_DESIGN par.6 step 3 / FMA3-RECON-4).
+InpScale=1.0
+InpInitial=10000.0
+InpDailyStopX=0.0
+InpFedFracFile=FMA3_fed_frac_v3.csv
+InpMagicBase=3900000
+InpV34SymbolMap=
+InpLog=true
+InpMarginCap=0.9
+InpRebalBand=0.25
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK

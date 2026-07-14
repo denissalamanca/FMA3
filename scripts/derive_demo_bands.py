@@ -5,7 +5,7 @@ Reads ONLY frozen curve artifacts (no engine runs). Every number quoted in
 research/protocol/DEMO_PREREGISTRATION.md section B3 comes from this script's
 output. Reference basis:
 
-  - federation: research/outputs/fma3_v1_pin_curve.parquet  (v1.0, w=0.70, s=1.1)
+  - blend: research/outputs/fma3_v1_pin_curve.parquet  (v1.0, w=0.70, s=1.1)
   - v7 sub-book (native basis, R8 anchor): research/outputs/v7_book_equity_1m.parquet (eqc)
   - v3.4 sub-book (native basis, scale 10): research/baselines/fma2/v34_s10_pin_curve.parquet
   - forward cross-check: research/outputs/forward_oneshot_curve.parquet (+ v34sub)

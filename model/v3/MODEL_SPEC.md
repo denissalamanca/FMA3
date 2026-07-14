@@ -1,6 +1,6 @@
 # FMA3 STABLE MODEL OF RECORD — v3
 
-**One model, two dials.** Config `51a7541cc2aaa593` (`strategy_fma3.py`, `w_v7 = 0.70`). The IC and FTMO dashboards are the **same federated blend at different scale dials `s`**. Reproduced exactly by [`reproduce.py`](reproduce.py).
+**One model, two dials.** Config `51a7541cc2aaa593` (`strategy_fma3.py`, `w_v7 = 0.70`, the Core weight). The IC and FTMO dashboards are the **same blended book at different scale dials `s`**. Reproduced exactly by [`reproduce.py`](reproduce.py).
 
 | Preset | Seed | Dial | Extras | Final equity | CAGR | MaxDD (worst) | Notes |
 |---|---:|---|---|---:|---:|---:|---|
@@ -13,14 +13,14 @@
 
 | Symbol | Artifact | Content |
 |---|---|---|
-| `frac7` | `research/outputs/v7_book_frac_1h.parquet` | v7.0 band-book hourly **signed fraction-of-own-equity**, 8 net cols: AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD |
-| `frac34` | `engine/books.build_v34_frac_1h()` → `eval_v34_pin_s10.build_c2()` | v3.4 book, **31 cols**, GLOBAL_SCALE=10, structural gold cap 1.80 **pre-applied** (never renormalize/re-cap) |
-| `a` | `research/outputs/v7_book_equity_1m.parquet["eqc"]`, ÷ its t0 | v7 **native standalone** 1m equity multiple (=1.0 at t0) |
-| `b` | `research/baselines/fma2/v34_s10_pin_curve.parquet["equity"]`, ÷ its t0 | v3.4 **native standalone** 1m equity multiple (=1.0 at t0) |
+| `frac7` | `research/outputs/v7_book_frac_1h.parquet` | Core band-book hourly **signed fraction-of-own-equity**, 8 net cols: AUDUSD, BTCUSD, ETHUSD, EURGBP, NZDUSD, USDJPY, USTEC, XAUUSD |
+| `frac34` | `engine/books.build_v34_frac_1h()` → `eval_v34_pin_s10.build_c2()` | Satellite book, **31 cols**, GLOBAL_SCALE=10, structural gold cap 1.80 **pre-applied** (never renormalize/re-cap) |
+| `a` | `research/outputs/v7_book_equity_1m.parquet["eqc"]`, ÷ its t0 | Core **native standalone** 1m equity multiple (=1.0 at t0) |
+| `b` | `research/baselines/fma2/v34_s10_pin_curve.parquet["equity"]`, ÷ its t0 | Satellite **native standalone** 1m equity multiple (=1.0 at t0) |
 
-`a` and `b` are each book's **own** standalone equity path — **NOT** the joint account, **NOT** levered by `s`, **NO** federation friction. This is the single most important fact for the EA: a live federated account **cannot** reconstruct them from its own equity.
+`a` and `b` are each book's **own** standalone equity path — **NOT** the joint account, **NOT** levered by `s`, **NO** blend friction. This is the single most important fact for the EA: a live blended account **cannot** reconstruct them from its own equity.
 
-## 2. The federation blend (`static_fed`, w = 0.70)
+## 2. The blend (`static_fed`, w = 0.70)
 
 ```
 hours = frac7.index ∪ frac34.index
@@ -55,11 +55,11 @@ On server-day rollover: `anchor = previous server-day CLOSE-mark equity` (day 1 
 
 ## 6. Currency conversion (eurq)
 
-`eurq = 1` if quote=EUR, else `1/mid(EUR-cross)` with the FULL map: `USD→EURUSD, JPY→EURJPY, GBP→EURGBP, CHF→EURCHF, NZD→EURNZD, CAD→EURCAD, NOK→EURNOK, SEK→EURSEK`. (The v1/v2 EA only had 3 branches with a `1/EURUSD` catch-all → the v34-only JPY/NOK/SEK/CHF/CAD legs were mispriced ~117×/~10× below min-lot and never traded — see [`../../.../memory/v34-sleeve-dead-root-cause`].)
+`eurq = 1` if quote=EUR, else `1/mid(EUR-cross)` with the FULL map: `USD→EURUSD, JPY→EURJPY, GBP→EURGBP, CHF→EURCHF, NZD→EURNZD, CAD→EURCAD, NOK→EURNOK, SEK→EURSEK`. (The v1/v2 EA only had 3 branches with a `1/EURUSD` catch-all → the Satellite-only JPY/NOK/SEK/CHF/CAD legs were mispriced ~117×/~10× below min-lot and never traded — see [`../../.../memory/v34-sleeve-dead-root-cause`].)
 
 ## 7. Symbol map & universe
 
-33 symbols. v7 US-index sleeve trades **USTEC** (`InpUS500=USTEC`). Repo→broker map applied once at load: `USA500=US500; DAX=DE40`, others identity.
+33 symbols. Core US-index sleeve trades **USTEC** (`InpUS500=USTEC`). Repo→broker map applied once at load: `USA500=US500; DAX=DE40`, others identity.
 
 ---
 

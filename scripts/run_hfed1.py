@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FMA3-001: H-FED-1 — static federation (no cross-book rebalance).
+"""FMA3-001: H-FED-1 — static blend (no cross-book rebalance).
 
 Pre-registered in research/protocol/HYPOTHESES.md BEFORE any merged number
 was computed. Grid w in {0.30, 0.40, 0.50, 0.60, 0.70} (v7 share), each book
@@ -12,7 +12,7 @@ state sees the other's P&L (the PROTOCOL §5.7 anti-coupling guard holds by
 construction). The joint target fraction at hour h is the capital-weighted
 blend of the parents' native fractions:
 
-    fed_frac_h = fracV7_h * (w * A_h / J_h) + fracV34_h * ((1-w) * B_h / J_h)
+    book_frac_h = fracV7_h * (w * A_h / J_h) + fracV34_h * ((1-w) * B_h / J_h)
 
 where A_h, B_h are the parents' NATIVE equity curves normalized to 1.0 at t0
 (both byte-reconciled artifacts: v7_book_equity_1m.parquet eqc and the pinned
@@ -24,7 +24,7 @@ The record engine then simulates the ACTUAL combined account — joint margin,
 joint stop-out, real fills/costs on the blended targets (cross-book netting
 on shared instruments, e.g. USDJPY, is real and is measured, not assumed).
 The realized joint curve may drift from the ideal J; the drift is reported
-(ideal-vs-realized CAGR/DD deltas) as the federation-friction measurement.
+(ideal-vs-realized CAGR/DD deltas) as the blend-friction measurement.
 
 PRE-REGISTERED BARS (H-FED-1, all must pass at >=1 grid point):
   combined worst-mark DD  < min(parent DDs in record engine) - 0.5pp
@@ -66,19 +66,19 @@ def crisis_tail(eq_close: pd.Series, eq_worst: pd.Series) -> float:
 
 def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Native frac matrices + native equity curves normalized to 1.0 at t0."""
-    frac7 = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
-    frac34 = books.build_v34_frac_1h()
-    eq7 = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_equity_1m.parquet")["eqc"]
-    eq34 = pd.read_parquet(
+    core_frac = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
+    sat_frac = books.build_sat_frac_1h()
+    core_eq = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_equity_1m.parquet")["eqc"]
+    sat_eq = pd.read_parquet(
         RE.PATHS.BASELINES / "fma2" / "v34_s10_pin_curve.parquet")["equity"]
-    return frac7, frac34, eq7 / eq7.iloc[0], eq34 / eq34.iloc[0]
+    return core_frac, sat_frac, core_eq / core_eq.iloc[0], sat_eq / sat_eq.iloc[0]
 
 
-def build_fed_frac(frac7: pd.DataFrame, frac34: pd.DataFrame,
+def build_book_frac(core_frac: pd.DataFrame, sat_frac: pd.DataFrame,
                    a: pd.Series, b: pd.Series, w: float
                    ) -> tuple[pd.DataFrame, pd.Series]:
     """Blend the parents' fraction matrices by causal sub-equity weights."""
-    hours = frac7.index.union(frac34.index)
+    hours = core_frac.index.union(sat_frac.index)
     # causal hourly sample: last native 1m equity value at or before hour h
     a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours)
     b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours)
@@ -87,11 +87,11 @@ def build_fed_frac(frac7: pd.DataFrame, frac34: pd.DataFrame,
     j_h = w * a_h + (1.0 - w) * b_h
     wa = (w * a_h / j_h)
     wb = ((1.0 - w) * b_h / j_h)
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    fed = (f7.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
-           + f34.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    fed = (f_core.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
+           + f_sat.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
     ideal_daily = j_h.resample("1D").last().dropna()
     return fed, ideal_daily
 
@@ -110,7 +110,7 @@ def ideal_metrics(ideal_daily: pd.Series) -> dict:
 def main() -> int:
     t0 = time.time()
     print("[hfed1] loading inputs ...", flush=True)
-    frac7, frac34, a, b = load_inputs()
+    core_frac, sat_frac, a, b = load_inputs()
 
     # parent reference points (engine of record) for the pre-registered bars
     comp = json.loads((RE.PATHS.OUTPUTS / "composite_benchmark.json")
@@ -137,7 +137,7 @@ def main() -> int:
         lbl = f"hfed1_w{int(w*100)}"
         print(f"[{lbl}] building blend + engine pass "
               f"({time.time()-t0:.0f}s elapsed) ...", flush=True)
-        fed, ideal_daily = build_fed_frac(frac7, frac34, a, b, w)
+        fed, ideal_daily = build_book_frac(core_frac, sat_frac, a, b, w)
         res = RE.run_record(fed, label=lbl, verbose=False)
         tail = crisis_tail(res["curves"]["equity"], res["curves"]["worst"])
         im = ideal_metrics(ideal_daily)

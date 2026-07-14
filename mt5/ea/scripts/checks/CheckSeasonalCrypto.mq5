@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
 //| CheckSeasonalCrypto.mq5 — compile/smoke gate for                 |
-//| FMA3v34/SeasonalCrypto.mqh.  Instantiates                        |
-//| CV34SeasonalCryptoStepper, feeds 60 synthetic hourly bars        |
+//| Sat/SeasonalCrypto.mqh.  Instantiates                        |
+//| CSatSeasonalCryptoStepper, feeds 60 synthetic hourly bars        |
 //| (pre-inception NaN SOL closes + interior NaN ETH closes),        |
 //| prints emitted rows, round-trips GetState/SetState (JSON) and    |
 //| verifies bit-identical continuation over 20 more bars incl. a    |
 //| day rollover, then Finalize().  NO trading functions.            |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/SeasonalCrypto.mqh>
+#include <Sat/SeasonalCrypto.mqh>
 
 // bitwise-or-both-NaN equality
 bool SameD(const double a, const double b)
@@ -24,15 +24,15 @@ void Feed(const int i, double &xr, double &btc, double &eth, double &sol)
    xr  = 0.0002 * ((i % 7) - 3);              // never NaN (feed contract)
    btc = 40000.0 + 25.0 * i + 300.0 * ((i % 5) - 2);
    eth = 2200.0 + 3.0 * i;
-   sol = (i < 6) ? V34Nan() : 95.0 + 0.5 * i; // NaN before inception
+   sol = (i < 6) ? SatNan() : 95.0 + 0.5 * i; // NaN before inception
    if(i % 13 == 5)
-      eth = V34Nan();                         // interior NaN close
+      eth = SatNan();                         // interior NaN close
   }
 
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   CV34SeasonalCryptoStepper st;
+   CSatSeasonalCryptoStepper st;
    const long ts0 = 1704067200;               // 2024.01.01 00:00 UTC
    long   ets;
    double pos[];
@@ -55,7 +55,7 @@ void OnStart()
 
    // --- state round-trip: JSON out -> fresh stepper -> JSON out ---
    string s1 = st.GetState();
-   CV34SeasonalCryptoStepper st2;
+   CSatSeasonalCryptoStepper st2;
    bool ok = st2.SetState(s1);
    string s2 = st2.GetState();
    PrintFormat("state len=%d setstate_ok=%s json_identical=%s",

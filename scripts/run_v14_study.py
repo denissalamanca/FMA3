@@ -299,7 +299,7 @@ def fed_metrics(d7: pd.Series, d34: pd.Series, lo: str, hi: str) -> dict:
         "v7_maxdd": float(dd7.max()), "v34_maxdd": float(dd34.max()),
     }
 
-    # federation bookkeeping: static w70 virtual sub-accounts, NO rebalancing
+    # blend bookkeeping: static w70 virtual sub-accounts, NO rebalancing
     e7 = W_FED * (1 + r7.reindex(ridx).fillna(0)).cumprod()
     e34 = (1 - W_FED) * (1 + r34.reindex(ridx).fillna(0)).cumprod()
     efed = e7 + e34

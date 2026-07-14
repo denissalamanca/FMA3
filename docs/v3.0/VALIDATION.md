@@ -1,7 +1,7 @@
 # V3.0 validation analysis
 
 **FMA3 v3.0 = the faithful-executor release.** v1.0 shipped the **model** — a Python record-engine
-book, validated in-sample as the first fully-parent-dominant federation. v3.0 ships the **EA that
+book, validated in-sample as the first fully-parent-dominant blend. v3.0 ships the **EA that
 provably executes that model on MT5**, plus the honest deployable reality: two dials, three named
 physical constraints, measured friction. The model itself is unchanged — same config hash
 **`51a7541cc2aaa593`**, same `w_v7 = 0.70` — and the v1.0 statistical battery (6-tier: reproduction
@@ -15,8 +15,8 @@ Sources of truth: the canonical model home is [`model/v3/`](../../model/v3/) —
 [`PINNED_INPUTS`](../../model/v3/PINNED_INPUTS.md), [`EA_V3_DESIGN`](../../model/v3/EA_V3_DESIGN.md),
 [`RECON4_RESULTS`](../../model/v3/RECON4_RESULTS.md). Reconciliation protocol:
 [research/protocol/RECONCILIATION.md](../../research/protocol/RECONCILIATION.md). EA source:
-[`mt5/ea/FableFederation_V3.mq5`](../../mt5/ea/FableFederation_V3.mq5). Exporter + sweep:
-[`scripts/export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py) /
+[`mt5/ea/FableBook.mq5`](../../mt5/ea/FableBook.mq5). Exporter + sweep:
+[`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py) /
 [`scripts/sweep_s_volcap.py`](../../scripts/sweep_s_volcap.py).
 
 **All model figures are in-sample RECORD reads (IC 2020-25). The three RECON-4 runs are 1m-OHLC
@@ -53,19 +53,19 @@ necessary (below).
 |---|---|---|---|---|
 | **1** | Model reproduction — `reproduce.py` to the euro | asserts **€3,872,872** (IC) and **€1,332,404** (FTMO); exits non-zero on any drift | delta 0.0 vs the pinned headline equities | ✅ PASS |
 | **1** | Frozen-input pins (4 artifacts + 2 scalars) | 3 parquet sha256 + config hash `51a7541cc2aaa593` re-verified 2026-07-12 | any hash change re-opens the model | ✅ PASS |
-| **2** | Exporter self-check — `export_fed_frac_v3.py` | re-parsed stream reproduces `static_fed(0.70)` to **< 1e-12**; record engine on the stream = **€3,872,872 / €1,332,404** to the euro | matrix < 1e-12 AND equities to the euro | ✅ PASS |
+| **2** | Exporter self-check — `export_book_frac_v3.py` | re-parsed stream reproduces `static_fed(0.70)` to **< 1e-12**; record engine on the stream = **€3,872,872 / €1,332,404** to the euro | matrix < 1e-12 AND equities to the euro | ✅ PASS |
 | **2** | EA compile + hash | `FableFederation_V3.ex5` compiles **0/0**, sha **`740da0ff…`** (post volume-limit fix); stream sha `d00b614b…`, fmt=3 | clean compile, hash recorded to RECON row | ✅ PASS |
 | **3** | **Position-level fidelity (the real test)** | median `after/want` = **1.000**, p10 = 1.000, **all 3 runs** | held frac == fed_frac·s within lot-step | ✅ PASS |
 | **3** | PARITY s=1.0 | €391,873 (**0.84×**), **0 rejects**, all 33 symbols trade | fraction == exposure sanity point | ✅ PASS |
 | **3** | IC s=1.6 | €2,552,962 (**0.66×**), 0 rejects after the volume-limit fix | reproduces up to physical caps | ✅ PASS (capped) |
 | **3** | FTMO s=0.7 | €1,265,541 (**0.95×**), **0 rejects, 0 volume-capped** | deployable dial reproduces cleanly | ✅ PASS |
-| **4** | v3.4 sleeve revival | **all 33/33 symbols trade** — incl. the 7 dead in v1/v2 (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) | full-map eurq revives every leg | ✅ PASS |
+| **4** | Satellite sleeve revival | **all 33/33 symbols trade** — incl. the 7 dead in v1/v2 (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) | full-map eurq revives every leg | ✅ PASS |
 | **5** | FTMO breaker fidelity | fires **28×** (model 26); worst-mark `eq_w` + prev-day-close anchor | fires ≈ model, conservative direction | ✅ PASS |
 | **6** | Margin at retail 1:30 (IC s=1.6) | **min ML 121%** across the full 2020–25 backtest | > IC 50% stop-out; ≥ owner ML≥110% floor | ✅ PASS (provisional) |
 | **7** | Volume-limit s-sweep (FMA3-024) | cap is a **capacity ceiling scaling with account size**: ~0–6% @ €10k, 17–40% @ €1M; binds past ~€2M/s | quantify the volume ceiling | ✅ MAPPED |
 
 **Model reproduces to the euro; the exporter round-trips to 1e-12; the EA holds exact target
-positions on every bar in all three runs; the v3.4 sleeve is fully revived; the breaker and margin
+positions on every bar in all three runs; the Satellite sleeve is fully revived; the breaker and margin
 behave as designed.** The only OPEN items are MT5 real-tick confirmations — they cannot be closed on
 this Mac (sign-off below).
 
@@ -88,20 +88,20 @@ The pinned inputs ([`PINNED_INPUTS.md`](../../model/v3/PINNED_INPUTS.md), re-ver
 
 | Symbol | Path | sha256[:16] | Role |
 |---|---|---|---|
-| `frac7` | `research/outputs/v7_book_frac_1h.parquet` | `450e65bee7307d09` | v7.0 hourly signed fraction, 8 net cols |
-| `a` (eq7) | `research/outputs/v7_book_equity_1m.parquet` | `ccb0335df45d9a03` | v7 **native standalone** 1m equity multiple |
-| `b` (eq34) | `research/baselines/fma2/v34_s10_pin_curve.parquet` | `a5787993a3413108` | v3.4 **native standalone** 1m equity multiple |
-| `frac34` | `engine/books.build_v34_frac_1h()` (read-only FMA2 pin) | *(code, deterministic)* | v3.4 book, 31 cols, gold cap 1.80 pre-applied |
+| `frac7` | `research/outputs/v7_book_frac_1h.parquet` | `450e65bee7307d09` | Core hourly signed fraction, 8 net cols |
+| `a` (eq7) | `research/outputs/v7_book_equity_1m.parquet` | `ccb0335df45d9a03` | Core **native standalone** 1m equity multiple |
+| `b` (eq34) | `research/baselines/fma2/v34_s10_pin_curve.parquet` | `a5787993a3413108` | Satellite **native standalone** 1m equity multiple |
+| `frac34` | `engine/books.build_v34_frac_1h()` (read-only FMA2 pin) | *(code, deterministic)* | Satellite book, 31 cols, gold cap 1.80 pre-applied |
 
 `a` and `b` are each book's **own** standalone equity path — **not** the joint account, **not**
-levered by `s`, **no** federation friction. This is the single load-bearing fact of the whole
-release: a live federated account **cannot reconstruct** the share weights `(w·a_h/j)`,
+levered by `s`, **no** blend friction. This is the single load-bearing fact of the whole
+release: a live blended account **cannot reconstruct** the share weights `(w·a_h/j)`,
 `((1−w)·b_h/j)` from its own equity, so any EA that computes them live must diverge whenever s ≠ 1.
 Both shipped dials are s ≠ 1. That is why v1/v2 (compute-live) were abandoned and v3 **replays** the
 precomputed blend — dissolving the reseed / floating-double-count / pooled-redistribution
 divergences by construction.
 
-**Exporter round-trip** ([`export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py)). The
+**Exporter round-trip** ([`export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py)). The
 unified, already-netted `fed_frac` stream that v3 replays is hard-gated at emit time:
 
 | Self-check | Measured | Gate |
@@ -129,9 +129,9 @@ so v3 reaches the record; retail 1:30 is the separate *deployment* constraint, m
 
 | Run | Preset | Dial | Seed → v3 equity | Model | v3 / model | Rejects | Fidelity (median after/want) |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s = 1.0 | €10k → **€391,873** | €464,991 | **0.84** | 0 | **1.000** (33/33 symbols) |
-| 2 | `FED_V3_IC` | s = 1.6 | €10k → **€2,552,962** | €3,872,872 | **0.66** | 0¹ | **1.000** |
-| 3 | `FED_V3_FTMO` | s = 0.7 | €100k → **€1,265,541** | €1,332,404 | **0.95** | 0 | **1.000** (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s = 1.0 | €10k → **€391,873** | €464,991 | **0.84** | 0 | **1.000** (33/33 symbols) |
+| 2 | `FABLE_IC` | s = 1.6 | €10k → **€2,552,962** | €3,872,872 | **0.66** | 0¹ | **1.000** |
+| 3 | `FABLE_FTMO` | s = 0.7 | €100k → **€1,265,541** | €1,332,404 | **0.95** | 0 | **1.000** (0 volume-capped) |
 
 ¹ Pre-fix, Run 2 spun **51,346 rejects** on volume-limited legs (v3 retried the un-holdable excess
 every bar). The volume-limit clamp (sha `740da0ff…`) removes the *spin*; the **equity is unchanged**
@@ -145,7 +145,7 @@ every bar). The volume-limit clamp (sha `740da0ff…`) removes the *spin*; the *
    criterion the EA was designed against ([EA_V3_DESIGN §1](../../model/v3/EA_V3_DESIGN.md)):
    position-level match, not byte-identical equity — the equity gap is friction, measured not
    mysterious.
-2. **The v3.4 sleeve is alive** (Tier 4 below).
+2. **The Satellite sleeve is alive** (Tier 4 below).
 3. **The breaker works** (Tier 5 below).
 
 **Verdict: v3 is the FAITHFUL EXECUTOR of `model/v3`.** Final equity = 0.66–0.95× the frictionless
@@ -174,9 +174,9 @@ capacity, no diversification).
 
 ---
 
-## Tier 4 — the v3.4 sleeve revival (33/33 symbols alive)
+## Tier 4 — the Satellite sleeve revival (33/33 symbols alive)
 
-v1/v2 silently killed **7 v3.4 symbols** (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) via
+v1/v2 silently killed **7 Satellite symbols** (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) via
 an `EurPerQuote` quote-currency bug: the JPY/NOK/SEK legs were mispriced ~117× / ~10× below min-lot,
 rounded to zero, and never traded. v3's **unconditional full-map eurq** (`USD→EURUSD, JPY→EURJPY,
 GBP→EURGBP, CHF→EURCHF, NZD→EURNZD, CAD→EURCAD, NOK→EURNOK, SEK→EURSEK`, applied to **all** symbols)
@@ -245,8 +245,8 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 
 - **The three RECON-4 runs are 1m-OHLC tester smokes, not the crisis arbiter.** They prove
   *mechanics* (position fidelity, sleeve coverage, breaker, margin) on smooth 1-minute feed bars. The
-  record→tick crisis-tail gap is *measured* at ~6.5× (v7 COVID: 35.6% MT5-tick vs 5.5% 1m worst-mark)
-  and the federation's tick-granularity tail is **unknown by construction until the real-tick run**.
+  record→tick crisis-tail gap is *measured* at ~6.5× (Core COVID: 35.6% MT5-tick vs 5.5% 1m worst-mark)
+  and the blend's tick-granularity tail is **unknown by construction until the real-tick run**.
   Record-engine tail numbers must **never** be quoted against MT5 numbers.
 - **All model figures are in-sample RECORD reads** (IC 2020-25) — frictionless and unbounded. The
   achievable equity is **0.66–0.95× the record** by dial/scale; the €3.87M IC-s1.6 headline is a
@@ -263,13 +263,13 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 - **The FTMO €1.33M is compounding never-withdraw** equity; the 5/5 FTMO rule-compliance gates are
   scored under a *contradictory* monthly withdraw-to-base frame. Both cannot hold at once — €1.33M is
   an "if-compounded" upper figure.
-- **The netted stream loses v7-vs-v34 attribution on the 6 shared symbols** by construction (the
+- **The netted stream loses Core-vs-Satellite attribution on the 6 shared symbols** by construction (the
   owner's ratified choice). Attribution stays recoverable offline from the pre-net `f7`/`f34` rows if
   ever needed.
 - **The joint 0.5·margin_used stop-out is deferred, not implemented** — in-sample it never triggers
   (IC worst DD 22.6%, FTMO 13.3%, nowhere near the ~50% needed), and RECON-4 asserts `eq_w` never
   falls below 0.5·margin_used in either preset, proving the omission immaterial for the reproduction.
-- **The frozen stream ends 2025-12-31** — live trading past it needs a forward v7-signal recompute +
+- **The frozen stream ends 2025-12-31** — live trading past it needs a forward Core-signal recompute +
   stream extension (documented, not built).
 
 ---
@@ -284,7 +284,7 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 - [x] **EA compiles 0/0**, sha `740da0ff…` (post volume-limit fix), stream sha `d00b614b…`, fmt=3
 - [x] **Position fidelity EXACT** — median `after/want` = **1.000**, p10 = 1.000, **all three runs**
   (PARITY 0.84× / IC 0.66× / FTMO 0.95×)
-- [x] **v3.4 sleeve fully revived** — 33/33 symbols trade, incl. the 7 dead in v1/v2
+- [x] **Satellite sleeve fully revived** — 33/33 symbols trade, incl. the 7 dead in v1/v2
 - [x] **Breaker fidelity** — 28 fires vs model 26 (conservative), prev-day-close anchor + worst-mark
 - [x] **Margin at 1:30 characterised** — IC s=1.6 min ML 121% (> 50% stop-out); old "not deployable
   at 1:30" flag DISPROVEN for v3
@@ -314,9 +314,9 @@ falsification tests.
 [`MODEL_SPEC`](../../model/v3/MODEL_SPEC.md) · [`PINNED_INPUTS`](../../model/v3/PINNED_INPUTS.md) ·
 [`EA_V3_DESIGN`](../../model/v3/EA_V3_DESIGN.md) · [`RECON4_RESULTS`](../../model/v3/RECON4_RESULTS.md) ·
 [`reproduce.py`](../../model/v3/reproduce.py) ·
-[`scripts/export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py) ·
+[`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py) ·
 [`scripts/sweep_s_volcap.py`](../../scripts/sweep_s_volcap.py) ·
-[`mt5/ea/FableFederation_V3.mq5`](../../mt5/ea/FableFederation_V3.mq5) ·
+[`mt5/ea/FableBook.mq5`](../../mt5/ea/FableBook.mq5) ·
 [RECONCILIATION.md](../../research/protocol/RECONCILIATION.md) (FMA3-RECON-4 ledger row) · package
 siblings: [STRATEGY.md](STRATEGY.md) · [PERFORMANCE.md](PERFORMANCE.md) ·
 [TRADE_CHARACTERISTICS.md](TRADE_CHARACTERISTICS.md) · [DEMO.md](DEMO.md).

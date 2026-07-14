@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| CheckV34Math.mq5 — compile/smoke gate for FMA3v34/V34Math.mqh    |
+//| CheckV34Math.mq5 — compile/smoke gate for Sat/SatMath.mqh    |
 //| Instantiates every primitive, steps synthetic sequences with     |
 //| interior NaNs, prints values.  NO trading functions.             |
 //|                                                                  |
@@ -25,58 +25,58 @@
 //|    2.4->2 2.6->3                                                 |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/V34Math.mqh>
+#include <Sat/SatMath.mqh>
 
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   double nan = V34Nan();
-   double inf = V34Inf();
+   double nan = SatNan();
+   double inf = SatInf();
 
    // ---- NaN / IEEE helpers ----------------------------------------
    PrintFormat("nan: isnan=%d isobs=%d isfinite=%d  inf: isfinite=%d",
-               (int)V34IsNan(nan), (int)V34IsObs(nan),
-               (int)V34IsFinite(nan), (int)V34IsFinite(inf));
+               (int)SatIsNan(nan), (int)SatIsObs(nan),
+               (int)SatIsFinite(nan), (int)SatIsFinite(inf));
    PrintFormat("npdiv: 1/0=%g -1/0=%g 1/-0=%g 0/0=%g nan/2=%g 6/3=%g",
-               V34NpDiv(1.0, 0.0), V34NpDiv(-1.0, 0.0),
-               V34NpDiv(1.0, -0.0), V34NpDiv(0.0, 0.0),
-               V34NpDiv(nan, 2.0), V34NpDiv(6.0, 3.0));
+               SatNpDiv(1.0, 0.0), SatNpDiv(-1.0, 0.0),
+               SatNpDiv(1.0, -0.0), SatNpDiv(0.0, 0.0),
+               SatNpDiv(nan, 2.0), SatNpDiv(6.0, 3.0));
    PrintFormat("sign: (-3)=%g (0)=%g (2)=%g (nan)=%g",
-               V34Sign(-3.0), V34Sign(0.0), V34Sign(2.0), V34Sign(nan));
+               SatSign(-3.0), SatSign(0.0), SatSign(2.0), SatSign(nan));
 
    // ---- BankerRound: ties go to even, never half-away --------------
    PrintFormat("banker: 0.5=%g 1.5=%g 2.5=%g 3.5=%g -0.5=%g -1.5=%g 2.4=%g 2.6=%g nan=%g",
-               V34BankerRound(0.5), V34BankerRound(1.5),
-               V34BankerRound(2.5), V34BankerRound(3.5),
-               V34BankerRound(-0.5), V34BankerRound(-1.5),
-               V34BankerRound(2.4), V34BankerRound(2.6),
-               V34BankerRound(nan));
+               SatBankerRound(0.5), SatBankerRound(1.5),
+               SatBankerRound(2.5), SatBankerRound(3.5),
+               SatBankerRound(-0.5), SatBankerRound(-1.5),
+               SatBankerRound(2.4), SatBankerRound(2.6),
+               SatBankerRound(nan));
 
    // ---- synthetic sequence with interior NaN ------------------------
    double seq[10];
    seq[0] = 1.0;  seq[1] = 2.0;  seq[2] = nan;  seq[3] = 4.0;  seq[4] = 3.0;
    seq[5] = nan;  seq[6] = 5.0;  seq[7] = 5.0;  seq[8] = 2.0;  seq[9] = 6.0;
 
-   // ---- CV34EwmMean (span=3, minp=1) --------------------------------
-   CV34EwmMean em;
+   // ---- CSatEwmMean (span=3, minp=1) --------------------------------
+   CSatEwmMean em;
    em.Init(3.0, 1);
    string s = "ewm_mean(span=3): ";
    for(int i = 0; i < 10; i++)
       s += StringFormat("%.10g ", em.Step(seq[i]));
    Print(s);
 
-   // ---- CV34EwmMean minp gating (trend_v2 style, minp=4) ------------
-   CV34EwmMean em2;
+   // ---- CSatEwmMean minp gating (trend_v2 style, minp=4) ------------
+   CSatEwmMean em2;
    em2.Init(20.0, 4);
    s = "ewm_mean(span=20,minp=4): ";
    for(int i = 0; i < 6; i++)
       s += StringFormat("%.10g ", em2.Step(seq[i]));
    Print(s);
 
-   // ---- CV34EwmStd (span=5, minp=3), both neg-var flavors -----------
-   CV34EwmStd es;
+   // ---- CSatEwmStd (span=5, minp=3), both neg-var flavors -----------
+   CSatEwmStd es;
    es.Init(5.0, 3, true);       // crisis flavor (zsqrt clamp)
-   CV34EwmStd es2;
+   CSatEwmStd es2;
    es2.Init(5.0, 3, false);     // consolidate flavor
    s = "ewm_std(span=5,minp=3): ";
    string s2 = "ewm_std(consolidate flavor): ";
@@ -88,8 +88,8 @@ void OnStart()
    Print(s);
    Print(s2);
 
-   // ---- CV34Ring + two-pass scans (window=4, minp=2) ----------------
-   CV34Ring ring;
+   // ---- CSatRing + two-pass scans (window=4, minp=2) ----------------
+   CSatRing ring;
    ring.Init(4);
    s = "ring std/mean/max/min(w=4,minp=2): ";
    for(int i = 0; i < 10; i++)
@@ -101,26 +101,26 @@ void OnStart()
      }
    Print(s);
 
-   // ---- CV34RollStd wrapper (window=3, minp=3) -----------------------
-   CV34RollStd rs;
+   // ---- CSatRollStd wrapper (window=3, minp=3) -----------------------
+   CSatRollStd rs;
    rs.Init(3, 3);
    s = "roll_std(w=3,minp=3): ";
    for(int i = 0; i < 10; i++)
       s += StringFormat("%.10g ", rs.Step(seq[i]));
    Print(s);
 
-   // ---- CV34Sma (window=3, minp==window, NaN poisons window) --------
-   CV34Sma sma;
+   // ---- CSatSma (window=3, minp==window, NaN poisons window) --------
+   CSatSma sma;
    sma.Init(3);
    s = "sma(w=3): ";
    for(int i = 0; i < 10; i++)
       s += StringFormat("%.10g ", sma.Step(seq[i]));
    Print(s);
 
-   // ---- CV34Donchian (w=3): Query BEFORE Push each bar (shift-1) ----
-   CV34Donchian dmax;
+   // ---- CSatDonchian (w=3): Query BEFORE Push each bar (shift-1) ----
+   CSatDonchian dmax;
    dmax.Init(3, true);
-   CV34Donchian dmin;
+   CSatDonchian dmin;
    dmin.Init(3, false);
    s = "donchian(w=3) hi/lo prior-window: ";
    for(int i = 0; i < 10; i++)
@@ -135,10 +135,10 @@ void OnStart()
 
    // ---- CSV helpers --------------------------------------------------
    string fields[];
-   int nf = V34CsvSplit("1.25,nan,,-inf,7", fields);
+   int nf = SatCsvSplit("1.25,nan,,-inf,7", fields);
    s = StringFormat("csv nf=%d vals: ", nf);
    for(int i = 0; i < nf; i++)
-      s += StringFormat("%g ", V34ParseDouble(fields[i]));
+      s += StringFormat("%g ", SatParseDouble(fields[i]));
    Print(s);
 
    Print("CheckV34Math: done");

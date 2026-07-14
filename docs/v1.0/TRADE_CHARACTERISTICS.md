@@ -1,15 +1,15 @@
 # V1.0 trade characteristics — book-level mixing + inherited sleeve profiles
 
 **Two measurement layers, kept separate on purpose.** FMA3 v1.0 changes NOTHING inside either
-parent book — the federation ([`strategy_fma3.py`](../../strategy_fma3.py), config hash
-`51a7541cc2aaa593`) freezes the v7.0 band book (w = 0.70) and the v3.4 fixed-fraction book (0.30)
+parent book — the blend ([`strategy_fma3.py`](../../strategy_fma3.py), config hash
+`51a7541cc2aaa593`) freezes the Core band book (w = 0.70) and the Satellite fixed-fraction book (0.30)
 at their shipped configs and mixes them in one cross-margined account at s = 1.1. So:
 
 1. **Per-sleeve trade profile — INHERITED BY CITATION, unchanged.** Which sleeves trade, their
-   instruments, params, and per-sleeve sizing are byte-frozen (v7 extraction verified 15/15 anchor
-   floats delta 0.0; v3.4 pin byte-reproduced — see [RECONCILIATION.md](RECONCILIATION.md)).
+   instruments, params, and per-sleeve sizing are byte-frozen (Core extraction verified 15/15 anchor
+   floats delta 0.0; Satellite pin byte-reproduced — see [RECONCILIATION.md](RECONCILIATION.md)).
    Because w and s are constant positive multipliers on each sleeve's fraction stream, the
-   sleeve-level profile — trades/yr, win%, PF, hold, long% — is **unchanged by federation** and is
+   sleeve-level profile — trades/yr, win%, PF, hold, long% — is **unchanged by blend** and is
    quoted below from the parents' own docs, **confirmed, not recomputed** (Part 2).
 2. **Book-level mixing statistics — FMA3-specific, measured.** How the two books stack on shared
    instruments, the joint turnover, gross exposure, overnight gold, and each sub-book's
@@ -34,17 +34,17 @@ real-tick + live demo are the remaining falsification tests.** Performance conte
 |---|---|---|
 | Trades, 2020-25 (record-engine fill events) | **25,869** | [fma3_v1_pin.json](../../research/outputs/fma3_v1_pin.json) |
 | Mean per quarter | **1,077.9** | total / 24 — the pin carries the total only; no per-quarter split is pinned |
-| v3.4 alone, same engine | 20,403 | [composite_benchmark.json](../../research/outputs/composite_benchmark.json) |
-| v7.0 @ r8 alone, same engine | 6,406 | [composite_benchmark.json](../../research/outputs/composite_benchmark.json) |
+| Satellite alone, same engine | 20,403 | [composite_benchmark.json](../../research/outputs/composite_benchmark.json) |
+| Core @ r8 alone, same engine | 6,406 | [composite_benchmark.json](../../research/outputs/composite_benchmark.json) |
 
 A "trade" here is the record engine's convention: one position-changing execution (open, add,
 reduce, or close) after min-lot quantization and the 25% rebalance dead-band. The three rows are
 comparable to each other and to nothing else — not to MT5 ledger fills, and not to the FIFO
-round-trip counts in Part 2. Note the netting effect: the federation prints **25,869 fills vs
+round-trip counts in Part 2. Note the netting effect: the blend prints **25,869 fills vs
 26,809 for the parents run separately** (20,403 + 6,406) — on shared instruments the two books'
 targets sum at the account level before quantization, and opposing demands cancel instead of
-crossing the spread twice. This is one component of the measured −2.7pp federation friction
-([PERFORMANCE.md §Federation friction](PERFORMANCE.md)).
+crossing the spread twice. This is one component of the measured −2.7pp blend friction
+([PERFORMANCE.md §Blend friction](PERFORMANCE.md)).
 
 ### Turnover and gross exposure (locked matrix, w = 0.70, s = 1.1)
 
@@ -58,7 +58,7 @@ crossing the spread twice. This is one component of the measured −2.7pp federa
 | Gross exposure — p99 | 7.95× |
 | Gross exposure — max | **9.23× equity** |
 
-Basis: the locked federation fraction matrix (sum over instruments of |Δfrac| per hour, summed per
+Basis: the locked blend fraction matrix (sum over instruments of |Δfrac| per hour, summed per
 calendar day; gross = hourly Σ|frac| over all 49,379 hours). These are *target* exposures at the
 shipped scale — the engine then applies min-lot rounding, the 0.90 margin cap, and per-instrument
 leverage. For the realized margin envelope the only measured datapoint is the forward window: max
@@ -90,17 +90,17 @@ Mean |frac| (average absolute target fraction of joint equity) and active share 
 | | | | EURUSD | 0.001 | 1.3% |
 
 The book's risk is concentrated in **four lines**: EURGBP (both parents' mean-reversion workhorse
-— v7's ZC_EG plus v3.4's meanrev FX-cross leg — 1.35×E on average, active 95% of hours), XAUUSD
-(v7's BOOK_XAU stacked on v3.4's three gold-touching sleeves, 86% co-active hours per the M-0
+— Core's ZC_EG plus Satellite's meanrev FX-cross leg — 1.35×E on average, active 95% of hours), XAUUSD
+(Core's BOOK_XAU stacked on Satellite's three gold-touching sleeves, 86% co-active hours per the M-0
 measurement in [composite_benchmark.json](../../research/outputs/composite_benchmark.json)),
-USDJPY (v7's S5_JPY carry + S6 opex-USD leg stacked on v3.4's JPY-cross legs), and USTEC (v7's
-BOOK_USTEC + v3.4's index legs — the duplicate-edge concern was measured and cleared, ρ = 0.046 on
-co-active hours, M-0). The long tail of ~29 small lines (≤ 0.08×E each) is v3.4's breadth: FX
+USDJPY (Core's S5_JPY carry + S6 opex-USD leg stacked on Satellite's JPY-cross legs), and USTEC (Core's
+BOOK_USTEC + Satellite's index legs — the duplicate-edge concern was measured and cleared, ρ = 0.046 on
+co-active hours, M-0). The long tail of ~29 small lines (≤ 0.08×E each) is Satellite's breadth: FX
 crosses, indices, metals/energy, SOL.
 
 ### Overnight gold — the one measured stack (H-CAPS-1, NO-OP verified)
 
-Three v3.4 sleeves and v7's largest sleeve all touch XAUUSD, so the joint overnight gold line was
+Three Satellite sleeves and Core's largest sleeve all touch XAUUSD, so the joint overnight gold line was
 measured before any scale-up ([hcaps1_analysis.json](../../research/outputs/hcaps1_analysis.json),
 on the w70 matrix at s = 1.0 — multiply fractions by 1.1 for shipped scale; the entitlement scales
 identically, so the verdict is scale-invariant):
@@ -113,11 +113,11 @@ identically, so the verdict is scale-invariant):
 | max | **2.03 = exactly the inherited entitlement** |
 | Hours exceeding entitlement | **0** |
 
-Entitlement = |v7's own gold demand| × its share + **1.80×E** (v3.4's structural overnight gold
+Entitlement = |Core's own gold demand| × its share + **1.80×E** (Satellite's structural overnight gold
 cap) × its share. The maximum ever reached sits exactly on the entitlement and never above it —
 the parents' per-book caps **compose correctly in the merged account**, which is why H-CAPS-1
 adopted no new joint cap (**NO-OP**, [REGISTRY.md FMA3-C1](../REGISTRY.md)). Same analysis for the
-managed crosses (all v3.4-only — v7 trades none of them): EURCHF max 0.189 vs entitlement 0.195,
+managed crosses (all Satellite-only — Core trades none of them): EURCHF max 0.189 vs entitlement 0.195,
 EURSEK 0.187, EURNOK 0.191, AUDNZD 0.187 — all within. Joint USTEC: p99 1.13×E, max 1.78×E.
 
 ### Sub-book contribution — who earned the growth
@@ -125,27 +125,27 @@ EURSEK 0.187, EURNOK 0.191, AUDNZD 0.187 — all within. Joint USTEC: p99 1.13×
 w-weighted native-curve growth (share_i = w_i·(mult_i − 1) / Σ_j w_j·(mult_j − 1), native
 multiples from the parents' pinned curves, `package_data.json`):
 
-| Sub-book | Capital share | Native multiple (€10k base) | Contribution to federation growth |
+| Sub-book | Capital share | Native multiple (€10k base) | Contribution to blend growth |
 |---|---|---|---|
-| v7.0 band book | 0.70 | 53.2× | **73.5%** |
-| v3.4 book | 0.30 | 45.0× | **26.5%** |
+| Core band book | 0.70 | 53.2× | **73.5%** |
+| Satellite book | 0.30 | 45.0× | **26.5%** |
 
-The v7 leg earns roughly its capital share (73.5% on 70% of capital); v3.4's 26.5% is not the
-point — its job is the 2022-shaped complementarity (its +32.1% cushioning v7's worst year) and the
-disjoint drawdown troughs that let the federation cut DD to 15.73% while both parents alone sit at
+The Core leg earns roughly its capital share (73.5% on 70% of capital); Satellite's 26.5% is not the
+point — its job is the 2022-shaped complementarity (its +32.1% cushioning Core's worst year) and the
+disjoint drawdown troughs that let the blend cut DD to 15.73% while both parents alone sit at
 ~21% ([PERFORMANCE.md](PERFORMANCE.md)).
 
 ---
 
 ## Part 2 — Per-sleeve trade profiles (inherited by citation, unchanged)
 
-**Sleeve-level trade characteristics are unchanged by federation — the books are frozen.** The
+**Sleeve-level trade characteristics are unchanged by blend — the books are frozen.** The
 tables below quote the parents' own shipped docs; FMA3 confirms the inputs byte-exactly
 ([RECONCILIATION.md](RECONCILIATION.md)) but does not recompute the profiles. Book-level mixing
 (Part 1) is the only FMA3-measured layer. Each parent's own conventions and caveats travel with
 its table — the two tables use *different* trade definitions and must not be cross-compared.
 
-### v7.0 band book (w = 0.70) — from `NSF5/docs/v7/TRADE_CHARACTERISTICS.md`
+### Core band book (w = 0.70) — from `NSF5/docs/v7/TRADE_CHARACTERISTICS.md`
 
 Source: `/Users/dsalamanca/vs_env/NewStrategyFable5/docs/v7/TRADE_CHARACTERISTICS.md` Part 1 (per-
 sleeve profile inherited there from V6, byte-identical; IC Python engine, "trade" = a
@@ -174,7 +174,7 @@ characteristics: 57 triggers, delta-resize, harvest backstop) describes the pare
 deployment, not the extracted R8 matrix — it is cited for context, not carried into FMA3's
 numbers.
 
-### v3.4 book (share 0.30) — from `FMA2/docs/v3.4/TRADE_CHARACTERISTICS.md`
+### Satellite book (share 0.30) — from `FMA2/docs/v3.4/TRADE_CHARACTERISTICS.md`
 
 Source: `/Users/dsalamanca/vs_env/FableMultiAssets2/docs/v3.4/TRADE_CHARACTERISTICS.md`
 (MODEL profile off the hourly position engine, FIFO-on-position convention — counts are an upper
@@ -198,13 +198,13 @@ shape: a barbell of sub-day workhorses (seasonal, intraday — the cadence) and 
 crisis/intraday/meanrev. The parent's own caveats apply verbatim (model-not-fills; thin-sample PF
 on mag_xau/crypto_smart; windfall-flattery of 2020-21).
 
-### Why the profiles survive federation unchanged
+### Why the profiles survive blend unchanged
 
 w = 0.70/0.30 and s = 1.1 multiply every sleeve's fraction stream by a constant positive factor.
 Trades/yr, win%, PF, hold, and long% are invariant under constant positive scaling (the same
 argument FMA2 used for its scale-11 → scale-10 re-pick), and neither book's signals, params, caps,
-nor cadences were touched — v7's band re-splits and v3.4's cash-parking both operate on *shares of
-their own sub-book*, which the static federation preserves by construction. What scaling does NOT
+nor cadences were touched — Core's band re-splits and Satellite's cash-parking both operate on *shares of
+their own sub-book*, which the static blend preserves by construction. What scaling does NOT
 preserve is account-level execution: min-lot rounding at €7k/€3k sub-book starting capital and
 netting on shared instruments change realized fills — that is the measured book-level layer of
 Part 1 (25,869 vs 26,809 fills; −2.7pp friction), not a sleeve-level change.
@@ -216,7 +216,7 @@ Part 1 (25,869 vs 26,809 fills; −2.7pp friction), not a sleeve-level change.
 - **The gold stack is the concentration to watch.** Joint overnight |XAUUSD| reached its
   entitlement exactly (2.03×E at s = 1.0 basis, 0 hours over) with 86% co-active hours between the
   two books' gold sleeves. The demo must confirm the composed caps behave in MT5 the way the
-  matrix says — v3.4's 1.80×E structural overnight cap clipping its *combined* gold, v7's own
+  matrix says — Satellite's 1.80×E structural overnight cap clipping its *combined* gold, Core's own
   demand riding on top — and that the joint line stays at/under entitlement on gold-shock days.
 - **EURGBP is the single largest average line (1.35×E, 95% active).** Two mean-reversion sleeves
   from different programs share it; the netting benefit measured in the record engine (fills
@@ -225,8 +225,8 @@ Part 1 (25,869 vs 26,809 fills; −2.7pp friction), not a sleeve-level change.
 - **Gross exposure p99 ≈ 8×E at target.** The record engine's 0.90 margin cap never bound
   in-sample and the forward window peaked at margin/balance 0.324 — but that is 1m-bar evidence;
   the MT5 margin path on real ticks is unmeasured.
-- **Trade counts are conventions, not forecasts.** 25,869 record-engine fills, ~468/yr v7
-  round-trips, and 2,286/yr v3.4 model-trades are three different definitions. Do not reconcile
+- **Trade counts are conventions, not forecasts.** 25,869 record-engine fills, ~468/yr Core
+  round-trips, and 2,286/yr Satellite model-trades are three different definitions. Do not reconcile
   the demo ledger against any of them numerically; reconcile the *shape* (which lines churn, which
   hunt, who carries the shorts).
 
@@ -238,7 +238,7 @@ Part 1 (25,869 vs 26,809 fills; −2.7pp friction), not a sleeve-level change.
   properties of the locked *target* matrix (plus pinned engine outputs for the fill counts); MT5
   real-tick execution is the remaining test of all of them.
 - **The three trade-count conventions in this doc are mutually incomparable** (record-engine fill
-  events vs v7 FIFO position-reducing deals vs v3.4 FIFO-on-position model trades). Every table
+  events vs Core FIFO position-reducing deals vs Satellite FIFO-on-position model trades). Every table
   names its convention; never quote across them.
 - **No per-quarter trade split is pinned** — 1,077.9/quarter is the flat mean of the pinned total,
   not a measured series.

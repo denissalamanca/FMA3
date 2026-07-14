@@ -28,7 +28,7 @@ deployable promise.** Model home and source of truth:
 
 v1.0 reconciled *three Python engines* into one accounting. v3.0 reconciles a different bridge:
 the **frozen model** (that same record accounting) against the **EA that must reproduce it on
-MT5**. The architecture forces this to be a *replay*, not a live recompute — the federation share
+MT5**. The architecture forces this to be a *replay*, not a live recompute — the blend share
 weights `w·a_h/j` and `(1−w)·b_h/j` are built from each book's **frozen native standalone**
 equity multiples `a`, `b`, which a live s-levered account cannot reconstruct from its own equity;
 so a compute-live EA diverges the instant `s ≠ 1` (and both shipped dials are `s ≠ 1`). v3
@@ -60,9 +60,9 @@ gap. Measured on the same book, same tester:
 
 | Run | Preset | Dial | Book | v3 equity | Model | v3/model | Rejects | Fidelity (median `after/want`) |
 |---|---|---|---|---:|---:|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
-| 2 | `FED_V3_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66** | 0 (after fix) | 1.000 |
-| 3 | `FED_V3_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
+| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66** | 0 (after fix) | 1.000 |
+| 3 | `FABLE_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 The friction ladder **0.95 @ s0.7 → 0.84 @ s1.0 → 0.66 @ s1.6** is the price of leverage on real
 fills. It is inside every equity number and is not recoverable by any EA fix — it is what a live
@@ -110,16 +110,16 @@ is a v1-over-leverage artifact and is **DISPROVEN for v3.** On the FTMO side the
 
 | Link | Check | Result |
 |---|---|---|
-| Exporter self-check ([`export_fed_frac_v3.py`](../../scripts/export_fed_frac_v3.py)) | re-parse → matrix reproduces `static_fed(0.70)`; record engine on the stream re-run | matrix **< 1e-12**; `run_record(stream·1.6, 10k)` = **€3,872,872** and `run_record_ext(stream·0.7, 100k, 3.0)` = **€1,332,404**, to the euro |
+| Exporter self-check ([`export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py)) | re-parse → matrix reproduces `static_fed(0.70)`; record engine on the stream re-run | matrix **< 1e-12**; `run_record(stream·1.6, 10k)` = **€3,872,872** and `run_record_ext(stream·0.7, 100k, 3.0)` = **€1,332,404**, to the euro |
 | Model reproduction ([`reproduce.py`](../../model/v3/reproduce.py)) | both presets rebuilt from config `51a7541cc2aaa593` | asserts **€3,872,872** (IC) and **€1,332,404** (FTMO) |
 | Position fidelity (RECON-4, 3 runs) | held fraction ÷ model target `fed_frac·s`, per bar per symbol | **median 1.000, p10 1.000** in all three runs; all **33/33** symbols trade |
 | Reject count (RECON-4, post volume-fix) | order rejects per run | **0 / 0 / 0** (Run 2 spin removed by the volume clamp; equity unchanged) |
-| v34 sleeve revival (RECON-4 Run 1) | the 7 legs v1/v2 killed via the EurPerQuote bug: AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK | **all 7 trade >0 deals** — full-map eurq works end-to-end |
+| Satellite sleeve revival (RECON-4 Run 1) | the 7 legs v1/v2 killed via the EurPerQuote bug: AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK | **all 7 trade >0 deals** — full-map eurq works end-to-end |
 | FTMO breaker (RECON-4 Run 3) | fire count + anchor basis vs model | **28 fires** (model 26; +2 conservative worst-mark); prev-server-day CLOSE anchor + worst-mark `eq_w` confirmed |
 | Volume-cap s-sweep ([`sweep_s_volcap.py`](../../scripts/sweep_s_volcap.py), FMA3-024) | engine with `volume_limit`, no-cap branch vs record | no-cap == **€3,872,872**; cap cost 0.4%→40% across €10k→€1M |
 
 Reproduce: `python3 model/v3/reproduce.py` (~8–9 min) ·
-`python3 scripts/export_fed_frac_v3.py` (self-checks the stream) ·
+`python3 scripts/export_book_frac_v3.py` (self-checks the stream) ·
 `python3 scripts/sweep_s_volcap.py` (volume-cap curve). MT5 fidelity: the three preset runs on
 IC Markets 11078280, 1m-OHLC, 1:500, HEDGING.
 
@@ -130,12 +130,12 @@ IC Markets 11078280, 1m-OHLC, 1:500, HEDGING.
 1. **No MT5 real-tick run — the owed arbiter.** All three fidelity runs are **1m-OHLC smokes**.
    The record engine and the tester both use 1m bars, so tick-granularity spread blowouts and
    intra-bar margin excursions are **invisible by construction** (the v1.0 package measured this
-   as a 35.6%-vs-5.54% crisis-tail gap for v7 alone). The IC deployable commit is therefore
+   as a 35.6%-vs-5.54% crisis-tail gap for Core alone). The IC deployable commit is therefore
    **provisional pending a real-tick run confirming intra-bar min ML holds >110%** at 1:30.
-2. **The FTMO deployable dial is not confirmed at owner leverage.** The shipped `FED_V3_FTMO`
+2. **The FTMO deployable dial is not confirmed at owner leverage.** The shipped `FABLE_FTMO`
    preset is s=0.7 (0.95×, €1,265,541 @ 1:500). The recommended deployable dial is **s≈0.5**
    (sweep ret/DD 4.78, worst-DD 7.8% vs s0.7's 13.3%; the warm-COVID flag says s0.7 breaches the
-   −10% rule by 7.5–10.8pp), but the **1:100 confirm run (FED_V3_FTMO_S04/05) is pending.**
+   −10% rule by 7.5–10.8pp), but the **1:100 confirm run (FABLE_FTMO_S04/05) is pending.**
    Volume never binds at FTMO scale, so the −10%/−5% rules govern, not capacity.
 3. **The €3.87M IC record is a frictionless ceiling, not a reachable target on one account.**
    Reconciliation closes at the *position* layer (fidelity 1.000); the *equity* layer is

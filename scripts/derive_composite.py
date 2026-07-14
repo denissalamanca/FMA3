@@ -6,7 +6,7 @@ single cross-margined account, IC feed, 2020-2025, EUR 10k) and derives the
 composite gates per research/protocol/PROTOCOL.md §2. Also computes the M-0
 measurement block (research/protocol/HYPOTHESES.md) — book-level correlation,
 co-drawdown, exposure overlap, duplicate-edge check — which gates whether the
-federation thesis proceeds.
+blend thesis proceeds.
 
 Parents measured:
   * v3.4 @ scale 10 — cited from the pinned reference (byte-reproduced twice
@@ -188,7 +188,7 @@ def main() -> int:
             for k in q7.index.union(q34.index)}
 
     # exposure overlap: mean |frac| per instrument, both books
-    v34frac = books.build_v34_frac_1h()
+    v34frac = books.build_sat_frac_1h()
     common_idx = frac.index.intersection(v34frac.index)
     ov = {}
     for inst in sorted(set(frac.columns) | set(v34frac.columns)):

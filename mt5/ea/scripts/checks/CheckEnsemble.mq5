@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
-//| CheckEnsemble.mq5 — compile/smoke gate for FMA3v34/Ensemble.mqh  |
-//| Instantiates CV34EnsembleStepper (4 sleeves, 5-symbol union),    |
+//| CheckEnsemble.mq5 — compile/smoke gate for Sat/Ensemble.mqh  |
+//| Instantiates CSatEnsembleStepper (4 sleeves, 5-symbol union),    |
 //| steps 50 synthetic hourly bars with interior NaN positions,      |
 //| prints outputs + checksum, round-trips GetState/SetState, and    |
 //| exercises the error paths.  NO trading functions.                |
@@ -29,19 +29,19 @@
 //| exact given identical inputs.)                                   |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/Ensemble.mqh>
+#include <Sat/Ensemble.mqh>
 
 // deterministic synthetic position, mirrors gen_ens_golden.pos():
 // NaN when (bar+si+sym)%13==7, else sin(0.37*bar+1.3*si+0.71*sym)*1.7
 double SynthPos(const int sleeve_idx, const int sym_idx, const int bar)
   {
    if((bar + sleeve_idx + sym_idx) % 13 == 7)
-      return V34Nan();
+      return SatNan();
    return MathSin(0.37 * bar + 1.3 * sleeve_idx + 0.71 * sym_idx) * 1.7;
   }
 
 // stage all four sleeve rows for one bar; returns false on any failure
-bool StageBar(CV34EnsembleStepper &shell, const int bar)
+bool StageBar(CSatEnsembleStepper &shell, const int bar)
   {
    double mr[3], se[1], cr[2], mg[1];
    for(int j = 0; j < 3; j++) mr[j] = SynthPos(0, j, bar);
@@ -65,7 +65,7 @@ void OnStart()
    string cr_syms[2] = {"EURSEK", "USDJPY"};
    string mg_syms[1] = {"XAUUSD"};
 
-   CV34EnsembleStepper shell;
+   CSatEnsembleStepper shell;
    bool ok = true;
    // add out of canonical order on purpose — Finalize must reorder
    ok = ok && shell.AddSleeve("mag", mg_syms);
@@ -125,7 +125,7 @@ void OnStart()
    // ---- GetState/SetState round-trip -------------------------------
    string state = shell.GetState();
    Print("state: ", state);
-   CV34EnsembleStepper shell2;
+   CSatEnsembleStepper shell2;
    if(!shell2.SetState(state))
      {
       Print("FAIL: SetState");
@@ -153,7 +153,7 @@ void OnStart()
    Print("state roundtrip identical: ", same ? "OK" : "FAIL");
 
    // ---- error paths (all must return false, no crash) --------------
-   CV34EnsembleStepper bad;
+   CSatEnsembleStepper bad;
    string dummy[1] = {"EURUSD"};
    bool e1 = !bad.AddSleeve("not_a_sleeve", dummy);   // ValueError
    bool e2 = !bad.Finalize();                          // no sleeves added

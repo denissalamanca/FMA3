@@ -7,7 +7,7 @@ forward one-shot helpers (fwd_bar_files/restrict) + the UTC->server rule.
 Process imports record_engine_ext only (stop_out=0.50); never v7_bridge.
 
 NOTE: this is a SECONDARY read of 2026 for the sizing-basis question; the
-primary one-shot federation holdout was already consumed. Reported OOS, short
+primary one-shot blend holdout was already consumed. Reported OOS, short
 window (~4 months), wide error bars.
 """
 from __future__ import annotations
