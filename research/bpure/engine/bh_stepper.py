@@ -311,7 +311,7 @@ def run_bh_reference(pos, start_quarter: str = "2020Q1",
                      verbose: bool = True):
     """Full pure-scalar reference run. Returns (eq_c, eq_w) pandas Series on
     the 1m union grid — the b_h source curve (normalize by eq_c.iloc[0] and
-    asof-ffill onto hours for the federation blend)."""
+    asof-ffill onto hours for the blend)."""
     import numpy as np
     import pandas as pd
     st = make_stepper([c for c in pos.columns], balance=initial)

@@ -23,7 +23,7 @@ if _ENGINE_DIR not in sys.path:
 import record_engine  # noqa: E402,F401  (side effect: sys.path bootstrap)
 
 
-def build_v34_frac_1h() -> pd.DataFrame:
+def build_sat_frac_1h() -> pd.DataFrame:
     """The shipped v3.4 book, EXACTLY as the official pin constructs it.
 
     We deliberately delegate to ``eval_v34_pin_s10.build_c2()`` in read-only

@@ -38,7 +38,7 @@ sys.path.insert(0, str(_FMA3 / "engine"))
 sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE  # noqa: E402
-from run_hrisk1 import static_fed  # noqa: E402  (same blend builder)
+from run_hrisk1 import static_blend  # noqa: E402  (same blend builder)
 
 INITIAL = 100_000.0
 DAILY_LOSS_EUR = 0.05 * INITIAL
@@ -140,7 +140,7 @@ def main() -> int:
                      "static_floor_eur": STATIC_FLOOR, "initial": INITIAL,
                      "vehicle": "FTMO 2-Step Swing (verified 2026-07-10)"},
            "grid": {}, "probes": {}, "ship": None}
-    fed = static_fed(W_LOCKED)
+    fed = static_blend(W_LOCKED)
     for s in S_GRID:
         out["grid"][f"s{int(round(s*100))}"] = run_point(
             fed, s, f"hrisk2_s{int(round(s*100))}")
@@ -152,7 +152,7 @@ def main() -> int:
         probe_ok = True
         for wp in W_PROBES:
             lbl = f"hrisk2_probe_w{int(wp*100)}_s{int(round(s_cand*100))}"
-            row = run_point(static_fed(wp), s_cand, lbl)
+            row = run_point(static_blend(wp), s_cand, lbl)
             out["probes"][lbl] = row
             probe_ok = probe_ok and row["compliant"]
         out["ship"] = ({"s": s_cand, "verdict": f"SHIP s={s_cand}"}

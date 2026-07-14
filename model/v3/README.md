@@ -5,7 +5,7 @@
 
 ## What the model is
 
-One federated blend, config **`51a7541cc2aaa593`**, `w_v7 = 0.70`, run through the 1-minute worst-mark record engine. Two shipped dials:
+One blended book, config **`51a7541cc2aaa593`**, `w_v7 = 0.70` (the Core weight), run through the 1-minute worst-mark record engine. Two shipped dials:
 
 | Preset | Seed | Dial | Final equity | CAGR | MaxDD (worst) | Dashboard |
 |---|---:|---|---:|---:|---:|---|
@@ -27,16 +27,16 @@ python3 model/v3/reproduce.py --ftmo   # FTMO only (~4 min)
 
 | Look-alike | Why it is NOT the model |
 |---|---|
-| `hrisk1_results.json` "= v7-alone" | **False.** `hrisk1` **is** the federated blend (`static_fed` blends `f7`+`f34`). A prior session mislabeled it v7-alone — that error cost us. |
-| `v7_book_frac_1h_ab.parquet` / `v7_book_tgt_1h_ab.parquet` | The **ownjoint v7-ONLY probe** artifacts. Not this model's input. The model's v7 input is `v7_book_frac_1h.parquet` (no `_ab`). |
+| `hrisk1_results.json` "= Core-alone" | **False.** `hrisk1` **is** the blended book (`static_fed` blends `f7`+`f34`). A prior session mislabeled it Core-alone — that error cost us. |
+| `v7_book_frac_1h_ab.parquet` / `v7_book_tgt_1h_ab.parquet` | The **ownjoint Core-ONLY probe** artifacts. Not this model's input. The model's Core input is `v7_book_frac_1h.parquet` (no `_ab`). |
 | `global_scale = 1.1` in `strategy_fma3.py` | The config **base point**, not the shipped dial. Shipped dials are IC s=1.6 / FTMO s=0.7. |
 | `FED_IC_RESEED_*`, `FED_*` EA presets | EA execution experiments (v1/v2). The **model** is the Python record engine here; the EA only *approximates* it (v1/v2 diverge — see below). |
 
 ## Relationship to the EA (v1 → v2 → v3)
 
 The EA is a **separate** artifact that tries to *execute* this model live. It does not yet match it:
-- **v1/v2 diverge from the model** because they size v7 off `VBalance` (pooled quarterly reseed, floating double-count) and v34 off `e34` (stagnant own sub-equity) — **not** the model's frozen `w·a/j`, `(1−w)·b/j` share weights. A live account levered by `s` provably cannot reconstruct those weights, so compute-live diverges whenever s≠1 (both dials are s≠1).
-- **v3 (built + validated, FMA3-RECON-4)** replays the precomputed unified `fed_frac` stream (all 33 symbols) and reproduces this model **up to real execution constraints**: **0.95×** at the deployable FTMO dial (s0.7, 0 rejects), 0.84× at s1.0, 0.66× at s1.6 (volume limits + margin). Position fidelity is exact (held frac == fed_frac·s, median 1.000). `mt5/ea/FableFederation_V3.mq5` + `Include/FMA3v3/`. Full record: [`RECON4_RESULTS.md`](RECON4_RESULTS.md).
+- **v1/v2 diverge from the model** because they size Core off `VBalance` (pooled quarterly reseed, floating double-count) and Satellite off `e34` (stagnant own sub-equity) — **not** the model's frozen `w·a/j`, `(1−w)·b/j` share weights. A live account levered by `s` provably cannot reconstruct those weights, so compute-live diverges whenever s≠1 (both dials are s≠1).
+- **v3 (built + validated, FMA3-RECON-4)** replays the precomputed unified `fed_frac` stream (all 33 symbols) and reproduces this model **up to real execution constraints**: **0.95×** at the deployable FTMO dial (s0.7, 0 rejects), 0.84× at s1.0, 0.66× at s1.6 (volume limits + margin). Position fidelity is exact (held frac == fed_frac·s, median 1.000). `mt5/ea/FableBook.mq5` + `Include/FMA3v3/`. Full record: [`RECON4_RESULTS.md`](RECON4_RESULTS.md).
 
 ## ⚠ Honesty flags (these are in-sample RECORD reads, not deployable claims)
 

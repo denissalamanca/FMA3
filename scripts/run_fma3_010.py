@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """FMA3-010: FTMO-specific (w, s) grid WITH the adopted breaker (x=3.0%).
 
-Pre-registered in FTMO_CAMPAIGN.md FMA3-010. The federation w is preset-
+Pre-registered in FTMO_CAMPAIGN.md FMA3-010. The blend w is preset-
 specific for FTMO (config-only; both parent books internally unchanged). Tests
 whether a capital split other than IC's w=0.70 lets FTMO push past the
 FMA3-008 breaker ship (s=0.7, +54.0%).
@@ -31,7 +31,7 @@ sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE                      # noqa: E402
 from record_engine_ext import run_record_ext    # noqa: E402
-from run_hrisk1 import static_fed               # noqa: E402
+from run_hrisk1 import static_blend               # noqa: E402
 from ftmo_model_v3 import score_v3              # noqa: E402
 
 INITIAL, X = 100_000.0, 3.0
@@ -45,7 +45,7 @@ def log(m: str) -> None:
 
 
 def cell(w: float, s: float, tag: str) -> dict:
-    res = run_record_ext(static_fed(w) * s, initial=INITIAL, daily_stop_x=X,
+    res = run_record_ext(static_blend(w) * s, initial=INITIAL, daily_stop_x=X,
                          label=tag, verbose=False, run_bootstrap=False)
     sc = score_v3(res["curves"]["equity"], res["curves"]["worst"])
     row = {"w": w, "s": s, "x": X, "cagr": res["cagr"],

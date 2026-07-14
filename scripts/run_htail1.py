@@ -51,21 +51,21 @@ W_LOCKED, W_PROBES = 0.70, (0.56, 0.84)
 
 
 def load_v7() -> tuple[pd.DataFrame, pd.Series]:
-    frac7 = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
+    core_frac = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
     a = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_equity_1m.parquet")["eqc"]
-    return frac7, a / a.iloc[0]
+    return core_frac, a / a.iloc[0]
 
 
-def blend(frac7, a, frac34, b, w) -> pd.DataFrame:
-    hours = frac7.index.union(frac34.index)
+def blend(core_frac, a, sat_frac, b, w) -> pd.DataFrame:
+    hours = core_frac.index.union(sat_frac.index)
     a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     j = w * a_h + (1 - w) * b_h
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    return (f7.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
-            + f34.reindex(columns=cols, fill_value=0.0)
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    return (f_core.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
+            + f_sat.reindex(columns=cols, fill_value=0.0)
             .mul((1 - w) * b_h / j, axis=0))
 
 
@@ -116,14 +116,14 @@ def main() -> int:
            "baselines": {"p1_s": p1_base_s, "p1_cagr": p1_base_cagr,
                          "p2_s": p2_base_s, "p2_p_breach": p2_base_pb},
            "variants": {}, "winner": None, "ship": None}
-    frac7, a = load_v7()
+    core_frac, a = load_v7()
 
     # ---- PHASE M ------------------------------------------------------------
     for m, cw in ((1.5, 0.15), (2.0, 0.20)):
         tag = f"m{int(m*10)}"
         print(f"[htail1:{tag}] building v3.4' (crisis {cw}) ...", flush=True)
-        f34m = books.build_v34_variant_frac_1h(cw)
-        alone = RE.run_record(f34m, label=f"htail1_{tag}_v34alone",
+        f_sat_m = books.build_v34_variant_frac_1h(cw)
+        alone = RE.run_record(f_sat_m, label=f"htail1_{tag}_v34alone",
                               verbose=False, run_bootstrap=False)
         b_m = alone["curves"]["equity"] / alone["curves"]["equity"].iloc[0]
         v34_metrics = {k: alone[k] for k in
@@ -132,7 +132,7 @@ def main() -> int:
         runs = {}
         for w, lbl in ((W_LOCKED, "w70"), (W_PROBES[0], "w56"),
                        (W_PROBES[1], "w84")):
-            fed = blend(frac7, a, f34m, b_m, w)
+            fed = blend(core_frac, a, f_sat_m, b_m, w)
             r = RE.run_record(fed, label=f"htail1_{tag}_{lbl}",
                               verbose=False, run_bootstrap=False)
             runs[lbl] = {"cagr": r["cagr"], "maxdd_worst": r["maxdd_worst"],
@@ -172,12 +172,12 @@ def main() -> int:
     print(f"[htail1] winner {win} (crisis {cw}); PHASE S ...", flush=True)
 
     # ---- PHASE S ------------------------------------------------------------
-    f34m = books.build_v34_variant_frac_1h(cw)
-    alone = RE.run_record(f34m, label=f"htail1_{win}_v34alone_s",
+    f_sat_m = books.build_v34_variant_frac_1h(cw)
+    alone = RE.run_record(f_sat_m, label=f"htail1_{win}_v34alone_s",
                           verbose=False, run_bootstrap=False)
     b_m = alone["curves"]["equity"] / alone["curves"]["equity"].iloc[0]
     del alone["curves"]
-    fed = blend(frac7, a, f34m, b_m, W_LOCKED)
+    fed = blend(core_frac, a, f_sat_m, b_m, W_LOCKED)
 
     p1 = {}
     for s in COARSE:
@@ -197,7 +197,7 @@ def main() -> int:
         for attempt in (cand, round(cand - 0.05, 2)):
             ok = True
             for wp in W_PROBES:
-                fedp = blend(frac7, a, f34m, b_m, wp)
+                fedp = blend(core_frac, a, f_sat_m, b_m, wp)
                 r = p1_point(fedp, attempt,
                              f"htail1_{win}_p1probe_w{int(wp*100)}_"
                              f"s{int(round(attempt*100))}")

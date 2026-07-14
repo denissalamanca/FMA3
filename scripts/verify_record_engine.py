@@ -2,7 +2,7 @@
 """End-to-end verification of the FMA3 engine-of-record wrapper.
 
 Reconstructs the shipped v3.4 book exactly as FMA2's official pin script does
-(via ``books.build_v34_frac_1h`` -> ``eval_v34_pin_s10.build_c2``), runs it
+(via ``books.build_sat_frac_1h`` -> ``eval_v34_pin_s10.build_c2``), runs it
 through ``record_engine.run_record``, and reconciles every headline number
 against the pinned reference backed up at
 ``FMA3/research/baselines/fma2/v34_s10_pin_1m.json`` — plus a minute-level
@@ -52,7 +52,7 @@ def main() -> int:
     t0 = time.time()
     print("[1/3] reconstructing v3.4 book (eval_v34_pin_s10.build_c2) ...",
           flush=True)
-    pos = books.build_v34_frac_1h()
+    pos = books.build_sat_frac_1h()
     print(f"      book matrix {pos.shape}, {time.time()-t0:.0f}s", flush=True)
 
     print("[2/3] engine of record run (24 quarters, 1m) ...", flush=True)

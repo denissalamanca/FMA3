@@ -34,7 +34,7 @@ sys.path.insert(0, str(_FMA3 / "engine"))
 sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE  # noqa: E402
-from run_hrisk1 import static_fed  # noqa: E402
+from run_hrisk1 import static_blend  # noqa: E402
 from ftmo_model_v3 import score_v3  # noqa: E402
 
 S_GRID = (0.4, 0.5, 0.6, 0.7, 0.8)
@@ -67,7 +67,7 @@ def probe_curve(wp: float, s: float) -> tuple[pd.DataFrame, str, bool]:
     cp = RE.PATHS.OUTPUTS / f"{lbl}_curve.parquet"
     if cp.exists():
         return pd.read_parquet(cp), lbl, True
-    r = RE.run_record(static_fed(wp) * s, label=lbl, verbose=False,
+    r = RE.run_record(static_blend(wp) * s, label=lbl, verbose=False,
                       initial=INITIAL, run_bootstrap=False)
     c = pd.DataFrame({"equity": r["curves"]["equity"],
                       "worst": r["curves"]["worst"]})

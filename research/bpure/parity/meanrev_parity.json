@@ -23,5 +23,5 @@
   "pass_positions": true,
   "warmstart_roundtrip_maxabs": 0.0,
   "warmstart_exact": true,
-  "runtime_sec": 2.8
+  "runtime_sec": 2.7
 }

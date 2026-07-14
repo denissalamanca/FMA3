@@ -36,7 +36,7 @@ sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE                      # noqa: E402 (paths)
 from record_engine_ext import run_record_ext    # noqa: E402
-from run_hrisk1 import static_fed               # noqa: E402
+from run_hrisk1 import static_blend               # noqa: E402
 from ftmo_model_v3 import score_v3              # noqa: E402
 
 INITIAL = 100_000.0
@@ -80,7 +80,7 @@ def run_cell(fed_base: pd.DataFrame, s: float, x: float, w: float,
 def main() -> int:
     t0 = time.time()
     log("grid start — hook identity gate already PASSED (19:21)")
-    fed = static_fed(W_LOCKED)
+    fed = static_blend(W_LOCKED)
     out = {"bar": {"cagr_ge": BAR_CAGR, "p_le": BAR_P},
            "grid": {}, "walk_up": {}, "probes": {}, "verdict": None}
 
@@ -111,7 +111,7 @@ def main() -> int:
         ok = True
         for wp in W_PROBES:
             tag = f"fma3008_probe_w{int(wp*100)}_s{int(s*100)}_x{int(x*10)}"
-            row = run_cell(static_fed(wp), s, x, wp, tag)
+            row = run_cell(static_blend(wp), s, x, wp, tag)
             out["probes"][tag] = row
             ok = ok and row["compliant"]
         if ok:

@@ -25,7 +25,7 @@ sys.path.insert(0, str(_FMA3 / "engine"))
 sys.path.insert(0, str(_FMA3 / "scripts"))
 
 import record_engine as RE  # noqa: E402
-from run_hrisk1 import static_fed, run_point, CEIL, W_PROBES  # noqa: E402
+from run_hrisk1 import static_blend, run_point, CEIL, W_PROBES  # noqa: E402
 
 SEARCH = (1.5, 1.4, 1.3, 1.2)   # pre-registered top-down grid
 
@@ -41,7 +41,7 @@ def main() -> int:
         both_ok = True
         for wp in W_PROBES:
             lbl = f"hrisk1b_probe_w{int(wp*100)}_s{int(round(s*100))}"
-            row = run_point(static_fed(wp), s, lbl)
+            row = run_point(static_blend(wp), s, lbl)
             res["fma3_004b"]["search"][lbl] = row
             res["probes"][lbl] = row
             both_ok = both_ok and row["compliant"]

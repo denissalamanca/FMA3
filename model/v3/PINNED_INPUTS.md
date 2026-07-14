@@ -18,7 +18,7 @@ The model is a deterministic function of **4 frozen artifacts + 2 scalars (w, s)
 | `b` (eq34) | `research/baselines/fma2/v34_s10_pin_curve.parquet` | `a5787993a3413108` | 68,173,535 |
 | `frac34` | `engine/books.build_v34_frac_1h()` → `eval_v34_pin_s10.build_c2()` (read-only FMA2 pin) | *(code, deterministic)* | — |
 
-`frac34` is generated in code from the read-only FMA2 v3.4 pin; it is deterministic (31 cols, GLOBAL_SCALE=10, gold cap 1.80 pre-applied). The exporter `scripts/export_v34_replay.py` hard-fails if the brain path drifts from `books.build_v34_frac_1h()` beyond 1e-12 — that gate is the frac34 pin.
+`frac34` is generated in code from the read-only FMA2 v3.4 pin; it is deterministic (31 cols, GLOBAL_SCALE=10, gold cap 1.80 pre-applied). The exporter `scripts/export_sat_replay.py` hard-fails if the brain path drifts from `books.build_v34_frac_1h()` beyond 1e-12 — that gate is the frac34 pin.
 
 ## To re-verify the pins
 ```

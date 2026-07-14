@@ -7,7 +7,7 @@ engine/v7_bridge here.
 
 OWN  = v7_book_frac_1h_ab.parquet  (standalone-equity leverage; == existing
        v7_book_frac_1h, gated in Stage 1)
-JOINT= v7_book_tgt_1h_ab.parquet   (constant federated leverage)
+JOINT= v7_book_tgt_1h_ab.parquet   (constant blended leverage)
 
 Metrics per (regime, dial): CAGR, worst-mark MaxDD, Sharpe, desired peak joint
 margin load (analytic = max_t sum_k |frac_k*s|/lev_k; the record engine's own

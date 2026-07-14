@@ -167,7 +167,7 @@ HTML = r"""<!doctype html>
     <div>
       <span class="chip"><span class="dot"></span>FMA3 V1.0 &middot; LATEST STABLE</span>
       <div class="hero-eq">&euro;665,777</div>
-      <div class="hero-sub"><b>&euro;10,000 &rarr;</b> over 2020&ndash;2025 &middot; federation book &middot; w70/30 &middot; s=1.1 &middot; single account &middot; <b>1m worst-mark accounting</b>. Both shipped parents in one account &mdash; the pinned record, not a paper blend.</div>
+      <div class="hero-sub"><b>&euro;10,000 &rarr;</b> over 2020&ndash;2025 &middot; blend book &middot; w70/30 &middot; s=1.1 &middot; single account &middot; <b>1m worst-mark accounting</b>. Both shipped parents in one account &mdash; the pinned record, not a paper blend.</div>
     </div>
     <div class="verdict">
       <div class="score"><b>6</b> / 6 gates</div>
@@ -187,7 +187,7 @@ HTML = r"""<!doctype html>
   <section class="charts">
     <div class="card">
       <h3>Equity &mdash; &euro;10,000 account</h3>
-      <div class="csub">log scale &middot; federation book, close-mark weekly &middot; parents&rsquo; record curves faint (v7 &euro;532k, v3.4 &euro;450k)</div>
+      <div class="csub">log scale &middot; blend book, close-mark weekly &middot; parents&rsquo; record curves faint (v7 &euro;532k, v3.4 &euro;450k)</div>
       <div id="eq"></div>
     </div>
     <div class="card">
@@ -200,7 +200,7 @@ HTML = r"""<!doctype html>
   <section class="trail">
     <h2>How V1.0 was reached &mdash; four levers, each tested against pre-committed bars</h2>
     <div class="levers">
-      <div class="lever ad"><div class="st"><span class="ic">&check;</span>ADOPTED</div><div class="nm">Static federation, w = 0.70</div><div class="ds">Pre-registered grid w = .30&ndash;.70: w50/w60/w70 pass every H-FED-1 bar; winner by rule (max Sharpe among passers). Friction &minus;2.7pp, already in the pin.</div></div>
+      <div class="lever ad"><div class="st"><span class="ic">&check;</span>ADOPTED</div><div class="nm">Static blend, w = 0.70</div><div class="ds">Pre-registered grid w = .30&ndash;.70: w50/w60/w70 pass every H-FED-1 bar; winner by rule (max Sharpe among passers). Friction &minus;2.7pp, already in the pin.</div></div>
       <div class="lever de"><div class="st"><span class="ic">&times;</span>DECLINED</div><div class="nm">Cross-book rebalance</div><div class="ds">All four cadences (quarterly + 3 band rules) miss the &le;+0.3pp DD bar &mdash; rebalancing couples the disjoint troughs it harvests. Static w70 stands.</div></div>
       <div class="lever no"><div class="st"><span class="ic">&#9675;</span>NO-OP</div><div class="nm">Joint exposure caps</div><div class="ds">Verified, not assumed: overnight joint gold p99 1.97&times; / max 2.03&times; equity = exactly entitlement, 0 hours over. Per-book caps compose; no joint cap added.</div></div>
       <div class="lever ad"><div class="st"><span class="ic">&check;</span>ADOPTED</div><div class="nm">Global scale s = 1.1</div><div class="ds">The ceiling rule alone said s=1.4; the w+20% probe broke it (DD +3.59pp). Probe-robust re-pick &rArr; s=1.1 &mdash; the only fully parent-dominant point (7/7).</div></div>

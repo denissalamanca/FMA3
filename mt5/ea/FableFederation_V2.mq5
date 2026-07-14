@@ -124,12 +124,12 @@ void   F3_HoldSet(string sym,long magic,double desired,double held,string why);
 void   F3_HoldClear(string sym,long magic);
 bool   F3_SendAdd(string sym,long magic,int dir,double dv,double desired,double held);
 
-#include <FMA3v2/V7Core.mqh>
-#include <FMA3v2/Federation.mqh>
-#include <FMA3v2/V34Replay.mqh>
-#include <FMA3v2/V34Live.mqh>
-#include <FMA3v2/V34Exec.mqh>
-#include <FMA3v2/Guardian.mqh>
+#include <Core/CoreEngine.mqh>
+#include <Core/Federation.mqh>
+#include <Core/V34Replay.mqh>
+#include <Core/V34Live.mqh>
+#include <Core/V34Exec.mqh>
+#include <Core/Guardian.mqh>
 
 //====================================================================
 // INIT

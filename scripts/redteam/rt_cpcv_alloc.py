@@ -269,9 +269,9 @@ def main(argv: list[str] | None = None) -> int:
         if not (args.results and args.key):
             ap.error("results JSON and key are required unless --synthetic")
         cfg, _, _ = rt_lib.load_winner(args.results, args.key)
-        frozen_w = cfg.w_v7
+        frozen_w = cfg.core_weight
         winner_block = {"results": str(args.results), "key": args.key,
-                        "config": {"kind": cfg.kind, "w_v7": cfg.w_v7,
+                        "config": {"kind": cfg.kind, "w_v7": cfg.core_weight,
                                    "b_up": cfg.b_up,
                                    "min_gap_days": cfg.min_gap_days}}
         a_d, b_d = load_daily_parent_curves()

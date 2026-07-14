@@ -33,18 +33,18 @@ CEIL = {"dd": 0.30, "tail": 0.30, "negy": 0, "negq": 1, "breach": 0.15}
 W_LOCKED, W_PROBES = 0.70, (0.56, 0.84)
 
 
-def static_fed(w: float) -> pd.DataFrame:
-    """Fresh-seed static federation matrix at share w (probe-compatible)."""
-    frac7, frac34, a, b = load_inputs()
-    hours = frac7.index.union(frac34.index)
+def static_blend(w: float) -> pd.DataFrame:
+    """Fresh-seed static blend matrix at share w (probe-compatible)."""
+    core_frac, sat_frac, a, b = load_inputs()
+    hours = core_frac.index.union(sat_frac.index)
     a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     j = w * a_h + (1 - w) * b_h
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    return (f7.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
-            + f34.reindex(columns=cols, fill_value=0.0)
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    return (f_core.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
+            + f_sat.reindex(columns=cols, fill_value=0.0)
             .mul((1 - w) * b_h / j, axis=0))
 
 
@@ -78,7 +78,7 @@ def run_point(fed: pd.DataFrame, s: float, label: str) -> dict:
 def main() -> int:
     t0 = time.time()
     out = {"ceilings": CEIL, "base": {}, "probes": {}, "ship": None}
-    fed_locked = static_fed(W_LOCKED)
+    fed_locked = static_blend(W_LOCKED)
 
     # Stage A — base grid at locked w
     for s in S_NEW:
@@ -108,7 +108,7 @@ def main() -> int:
             probe_ok = True
             for wp in W_PROBES:
                 lbl = f"hrisk1_probe_w{int(wp*100)}_s{int(round(s*100))}"
-                row = run_point(static_fed(wp), s, lbl)
+                row = run_point(static_blend(wp), s, lbl)
                 out["probes"][lbl] = row
                 probe_ok = probe_ok and row["compliant"]
             if probe_ok:

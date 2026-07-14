@@ -54,7 +54,7 @@ def main() -> int:
     t0 = time.time()
     print("[1/3] reconstructing v3.4 book (eval_v34_pin_s10.build_c2) ...",
           flush=True)
-    pos = books.build_v34_frac_1h()
+    pos = books.build_sat_frac_1h()
     print(f"      book matrix {pos.shape}, {time.time()-t0:.0f}s", flush=True)
 
     print("[2/3] EXT engine run, default range 2020Q1..2025Q4, default IC "

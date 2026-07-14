@@ -1,7 +1,7 @@
 # V1.0 performance analysis
 
-Canonical result: the **pinned engine-of-record run of FMA3 v1.0** — the static federation
-carrying the **v7.0 band book at capital share w = 0.70** and the **v3.4 fixed-fraction book at
+Canonical result: the **pinned engine-of-record run of FMA3 v1.0** — the static blend
+carrying the **Core band book at capital share w = 0.70** and the **Satellite fixed-fraction book at
 0.30** as never-rebalanced virtual sub-accounts of ONE cross-margined €10k IC Markets EU Raw
 account, at **global scale s = 1.1** — 2020-01-02 → 2025-12-31, IC feed. Config:
 [`strategy_fma3.py`](../../strategy_fma3.py) (config hash **`51a7541cc2aaa593`**); pin script
@@ -64,7 +64,7 @@ FIFO round-trip counts (see [TRADE_CHARACTERISTICS.md](TRADE_CHARACTERISTICS.md)
 
 All six clear ([fma3_v1_pin.json](../../research/outputs/fma3_v1_pin.json) `gates.owner`, all
 `true`). **Standing caveat (\*): the six reference numbers straddle two non-comparable engines** —
-96.1 / 20.9 / 35.6 are v7.0's MT5 real-tick R10 figures, while FMA3 is measured in Python 1m
+96.1 / 20.9 / 35.6 are Core's MT5 real-tick R10 figures, while FMA3 is measured in Python 1m
 worst-mark accounting. The 5.36% tail clears the 35.6% bar only in the trivial sense; the honest
 tail comparison is the composite gate below (5.36% vs the parents' same-engine 5.54%), and the
 deployable tail number awaits the MT5 run (§crisis-tail gap).
@@ -77,19 +77,19 @@ in `research/protocol/PROTOCOL.md` before any merged number existed):
 
 | Dimension | Composite gate | Previous holder | FMA3 v1.0 | Verdict |
 |---|---|---|---|---|
-| CAGR | > 91.5% | v7.0 @ r8 | **+101.4%** | ✅ PASS |
-| Max DD (worst-mark) | < 21.22% | v7.0 @ r8 | **15.73%** | ✅ PASS |
-| Sharpe | > 2.267 | v7.0 @ r8 | **2.467** | ✅ PASS |
-| COVID crisis tail | ≤ 5.54% | v7.0 @ r8 | **5.36%** | ✅ PASS |
+| CAGR | > 91.5% | Core @ r8 | **+101.4%** | ✅ PASS |
+| Max DD (worst-mark) | < 21.22% | Core @ r8 | **15.73%** | ✅ PASS |
+| Sharpe | > 2.267 | Core @ r8 | **2.467** | ✅ PASS |
+| COVID crisis tail | ≤ 5.54% | Core @ r8 | **5.36%** | ✅ PASS |
 | Negative years | 0 | both parents (tied, 0/6) | **0 / 6** | ✅ PASS |
-| Negative quarters | ≤ 0 | v7.0 @ r8 (v3.4 had 1) | **0 / 24** | ✅ PASS |
-| Breach P(DD>30%) | < 0.0118 | v7.0 @ r8 (v3.4: 0.121) | **0.0020** | ✅ PASS |
+| Negative quarters | ≤ 0 | Core @ r8 (Satellite had 1) | **0 / 24** | ✅ PASS |
+| Breach P(DD>30%) | < 0.0118 | Core @ r8 (Satellite: 0.121) | **0.0020** | ✅ PASS |
 
 **FMA3 v1.0 at s = 1.1 dominates BOTH parents on ALL SEVEN dimensions in the engine of record —
-the first fully-dominant point in the two programs' combined history.** v7.0 @ r8 held six of the
-seven dimension bests (negY tied with v3.4); the federation takes all seven, buying **+9.9pp CAGR
+the first fully-dominant point in the two programs' combined history.** Core @ r8 held six of the
+seven dimension bests (negY tied with Satellite); the blend takes all seven, buying **+9.9pp CAGR
 over the best parent while *cutting* DD by 5.5pp, tail by 0.2pp, and breach by ~6×** — CAGR bought
-cheaper than the leverage dial sells it (see §parents table: re-levering v7 to r10 buys +30.6pp
+cheaper than the leverage dial sells it (see §parents table: re-levering Core to r10 buys +30.6pp
 CAGR at +5.0pp DD, breach 0.012 → 0.116 and a negative quarter).
 
 ---
@@ -122,8 +122,8 @@ to the pinned €665,777 to the cent):
 
 *(% per month.)* **10 of 72 months are negative** — worst **−10.7% (Jan-2022)**, best +19.9%
 (Oct-2025). The worst year (2022, +48.8%) is the year the two parents' weak years overlap least
-badly: v3.4 printed +32.1% and v7 @ r8 +55.6% in the same accounting — the structural
-complementarity the federation monetizes (book ρ = +0.351, DD troughs disjoint; measurement M-0 in
+badly: Satellite printed +32.1% and Core @ r8 +55.6% in the same accounting — the structural
+complementarity the blend monetizes (book ρ = +0.351, DD troughs disjoint; measurement M-0 in
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json)).
 
 ---
@@ -132,37 +132,37 @@ complementarity the federation monetizes (book ρ = +0.351, DD troughs disjoint;
 
 Both parent books measured for the first time in ONE accounting (FMA3-000,
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json)), plus the shipped
-federation:
+blend:
 
 | Book | CAGR | Max DD (worst-mark) | Sharpe | COVID tail | negY | negQ | Breach P(DD>30%) | €10k → |
 |---|---|---|---|---|---|---|---|---|
-| v3.4 @ s10 (pin) | +88.7% | 21.67% | 1.854 | 7.84% | 0/6 | 1 (2023Q1) | 0.121 | €449,708 |
-| v7.0 @ r8 (exact) | +91.5% | 21.22% | 2.267 | 5.54% | 0/6 | 0 | 0.012 | €492,611* |
-| v7.0 @ r9 (approx†) | +106.6% | 23.75% | 2.264 | 6.69% | 0/6 | 1 (2022Q4) | 0.044 | — |
-| v7.0 @ r10 (approx†) | +122.2% | 26.21% | 2.260 | 7.15% | 0/6 | 1 (2022Q4) | 0.116 | — |
+| Satellite @ s10 (pin) | +88.7% | 21.67% | 1.854 | 7.84% | 0/6 | 1 (2023Q1) | 0.121 | €449,708 |
+| Core @ r8 (exact) | +91.5% | 21.22% | 2.267 | 5.54% | 0/6 | 0 | 0.012 | €492,611* |
+| Core @ r9 (approx†) | +106.6% | 23.75% | 2.264 | 6.69% | 0/6 | 1 (2022Q4) | 0.044 | — |
+| Core @ r10 (approx†) | +122.2% | 26.21% | 2.260 | 7.15% | 0/6 | 1 (2022Q4) | 0.116 | — |
 | **FMA3 v1.0 (w70, s1.1)** | **+101.4%** | **15.73%** | **2.467** | **5.36%** | **0/6** | **0** | **0.0020** | **€665,777** |
 
-\* record-engine execution of the extracted v7 matrix; the native band engine prints €532,230 —
+\* record-engine execution of the extracted Core matrix; the native band engine prints €532,230 —
 the gap is the record engine's ~1-bar execution lag plus its own cost/margin conventions, the
-honest price of one common accounting (applied identically to parents and federation).
+honest price of one common accounting (applied identically to parents and blend).
 † linear scale-up of the R8 fraction matrix; the native book's per-sleeve caps do not rescale, so
 r9/r10 are approximations and set no gates.
 
 **The alternative to federating was re-levering the better parent, and it is measurably worse.**
 r8 → r10 buys +30.6pp CAGR for +5.0pp DD, a 10× breach jump (0.012 → 0.116) and a 2022Q4 negative
-quarter — the same CAGR-per-risk trade both parent programs documented. The federation instead
-buys +9.9pp CAGR over v7 @ r8 while cutting DD 21.22% → 15.73%, and its scale dial (below) reaches
+quarter — the same CAGR-per-risk trade both parent programs documented. The blend instead
+buys +9.9pp CAGR over Core @ r8 while cutting DD 21.22% → 15.73%, and its scale dial (below) reaches
 +140.8% CAGR before hitting any ceiling — the diversification, not leverage, is doing the work.
 
 ---
 
-## Federation friction — measured, −2.7pp
+## Blend friction — measured, −2.7pp
 
-The H-FED-1 grid (static federation, native operating points, s = 1.0;
+The H-FED-1 grid (static blend, native operating points, s = 1.0;
 [hfed1_results.json](../../research/outputs/hfed1_results.json)). Pre-registered bars: DD < 20.72%,
 Sharpe > 2.317, negY 0, negQ ≤ 0; winner by rule = max Sharpe among passers:
 
-| w (v7 share) | CAGR | Max DD (worst) | Sharpe | COVID tail | Breach (worst) | Ideal CAGR | Friction | Bars |
+| w (Core share) | CAGR | Max DD (worst) | Sharpe | COVID tail | Breach (worst) | Ideal CAGR | Friction | Bars |
 |---|---|---|---|---|---|---|---|---|
 | 0.30 | +86.8% | 18.34% | 2.156 | 6.41% | 0.0088 | +90.2% | −3.41pp | ❌ (Sharpe) |
 | 0.40 | +88.7% | 17.88% | 2.305 | 5.75% | 0.0020 | +90.8% | −2.08pp | ❌ (Sharpe) |
@@ -174,7 +174,7 @@ Sharpe > 2.317, negY 0, negQ ≤ 0; winner by rule = max Sharpe among passers:
 paper bookkeeping w·A + (1−w)·B of the two sub-curves; the realized account gives up **−2.7pp
 CAGR at the locked point** (92.4% → 89.7% at s = 1.0) to min-lot quantization (sub-books start at
 €7k/€3k in 2020, where 0.01-lot rounding is coarsest), joint margin, and netting/costs on shared
-instruments. The same netting shows up in the fill counts: the federation prints 25,869 fills vs
+instruments. The same netting shows up in the fill counts: the blend prints 25,869 fills vs
 26,809 for the two parents run alone in the same engine (20,403 + 6,406). Sharpe was still rising
 at the grid edge — **off-grid w80 was NOT tested; the pre-registered grid is binding**
 ([REGISTRY.md FMA3-001](../REGISTRY.md)).
@@ -220,14 +220,14 @@ everywhere, Sharpe scale-flat (2.45–2.48):
 | **w = 0.70 (locked)** | **+89.7%** | **14.38%** | — | **2.474** | — | **4.96%** | **0 / 0** |
 | w+20% (w = 0.84) | +89.0% | 17.97% | **+3.59pp** ❌ | 2.416 | −0.06 | 5.04% | 0 / 0 |
 
-Because a never-rebalanced federation's realized split *drifts* (measured band ~0.63–0.75 between
+Because a never-rebalanced blend's realized split *drifts* (measured band ~0.63–0.75 between
 quarterly marks, [hfed2_results.json](../../research/outputs/hfed2_results.json)), the ceilings
 must hold across the ±20% probe surface, not only at the locked w. The adjudicated shipping rule
 ([REGISTRY.md FMA3-RT](../REGISTRY.md)): **largest s with all ceilings at the locked w AND both
 ±20% probes** — binding at the w+20% probe (17.97% × 1.1 ≈ 19.8% < 20.9%; at s = 1.2 ≈ 21.6% >
 20.9%) → **s = 1.1 ships**. The FAIL was not waived: it was **priced**, at −39.4pp CAGR
 (s 1.4 → 1.1). Every quality metric is stable across the probe surface (Sharpe −0.05/−0.06, CAGR
-within 0.8pp, negQ 0 everywhere); only DD moves, monotonically toward the measured v7-alone
+within 0.8pp, negQ 0 everywhere); only DD moves, monotonically toward the measured Core-alone
 endpoint (21.22% at w = 1.0) — the geometry of a smooth frontier, not a fitted seat (full case in
 [VALIDATION.md](VALIDATION.md) and [../whitepaper/03_SCORECARD.md](../whitepaper/03_SCORECARD.md)).
 
@@ -244,8 +244,8 @@ the days it draws.
 | Book (same engine) | P(maxDD>30%) close | P(maxDD>30%) worst | Median bootstrap max-DD (worst) | p95 |
 |---|---|---|---|---|
 | **FMA3 v1.0** | **0.0010** | **0.0020** | **16.80%** | **23.28%** |
-| v7.0 @ r8 | 0.0052 | 0.0118 | 19.66% | 26.57% |
-| v3.4 @ s10 | 0.0932 | 0.1208 | 23.42% | 33.53% |
+| Core @ r8 | 0.0052 | 0.0118 | 19.66% | 26.57% |
+| Satellite @ s10 | 0.0932 | 0.1208 | 23.42% | 33.53% |
 
 A 30%+ drawdown appears in **2 of 5,000** resampled histories (composite gate < 0.0118 — cleared
 ~6× over; the H-FED-3 ceiling was ≤ 0.12). The realized 15.73% sits just under the bootstrap
@@ -261,7 +261,7 @@ scenarios live in the parents' own validation batteries and are not re-proven he
 The two accounting worlds price the COVID crash **6.5× apart, and both are honest**
 ([COMPOSITE_BENCHMARK.md](../../research/outputs/COMPOSITE_BENCHMARK.md)):
 
-| v7.0 COVID tail | Engine | Value |
+| Core COVID tail | Engine | Value |
 |---|---|---|
 | MT5 real-tick @ R10 | tick, real spread blowouts | **35.6%** |
 | Record engine @ r8–r10 | Python 1m worst-mark, IC bars | **5.5–7.2%** (5.54% at r8) |
@@ -271,11 +271,11 @@ same crash, 35.6% vs 5.5%. Consequences, stated as rules:
 
 - **Crisis-tail numbers from the record engine must never be quoted against MT5 numbers.** FMA3's
   5.36% is comparable to the parents' 5.54% / 7.84% (same engine), and to nothing else.
-- **The federation's tick-granularity tail is unknown by construction.** v3.4 has never had a tick
-  run at all; the federation has only the 1m record accounting. The owner's-machine MT5 real-tick
+- **The blend's tick-granularity tail is unknown by construction.** Satellite has never had a tick
+  run at all; the blend has only the 1m record accounting. The owner's-machine MT5 real-tick
   run is the deployable arbiter of the tail — it is the next falsification test after the consumed
   one-shot, before the live demo.
-- The same gap explains the negQ conventions: v7.0 scores 0/24 negQ in this engine but 3/24 on MT5
+- The same gap explains the negQ conventions: Core scores 0/24 negQ in this engine but 3/24 on MT5
   real-tick (its −21.8% COVID quarter is a tick artifact of the same event). FMA3's 0/24 is a
   record-engine statement.
 
@@ -296,7 +296,7 @@ server 2026-04-30 23:59:59. Results verbatim:
 | F1 | window worst-mark DD < 20.9% | 17.67% | PASS |
 | F2 | window return > −10% | +12.34% | PASS |
 | F3 | no joint stop-out or margin-cap breach event | stop-outs 0, cap-binds 0 | PASS |
-| F4 | each sub-book window return > −20% | v7 +15.99%, v3.4 +13.59% | PASS |
+| F4 | each sub-book window return > −20% | Core +15.99%, Satellite +13.59% | PASS |
 
 **4/4 PASS → pre-registered interpretation: CONFIRM** (proceed to MT5 demo deployment, the
 deployable arbiter). Window metrics (2026-01-01 → 2026-04-30, server time):
@@ -305,15 +305,15 @@ deployable arbiter). Window metrics (2026-01-01 → 2026-04-30, server time):
 - Worst-mark DD: **17.67%** (close-to-close 17.58%)
 - Daily Sharpe (annualized, 120 days — wide error bars): **1.17**
 - Monthly returns: 2026-01 **+14.94%**, 2026-02 −0.25%, 2026-03 +0.41%, 2026-04 −2.42%
-- Sub-books (native curves): v7 +15.99%, v3.4 +13.59%
+- Sub-books (native curves): Core +15.99%, Satellite +13.59%
 - Margin envelope: max margin/balance 0.324 (cap 0.90), min margin level 3.11 (stop-out at 0.50)
 - Breach bootstrap (20d blocks, short-window caveat): close 0.0002, worst 0.0002
 
 **Caveats disclosed in advance (FORWARD_TEST.md), carried with the verdict:** 4 months ≈ 85
 trading days — the bars are breakdown detectors, not performance targets; **Duka feed, not IC**
-(documented ~8pp CAGR_bd feed divergence on 2020-25); **v3.4 ran at ~0.88× reduced breadth**
+(documented ~8pp CAGR_bd feed divergence on 2020-25); **Satellite ran at ~0.88× reduced breadth**
 (uncovered legs zeroed, per-symbol disclosure in `v34_frac_1h_fwd_report.json`); **USA500 proxies
-USTEC** (corr 0.89, column-level; v3.4's own USTEC leg zeroed) — the proxy book is a directional
+USTEC** (corr 0.89, column-level; Satellite's own USTEC leg zeroed) — the proxy book is a directional
 confirmation, NOT the deployed book; swap carry = flat extension of last 2025 policy rates; open
 positions at the window-end stamp marked, not closed. The 2026H1 holdout is now permanently
 **CONSUMED** ([REGISTRY.md FMA3-FWD](../REGISTRY.md)).
@@ -329,20 +329,20 @@ positions at the window-end stamp marked, not closed. The 2026H1 holdout is now 
   *FMA3's own* few-parameter selection — one w grid, one cadence family, one scale grid — cannot
   explain a Sharpe of 2.47 by luck **within FMA3's ledger**. It says nothing about the parents'
   mining: the sleeves' alpha is assumed from the parents' validation records, not re-proven here.
-- **Forward-honest Sharpe expectation: ~1.6–2.0, not 2.47.** v3.4 shipped with a disclosed
+- **Forward-honest Sharpe expectation: ~1.6–2.0, not 2.47.** Satellite shipped with a disclosed
   forward-honest band of 1.2–1.5 vs 1.85 in-sample (ratio ≈ 0.65–0.81); the same ratio on the
   pinned 2.467 gives roughly **1.6–2.0**, and `FORWARD_TEST.md` budgeted the more conservative
   1.2–1.5 band outright. The consumed one-shot printed **1.17 on 120 days** — marginally below the
   conservative band, on a window too short to settle it. Judge the live book against the bands,
   not against 2.467.
 - **The crisis tail is engine-relative and the deployable tail is unknown.** 5.36% is a 1m
-  worst-mark number; the measured v7 tick↔1m gap is 35.6% vs 5.5%. No tick run of the federation
+  worst-mark number; the measured Core tick↔1m gap is 35.6% vs 5.5%. No tick run of the blend
   exists — MT5 on the owner's machine is the arbiter.
 - **The forward CONFIRM is a Duka-feed, proxy-book confirmation.** ~8pp known feed divergence,
-  0.88× v3.4 breadth, USA500-for-USTEC — directional, not a reconciliation. It clears breakdown
+  0.88× Satellite breadth, USA500-for-USTEC — directional, not a reconciliation. It clears breakdown
   bars; it does not certify the in-sample level.
-- **Federation friction (−2.7pp CAGR) and min-lot coarseness at €10k are genuine** and priced in;
-  the v7 leg additionally carries a ~1-bar execution lag vs its native engine (identical across
+- **Blend friction (−2.7pp CAGR) and min-lot coarseness at €10k are genuine** and priced in;
+  the Core leg additionally carries a ~1-bar execution lag vs its native engine (identical across
   all compared configs — like-for-like, but absolute levels are not the native book's).
 - **The capital split drifts (~0.63–0.75 measured band) and is never rebalanced.** The
   probe-robust scale rule exists precisely to absorb this: all ceilings hold across w 0.56–0.84 at

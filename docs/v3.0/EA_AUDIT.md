@@ -1,18 +1,18 @@
 # FableFederation_V3 EA audit — the faithful-executor release (v3.0)
 
-**Audited 2026-07-12.** Scope: the shipping EA `mt5/ea/FableFederation_V3.mq5` (sha `740da0ff…`)
+**Audited 2026-07-12.** Scope: the shipping EA `mt5/ea/FableBook.mq5` (sha `740da0ff…`)
 and its four-file include tree `mt5/ea/Include/FMA3v3/{FedConvert,FedReplay,FedExec,Guardian}.mqh`,
 against the model of record in `model/v3/` (`README`, `MODEL_SPEC`, `PINNED_INPUTS`, `EA_V3_DESIGN`,
-`RECON4_RESULTS`), the exporter `scripts/export_fed_frac_v3.py`, the capacity sweep
+`RECON4_RESULTS`), the exporter `scripts/export_book_frac_v3.py`, the capacity sweep
 `scripts/sweep_s_volcap.py`, and the reconciliation FMA3-RECON-4 (IC Markets 11078280, 1m-OHLC,
 HEDGING, 1:500). Every claim is cited to a file. Purpose: answer *"does the v3 EA provably execute
 the frozen `static_fed(0.70)` model on MT5, what did the adversarial review change, and what stands
 between here and (a) the real-tick run, (b) live deploy."*
 
-> **SUPERSEDES `docs/v1.0/FMA2_EA_AUDIT.md` for the shipping EA.** That audit covered the FMA2 v3.4
+> **SUPERSEDES `docs/v1.0/FMA2_EA_AUDIT.md` for the shipping EA.** That audit covered the FMA2 Satellite
 > *sub-book* run through the Python-brain bridge (a tester-replay of one sleeve). v3 is a different,
 > single-binary architecture: it discards the entire v1/v2 signal+sizing stack and replays ONE
-> unified 33-symbol netted `fed_frac` stream. The v1.0 audit remains valid as the record of the v3.4
+> unified 33-symbol netted `fed_frac` stream. The v1.0 audit remains valid as the record of the Satellite
 > sleeve's own tester harness; it is not the executor that ships. Where the two disagree, this doc
 > governs the deployed EA.
 
@@ -40,7 +40,7 @@ between here and (a) the real-tick run, (b) live deploy."*
    server-tz mismatch guard, gated FileFlush — plus the post-RECON volume-limit cap took the binary
    from `d516350b…` to `740da0ff…`. The single biggest IC-fidelity lever was **re-sizing every M1
    bar** (was once per H1). The compile is clean (0 errors / 0 warnings).
-5. **The v34 sleeve is alive again.** All 33 union symbols trade, including the **7** that v1/v2
+5. **The Satellite sleeve is alive again.** All 33 union symbols trade, including the **7** that v1/v2
    silently killed via a quote-currency bug (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) —
    the unconditional full-map `eurq` revives them end-to-end (`RECON4_RESULTS.md` proof #2).
 6. **One mechanism is deliberately deferred, not implemented: the joint 0.5·margin_used stop-out**
@@ -55,7 +55,7 @@ between here and (a) the real-tick run, (b) live deploy."*
 ### 1.1 Components (all under `mt5/ea/`, single binary, no external process)
 
 ```
-FableFederation_V3.mq5            OnTick driver: guardian → new-M1 gate → causal H1 apply → resize
+FableBook.mq5            OnTick driver: guardian → new-M1 gate → causal H1 apply → resize
   Include/FMA3v3/
     FedConvert.mqh   eurq: full 8-currency EUR-cross map, ALWAYS on (no gate)   [~55 ln]
     FedReplay.mqh    fmt=3 loader + FIXED 33-universe table + model leverage      [~240 ln]
@@ -130,7 +130,7 @@ hour's targets (`iTime(H1,1)` bar-open epoch = the CSV timestamp, ≥1 min causa
 every M1 bar** so the lots track balance/price intra-hour exactly as the engine re-derives them each
 minute (the fraction is causal; only the lot count moves). The 0.25 band suppresses intra-hour churn.
 
-### 1.6 The exporter (`scripts/export_fed_frac_v3.py`)
+### 1.6 The exporter (`scripts/export_book_frac_v3.py`)
 
 Emits the already-netted stream v3 replays and **hard-fails** unless (a) the re-parsed matrix
 reproduces `static_fed(0.70)` to <1e-12 and (b) the record engine on the parsed stream returns
@@ -147,18 +147,18 @@ map (`USA500=US500; DAX=DE40`) is applied once. Stream sha `d00b614b…`.
 | **Stream replay + universe** | **DONE** | `FedReplay.mqh` fmt=3 loader, fixed 33-table, hash/fmt/row gates → `INIT_FAILED` on any drift; O(rows) cursor; keep-last-good / flatten-by-omission. |
 | **Config-hash guard (LIVE + tester)** | **DONE** | `FED_LoadReplay` compares header `config_hash` to compiled `FED_CONFIG_HASH="51a7541cc2aaa593"` and refuses to trade a drifted stream. *(This is the exact guard the v1.0 audit flagged as MISSING in the live FMA2 executor — v3 has it unconditionally, at INIT, before any order can exist.)* |
 | **Sizing (model-exact)** | **DONE** | `FED_Reconcile` replicates `record_engine_ext._run_chunk`: balance-based `raw=g·base/unit`, floor-to-step, min-lot drop, uniform 0.9 margin shrink on model leverage, re-floor. RECON-4 `after/want` median 1.000. |
-| **eurq (full currency map)** | **DONE** | `FedConvert.mqh` 8-cross map, always on, tick-value fallback, skip-loud on failure. Revives the 7 v34 legs v1/v2 killed. |
+| **eurq (full currency map)** | **DONE** | `FedConvert.mqh` 8-cross map, always on, tick-value fallback, skip-loud on failure. Revives the 7 Satellite legs v1/v2 killed. |
 | **FTMO daily breaker** | **DONE** | `Guardian.mqh` prev-day-close anchor + worst-mark `eq_w` via `OrderCalcProfit`. RECON-4: **28** fires (model 26; the +2 is v3's worst-mark being marginally more sensitive → conservative). |
 | **Order execution primitives** | **DONE** | `FED_SendSplit` volume-max chunking, reject backoff+log, `FED_ReducePos` floor-safe trims, `FED_MarketOpen` session gate, HEDGING-account INIT guard. |
 | **Volume-limit cap** | **DONE (post-RECON fix)** | `want` capped at `SYMBOL_VOLUME_LIMIT` in pass 2; the margin shrink is still computed on the *uncapped* desired (matches the model) — only un-fillable overflow is dropped. Removes the 51,346-reject spin; equity unchanged (the cap is physical). |
 | **Server-tz mismatch guard** | **DONE** | `FED_ApplyHour`: 24 consecutive H1 bars with zero stream-epoch matches → loud one-shot "SERVER-TZ MISMATCH LIKELY / v3 is not trading" (catches a silent no-trade before a wasted run). |
 | **Decisions / health / reject logging** | **DONE** | `fma3v3_decisions.csv` (per-leg time/frac/want/held/after/balance/eq/ML), `fma3v3_health.csv` at deinit, live-only `fma3v3_rejects.csv`; FileFlush gated to live so the tester stays byte-neutral. |
-| **Dial-agnostic presets** | **DONE** | `InpScale` is the only IC↔FTMO knob. `FED_V3_IC` (s=1.6, breaker off), `FED_V3_FTMO` (s=0.7, breaker 3.0), `FED_V3_PARITY_S10` (s=1.0 sanity). |
+| **Dial-agnostic presets** | **DONE** | `InpScale` is the only IC↔FTMO knob. `FABLE_IC` (s=1.6, breaker off), `FABLE_FTMO` (s=0.7, breaker 3.0), `FABLE_PARITY_S10` (s=1.0 sanity). |
 | **Compile** | **DONE** | `FableFederation_V3.ex5` sha `740da0ff…`, 0 errors / 0 warnings. |
 | **1m-OHLC reconciliation (RECON-4)** | **DONE** | 3 runs, IC Markets 11078280, 1:500, HEDGING, 2020–2025; position fidelity exact; friction ratios measured. |
 | **Joint 0.5·margin_used stop-out** | **DEFERRED (by design)** | Not implemented; RECON-4 asserts `eq_w` never approaches 0.5·margin_used in either preset (worst DD 22.58% / 13.33% vs the ~50% needed). See §4.3. |
 | **Real-tick runs** | **OPEN** | Per the staged protocol, real-tick follows the 1m-OHLC smokes; IC min-ML>110% confirm and FTMO 1:100 confirm are the remaining falsification tests. |
-| **Live-horizon extension** | **NOT BUILT** | The frozen stream ends 2025-12-31; live trading past it needs a forward v7-signal recompute + stream extension (documented, not built). |
+| **Live-horizon extension** | **NOT BUILT** | The frozen stream ends 2025-12-31; live trading past it needs a forward Core-signal recompute + stream extension (documented, not built). |
 
 ---
 
@@ -204,7 +204,7 @@ Every finding was fixed; the binary is now `740da0ff…` after the additional po
 | # | Finding | Fix | Where |
 |---|---|---|---|
 | R1 | A transient missing quote on a **nonzero-target** leg would size `want=0` and be read as a cross-to-zero **close** — flattening a held position on a data hiccup | **Unsized-leg HOLD**: `unsized[k]` flag; if a nonzero target can't be priced, hold the position and defer, never flatten | `FedExec.mqh` pass 1 `unsized[]`, pass 2 `if(unsized[k]) …continue` |
-| R2 | Sizing ran **once per H1** — but the engine re-derives desired lots and the uniform margin shrink **every minute** off current balance/price; at s=1.6 (margin cap binding) this is the single largest fidelity error | **Re-size every M1 bar**: `FED_Reconcile` runs each M1 clock bar; the fraction stays causal (H1 boundary), only the lot count tracks intra-hour | `FableFederation_V3.mq5` `OnTick` `[FIDELITY]` |
+| R2 | Sizing ran **once per H1** — but the engine re-derives desired lots and the uniform margin shrink **every minute** off current balance/price; at s=1.6 (margin cap binding) this is the single largest fidelity error | **Re-size every M1 bar**: `FED_Reconcile` runs each M1 clock bar; the fraction stays causal (H1 boundary), only the lot count tracks intra-hour | `FableBook.mq5` `OnTick` `[FIDELITY]` |
 | R3 | Breaker tested point-in-time `ACCOUNT_EQUITY`, but the engine trips on **worst-mark** `eq_w` (bar low-longs / high-shorts) | **Worst-mark breaker**: `FED_WorstMarkEquity` via `OrderCalcProfit` on M1 low/high | `Guardian.mqh` |
 | R4 | Breaker anchor used `max(balance,equity)` (v1 Guardian); the engine anchors on the **previous-day CLOSE-mark** equity (`last_close`) | **Prev-day-close anchor**: carry the last `ACCOUNT_EQUITY` before rollover; day 1 = real seed balance | `Guardian.mqh` `g_fedPrevClose` |
 | R5 | A broker-server timezone offset vs the record feed grid would silently match no stream epoch → v3 trades nothing, undetected until the run is wasted | **TZ guard**: 24 consecutive H1 misses with zero hits → loud one-shot warning | `FedReplay.mqh` `FED_ApplyHour` |
@@ -215,8 +215,8 @@ Every finding was fixed; the binary is now `740da0ff…` after the additional po
 
 | # | Item | Effort | Where |
 |---|---|---|---|
-| T1 | **IC real-tick min-ML confirm.** Re-run `FED_V3_IC` @ 1:30 on real ticks; assert intra-bar min ML stays **>110%** (1m-OHLC showed 121%, but real ticks traverse the bar interior). Gates the s=1.6 IC ship commit | M (wall-clock) | owner MT5 |
-| T2 | **FTMO 1:100 confirm.** Run `FED_V3_FTMO_S04/05` @ 1:100 to fix the deployable FTMO dial; sweep says ret/DD peaks at **s≈0.5** (4.78, DD 7.82%) vs shipped s0.7 (4.05, DD 13.33%) | M | owner MT5 |
+| T1 | **IC real-tick min-ML confirm.** Re-run `FABLE_IC` @ 1:30 on real ticks; assert intra-bar min ML stays **>110%** (1m-OHLC showed 121%, but real ticks traverse the bar interior). Gates the s=1.6 IC ship commit | M (wall-clock) | owner MT5 |
+| T2 | **FTMO 1:100 confirm.** Run `FABLE_FTMO_S04/05` @ 1:100 to fix the deployable FTMO dial; sweep says ret/DD peaks at **s≈0.5** (4.78, DD 7.82%) vs shipped s0.7 (4.05, DD 13.33%) | M | owner MT5 |
 | T3 | **FTMO rule-compliance scoring** of the v3 curve: worst-mark daily/monthly vs the −5%/−10% rules. The internal 3% breaker is tighter than the external 5% rule, but warm-COVID scoring is the open question (see §Honest caveats) | S–M | FMA3-side |
 | T4 | **Run-2 clean-record refresh.** RECON-4 Run 2's headline was captured pre-fix (spin); the clean re-run (sha `740da0ff`) confirmed €2,552,961.62 / 0 rejects — fold into the standing RECON row | S | FMA3-side |
 
@@ -277,7 +277,7 @@ exercises it, so its absence is untested against a real tail, not proven safe.
 6. **The breaker fires +2 vs the model (28 vs 26).** This is v3's worst-mark being marginally more
    sensitive than the engine's — conservative, not a defect — but it means the FTMO curve is not
    byte-identical to the record even before friction.
-7. **The frozen stream ends 2025-12-31.** Live trading past it needs a forward v7-signal recompute and
+7. **The frozen stream ends 2025-12-31.** Live trading past it needs a forward Core-signal recompute and
    a stream extension that is documented but **not built**. v3 as shipped is a faithful *replayer* of a
    finite frozen decision file, not a live signal generator.
 8. **v3 supersedes the v1/v2 EA stack and the v1.0 FMA2 audit for the shipping EA** — but the v1/v2
@@ -285,7 +285,7 @@ exercises it, so its absence is untested against a real tail, not proven safe.
    Deploy only `FableFederation_V3.ex5` (sha `740da0ff…`) with a fmt=3 stream; the compute-live path
    provably diverges at s≠1 and must not be used.
 
-*Sources: `mt5/ea/FableFederation_V3.mq5`, `mt5/ea/Include/FMA3v3/{FedConvert,FedReplay,FedExec,Guardian}.mqh`,
+*Sources: `mt5/ea/FableBook.mq5`, `mt5/ea/Include/FMA3v3/{FedConvert,FedReplay,FedExec,Guardian}.mqh`,
 `model/v3/{README,MODEL_SPEC,PINNED_INPUTS,EA_V3_DESIGN,RECON4_RESULTS}.md`,
 `scripts/{export_fed_frac_v3,sweep_s_volcap}.py`, `research/protocol/RECONCILIATION.md`,
 `docs/v1.0/FMA2_EA_AUDIT.md` (superseded for the shipping EA). All numbers are canonical to the v3

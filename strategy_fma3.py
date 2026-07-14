@@ -1,4 +1,4 @@
-"""FMA3 v1.0 — the locked federation book (AUTHORITATIVE CONFIG).
+"""FMA3 v1.0 — the locked blend book (AUTHORITATIVE CONFIG).
 
 One cross-margined EUR account running BOTH parent books side by side as
 virtual sub-accounts, each with its native mechanics untouched:
@@ -12,7 +12,7 @@ virtual sub-accounts, each with its native mechanics untouched:
   * global scale s = 1.1 on the blended fraction matrix. H-FED-3's ceiling
     rule alone gave s=1.4; the red-team adjudication (FMA3-RT) added the
     probe-robustness constraint — all ceilings must also hold at both +-20%
-    w probes (a never-rebalanced federation's realized w drifts) — which
+    w probes (a never-rebalanced blend's realized w drifts) — which
     binds at w_up20: DD 17.97% x s < 20.9% => s = 1.1. s in {1.2..1.4}
     remain documented as the aggressive frontier (compliant at the locked w,
     not probe-robust).

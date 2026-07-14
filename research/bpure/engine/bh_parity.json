@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-14T02:42:01.836262",
+ "generated": "2026-07-14T12:10:04.985807",
  "golden": "/Users/dsalamanca/vs_env/FableMultiAssets3/model/v3/freeze/FMA3-v34-freeze-1/golden/curve.parquet",
  "pin_source": "/Users/dsalamanca/vs_env/FableMultiAssets2/research/outputs/v34_s10_pin_1m.json",
  "stage1_subwindow": {
@@ -10,7 +10,7 @@
   "max_rel_dclose": 0.0,
   "max_rel_dworst": 0.0,
   "carry_state_equal": true,
-  "seconds": 36.4
+  "seconds": 18.4
  },
  "stage2_full": {
   "bars": 2948650,
@@ -26,7 +26,7 @@
   "final_eur": 449707.7452664526,
   "n_trades": 20403,
   "final_balance": 434132.98905617336,
-  "scalar_runtime_s": 532.7
+  "scalar_runtime_s": 321.4
  },
  "metrics_vs_pin": {
   "cagr": {
@@ -63,8 +63,8 @@
   "max_abs_dequity": 0.0,
   "max_abs_dworst": 0.0,
   "resume_final_balance": 434132.98905617336,
-  "seconds": 323.7
+  "seconds": 197.2
  },
  "pass": true,
- "total_runtime_s": 893.3
+ "total_runtime_s": 537.2
 }

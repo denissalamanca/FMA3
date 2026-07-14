@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
-//| CheckTrendV2.mq5 — compile/smoke gate for FMA3v34/TrendV2.mqh    |
-//| Instantiates CV34TrendV2Stepper, feeds 170 synthetic daily bars  |
+//| CheckTrendV2.mq5 — compile/smoke gate for Sat/TrendV2.mqh    |
+//| Instantiates CSatTrendV2Stepper, feeds 170 synthetic daily bars  |
 //| (>= 125-bar warmup so the full 6-lookback ensemble goes live)    |
 //| with pre-listing NaNs (sym 2, t<12) and interior missing bars    |
 //| (sym 4 @ t=25, sym 3 @ t=150), prints held/target/sig milestones |
@@ -34,7 +34,7 @@
 //|  roundtrip A == B held[169], identical: true                     |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/TrendV2.mqh>
+#include <Sat/TrendV2.mqh>
 
 #define CTV2_NBARS 170
 
@@ -44,11 +44,11 @@
 double CloseAt(const int i, const int t)
   {
    if(i == 2 && t < 12)
-      return V34Nan();            // pre-listing NaN run
+      return SatNan();            // pre-listing NaN run
    if(i == 4 && t == 25)
-      return V34Nan();            // interior missing bar (warmup era)
+      return SatNan();            // interior missing bar (warmup era)
    if(i == 3 && t == 150)
-      return V34Nan();            // interior missing bar (live era)
+      return SatNan();            // interior missing bar (live era)
    return 100.0 * (1.0 + i) + 3.0 * MathSin(0.35 * t + 1.7 * i) + 0.15 * t;
   }
 
@@ -70,7 +70,7 @@ bool IsMark(const int t)
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   CV34TrendV2Stepper st;
+   CSatTrendV2Stepper st;
    double closes[5];
    double held[];
    string snap = "";
@@ -91,7 +91,7 @@ void OnStart()
      }
 
    // ---- GetState/SetState warm-start round-trip ---------------------
-   CV34TrendV2Stepper st2;
+   CSatTrendV2Stepper st2;
    bool ok = st2.SetState(snap);
    PrintFormat("SetState(t=130 snapshot) ok=%d (state len=%d)",
                (int)ok, StringLen(snap));
@@ -118,7 +118,7 @@ void OnStart()
    // reject a corrupted syms list (Python assert equivalent)
    string bad = snap;
    StringReplace(bad, "XAGUSD", "XXXUSD");
-   CV34TrendV2Stepper st3;
+   CSatTrendV2Stepper st3;
    PrintFormat("SetState(bad syms) rejected=%d", (int)!st3.SetState(bad));
 
    Print("CheckTrendV2: done");

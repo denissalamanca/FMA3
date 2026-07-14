@@ -1,8 +1,8 @@
 # FMA3 Evaluation Protocol — pre-registered 2026-07-10
 
 **Committed BEFORE any merged-book number was computed.** The engine-bridge
-work (v7 extraction + record-engine wrapper + composite benchmark of the two
-*parents*) runs concurrently with this commit; no merged/blended/federated
+work (Core extraction + record-engine wrapper + composite benchmark of the two
+*parents*) runs concurrently with this commit; no merged/blended/blended
 configuration has been simulated at commit time.
 
 ## 1. Engine of record
@@ -46,7 +46,7 @@ the evidence for the ceiling.
   artifacts; 2020–2025 is heavily mined in both programs and re-tuning would
   be curve-fitting by installment.
 - **The licensed design space is STRUCTURAL:** capital allocation between the
-  two books, federation rebalance mechanics, combined-book exposure limits,
+  two books, blend rebalance mechanics, combined-book exposure limits,
   global scale. Few parameters, tested one lever at a time.
 - **Closed channels (never re-litigated):** FMA2 sleeves as band slots
   (H14/H15 exhausted); band mechanism inside the fixed-fraction convention
@@ -83,13 +83,13 @@ the evidence for the ceiling.
 5. **Scale is set LAST** on the winning structure, by pre-committed rule
    (see HYPOTHESES.md H-FED-3), never tuned alongside other levers.
 6. **Reproduction gate:** before any experiment session, the record engine
-   must reproduce the v3.4 pin and the v7-extract must match its anchor —
+   must reproduce the Satellite pin and the Core-extract must match its anchor —
    drift means stop and diagnose.
-7. Guard against the known overlay-ring failure: any federation bookkeeping
+7. Guard against the known overlay-ring failure: any blend bookkeeping
    must isolate each book's internal trigger state from the other book's
    P&L (virtual sub-account accounting). A cross-book coupling perturbation
    test (±€128 on one book's start capital, à la NSF5's chaos probe) is
-   mandatory for any adopted federation mechanic.
+   mandatory for any adopted blend mechanic.
 
 ## 6. Red-team battery (before lock)
 

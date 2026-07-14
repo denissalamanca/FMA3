@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""rt_loo — PROTOCOL.md §6(f): leave-one-out at the book level, federation
+"""rt_loo — PROTOCOL.md §6(f): leave-one-out at the book level, blend
 edition.
 
 Full leave-one-book-out IS the composite benchmark: dropping v7 leaves the

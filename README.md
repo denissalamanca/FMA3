@@ -1,10 +1,10 @@
-# FableMultiAssets3 — unified v7.0 × v3.4 book (IC Markets EU Raw, EUR)
+# FableMultiAssets3 — unified Core × Satellite book (IC Markets EU Raw, EUR)
 
 Campaign to merge the structural edges of two independently-derived books into a
 new frontier strategy, validated in the strictest common accounting.
 
 **Current status: FMA3 v1.0 is LOCKED** (2026-07-10, config hash `51a7541cc2aaa593`) —
-static federation, w = 0.70 v7.0 / 0.30 v3.4, global scale 1.1, no cross-book
+static blend, core weight = 0.70 Core / 0.30 Satellite, global scale 1.1, no cross-book
 rebalancing. All six owner gates clear and **all seven composite dimensions
 dominate both parents in the engine of record** — the first fully-dominant
 point in either program's history. The 2026H1 one-shot forward confirmation
@@ -24,18 +24,18 @@ are in-sample**; the honest forward Sharpe expectation is ~1.6–2.0, not 2.47
 
 ## Parents
 
-| Book | Repo | Architecture | Official (native engine) |
+| Engine | Source repo | Architecture | Official (native engine) |
 |---|---|---|---|
-| **v7.0** | `../NewStrategyFable5` (docs in `docs/v7/`) | 7 equal-capital slot-equity sleeves + BAND_SYM_25 re-split + H9 delta-resize, R10 | MT5 real-tick: CAGR 96.1% / Max eq-DD 20.9% / Relative (COVID) 35.6% / Sharpe 2.03 / 0 negY / 3 negQ. Python anchor (R8): 89.7% bd / 19.44% tick-DD / Sharpe 2.58 |
-| **v3.4** | `../FableMultiAssets2` | 8 fraction-of-equity sleeves × scale 10, hard limits, cash-park, single cross-margined account | Python 1m worst-mark: CAGR 88.7% / DD 21.7% / Sharpe 1.85 / 0 negY / 1 negQ / €449,708 / breach 0.121 |
+| **Core** (formerly v7.0) | `../NewStrategyFable5` (docs in `docs/v7/`) | 7 equal-capital slot-equity sleeves + BAND_SYM_25 re-split + H9 delta-resize, R10 | MT5 real-tick: CAGR 96.1% / Max eq-DD 20.9% / Relative (COVID) 35.6% / Sharpe 2.03 / 0 negY / 3 negQ. Python anchor (R8): 89.7% bd / 19.44% tick-DD / Sharpe 2.58 |
+| **Satellite** (formerly v3.4) | `../FableMultiAssets2` | 8 fraction-of-equity sleeves × scale 10, hard limits, cash-park, single cross-margined account | Python 1m worst-mark: CAGR 88.7% / DD 21.7% / Sharpe 1.85 / 0 negY / 1 negQ / €449,708 / breach 0.121 |
 
-**Note:** v3.4 was built under an alpha firewall against NewStrategyFable5.
+**Note:** the Satellite parent (formerly v3.4) was built under an alpha firewall against NewStrategyFable5.
 The owner has explicitly lifted that firewall for this project (2026-07-10).
 
 ## Charter (locked 2026-07-10)
 
 - **Engine of record:** Python 1-minute worst-mark, single cross-margined account
-  (v3.4-style `simulate_account_1m`). MT5 real-tick confirmation deferred to the
+  (Satellite-style `simulate_account_1m`). MT5 real-tick confirmation deferred to the
   owner's MT5 machine. Composite gates are re-derived in this engine — the
   original six gate numbers straddle two non-comparable engines.
 - **Honesty rule:** honest frontier wins. Pre-committed bars, one lever at a
@@ -77,15 +77,15 @@ whitepaper is the research layer beneath it.
 | Doc | What it covers |
 |---|---|
 | **[docs/v1.0/README.md](docs/v1.0/README.md)** | **The shipped v1.0 package (start here)** — one-page index: headline, gate scoreboards, the six docs + dashboard, the research layer |
-| [docs/v1.0/STRATEGY.md](docs/v1.0/STRATEGY.md) | What v1.0 is & why — the federation mechanics, w = 0.70, s = 1.1, everything declined |
+| [docs/v1.0/STRATEGY.md](docs/v1.0/STRATEGY.md) | What v1.0 is & why — the blend mechanics, core weight = 0.70, s = 1.1, everything declined |
 | [docs/v1.0/PERFORMANCE.md](docs/v1.0/PERFORMANCE.md) | The canonical performance read — pin, gates, tables, friction, scale frontier, forward one-shot |
 | [docs/v1.0/VALIDATION.md](docs/v1.0/VALIDATION.md) | The 6-tier battery & sign-off — reproduction chain, pre-registered ladder, red team, CPCV/DSR, one-shot |
 | [docs/v1.0/RECONCILIATION.md](docs/v1.0/RECONCILIATION.md) | Three engines, one accounting — every bridge at delta 0.0; the measured translation costs |
 | [docs/v1.0/TRADE_CHARACTERISTICS.md](docs/v1.0/TRADE_CHARACTERISTICS.md) | Book-level mixing (measured) + per-sleeve profiles (inherited by citation) |
 | [docs/v1.0/DEMO.md](docs/v1.0/DEMO.md) · [docs/v1.0/DASHBOARD.html](docs/v1.0/DASHBOARD.html) | The demo deployment/monitoring plan · the one-page visual scorecard |
-| **[docs/whitepaper/00_WHITEPAPER.md](docs/whitepaper/00_WHITEPAPER.md)** | **The Federation Book** (research layer) — executive summary, document map, definition of done |
+| **[docs/whitepaper/00_WHITEPAPER.md](docs/whitepaper/00_WHITEPAPER.md)** | **The Fable Book** (research layer) — executive summary, document map, definition of done |
 | [docs/whitepaper/01_DECONSTRUCTION.md](docs/whitepaper/01_DECONSTRUCTION.md) | The two frozen parents, the firewall history, the engine-of-record decision |
-| [docs/whitepaper/02_FEDERATION_DESIGN.md](docs/whitepaper/02_FEDERATION_DESIGN.md) | Federation mechanics, anti-coupling guard, the pre-registered evaluation ladder |
+| [docs/whitepaper/02_FEDERATION_DESIGN.md](docs/whitepaper/02_FEDERATION_DESIGN.md) | Blend mechanics, anti-coupling guard, the pre-registered evaluation ladder |
 | [docs/whitepaper/03_SCORECARD.md](docs/whitepaper/03_SCORECARD.md) | Results — the frontier scorecard, experiment trail, red-team battery, honest caveats |
 | [docs/REGISTRY.md](docs/REGISTRY.md) | Every experiment ever run (incl. failures) — the honest multiple-testing ledger |
 | [research/protocol/PROTOCOL.md](research/protocol/PROTOCOL.md) · [HYPOTHESES.md](research/protocol/HYPOTHESES.md) · [FORWARD_TEST.md](research/protocol/FORWARD_TEST.md) | The pre-registrations (committed before their numbers existed) |
@@ -97,7 +97,7 @@ whitepaper is the research layer beneath it.
 ## Status
 
 - [x] Recon/assimilation of both parents (2026-07-10)
-- [x] Baseline reproduction (v3.4 pin + v7.0 Python anchor) — byte-exact
+- [x] Baseline reproduction (Satellite pin + Core Python anchor) — byte-exact
 - [x] Unified engine + both baselines in the engine of record (41/41 + 15/15 delta 0.0; ext engine bit-identical)
 - [x] Pre-registered protocol + hypothesis slate (committed before any merged number)
 - [x] Hypothesis loop — H-FED-1 confirmed (w = 0.70) · H-FED-2 declined · H-CAPS-1 no-op · H-FED-3 frontier mapped

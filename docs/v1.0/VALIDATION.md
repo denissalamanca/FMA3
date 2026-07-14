@@ -1,7 +1,7 @@
 # V1.0 validation analysis
 
-**FMA3 v1.0 = the static federation locked 2026-07-10: one cross-margined €10k IC Markets EU Raw
-account carrying the v7.0 band book at capital share w = 0.70 and the v3.4 fixed-fraction book at
+**FMA3 v1.0 = the static blend locked 2026-07-10: one cross-margined €10k IC Markets EU Raw
+account carrying the Core band book at capital share w = 0.70 and the Satellite fixed-fraction book at
 0.30 as never-rebalanced virtual sub-accounts, at global scale s = 1.1 — no cross-book rebalance
 (H-FED-2 declined), no new caps (H-CAPS-1 no-op), both parents' sleeves frozen.** Sources of
 truth: config = [`strategy_fma3.py`](../../strategy_fma3.py) (**config hash `51a7541cc2aaa593`**);
@@ -27,15 +27,15 @@ programs before FMA3 existed (FMA2 ≈ low-hundreds of design trials; NSF5 ≈ 7
 
 ## Headline (IC 2020-25, engine of record)
 
-| Metric | **FMA3 v1.0 (federation)** | Composite gate (best parent) | Previous holder | Verdict |
+| Metric | **FMA3 v1.0 (blend)** | Composite gate (best parent) | Previous holder | Verdict |
 |---|---|---|---|---|
-| CAGR | **+101.4%** | > 91.5% | v7.0 @ r8 | ✅ |
-| Max DD (worst-mark) | **15.73%** (close 15.62%) | < 21.22% | v7.0 @ r8 | ✅ |
-| Sharpe | **2.467** | > 2.267 | v7.0 @ r8 | ✅ |
-| COVID crisis tail | **5.36%** | ≤ 5.54% | v7.0 @ r8 | ✅ |
+| CAGR | **+101.4%** | > 91.5% | Core @ r8 | ✅ |
+| Max DD (worst-mark) | **15.73%** (close 15.62%) | < 21.22% | Core @ r8 | ✅ |
+| Sharpe | **2.467** | > 2.267 | Core @ r8 | ✅ |
+| COVID crisis tail | **5.36%** | ≤ 5.54% | Core @ r8 | ✅ |
 | Negative years | **0 / 6** | == 0 | both parents (tied) | ✅ |
-| Negative quarters | **0 / 24** (worst 2022Q4 +2.9%) | ≤ 0 | v7.0 @ r8 (v3.4 had 1) | ✅ |
-| Breach P(DD>30%) | **0.0020** | < 0.0118 | v7.0 @ r8 (v3.4: 0.121) | ✅ |
+| Negative quarters | **0 / 24** (worst 2022Q4 +2.9%) | ≤ 0 | Core @ r8 (Satellite had 1) | ✅ |
+| Breach P(DD>30%) | **0.0020** | < 0.0118 | Core @ r8 (Satellite: 0.121) | ✅ |
 | Final equity (€10k init) | **€665,777** | — | 25,869 trades | — |
 
 **All seven composite dimensions dominate BOTH parents in the engine of record — the first
@@ -60,19 +60,19 @@ locked w but **not probe-robust** (Tier 3 adjudication below).
 
 | Tier | Test | Result | Gate | Verdict |
 |---|---|---|---|---|
-| **1** | v3.4 pin, FMA2 native engine | byte-identical re-pin (REGISTRY FMA3-000) | reproduces the parent lock | ✅ PASS |
-| **1** | v7.0 anchor, NSF5 native battery (`v7val/tier12.py`) | byte PASS (anchor 89.72% / €532,230 / 31 triggers) | reproduces the parent anchor | ✅ PASS |
-| **1** | Record-engine wrapper (v3.4 pin end-to-end) | **41/41 metrics delta 0.0** + minute curves max-abs 0.0 | delta 0.0 | ✅ PASS |
-| **1** | v7 anchor extraction (`engine/v7_bridge`) | **15/15 floats delta 0.0** + 9/9 legs bit-exact, consistency < 2.4e-15 | delta 0.0 | ✅ PASS |
+| **1** | Satellite pin, FMA2 native engine | byte-identical re-pin (REGISTRY FMA3-000) | reproduces the parent lock | ✅ PASS |
+| **1** | Core anchor, NSF5 native battery (`v7val/tier12.py`) | byte PASS (anchor 89.72% / €532,230 / 31 triggers) | reproduces the parent anchor | ✅ PASS |
+| **1** | Record-engine wrapper (Satellite pin end-to-end) | **41/41 metrics delta 0.0** + minute curves max-abs 0.0 | delta 0.0 | ✅ PASS |
+| **1** | Core anchor extraction (`engine/v7_bridge`) | **15/15 floats delta 0.0** + 9/9 legs bit-exact, consistency < 2.4e-15 | delta 0.0 | ✅ PASS |
 | **1** | Ext engine (2026-capable copy) | **38/38 exactly equal**, curves `np.array_equal` | BIT-IDENTICAL, tolerance zero | ✅ PASS |
 | **1** | v1.0 pin rebuild from config alone | **5/5 headline delta 0.0** (`PIN OK`, all owner gates true) | delta 0.0 vs FMA3-003 grid | ✅ PASS |
-| **2** | H-FED-1 static federation (grid w .30–.70) | w70: DD **14.38%** / Sharpe **2.474** / negQ 0 / breach 0.0004 | DD < 20.72% · Sharpe > 2.317 · negY 0 · negQ ≤ 0 | ✅ MECHANISM CONFIRMED |
-| **2** | H-FED-2 rebalanced federation (4 cadences) | best +1.12pp CAGR at **+0.43pp DD** (F2a) | > +0.5pp CAGR at ≤ +0.3pp DD | ✅ DECLINED — static stands |
+| **2** | H-FED-1 static blend (grid w .30–.70) | w70: DD **14.38%** / Sharpe **2.474** / negQ 0 / breach 0.0004 | DD < 20.72% · Sharpe > 2.317 · negY 0 · negQ ≤ 0 | ✅ MECHANISM CONFIRMED |
+| **2** | H-FED-2 rebalanced blend (4 cadences) | best +1.12pp CAGR at **+0.43pp DD** (F2a) | > +0.5pp CAGR at ≤ +0.3pp DD | ✅ DECLINED — static stands |
 | **2** | H-CAPS-1 joint exposure caps (measurement) | joint gold max **2.03×E = entitlement, 0/49,379 h exceeding** | adoption default-YES unless > 3pp cost | ✅ NO-OP (verified) |
 | **2** | H-FED-3 scale frontier (s 0.8–1.4) | **7/7 compliant**, ceiling rule → s = 1.4 | largest s: DD < 20.9 · negQ ≤ 1 · negY 0 · breach ≤ 0.12 · tail ≤ 35.6 | ⚠️ re-adjudicated → s = 1.1 (Tier 3) |
 | **3** | Parameter perturbation (±20% on w) | w+20%: **ΔDD +3.59pp** (w−20%: +1.06pp ✓) | \|ΔDD\| ≤ 3.0pp AND \|ΔSharpe\| ≤ 0.3 | ❌ **FAIL → adjudicated s = 1.1** |
-| **3** | Coupling perturbation (±€128 v7 seed) | Δfinal +0.32% / −1.10%, \|ΔDD\| ≤ 0.02pp | \|Δfinal\| < 5% AND \|ΔDD\| < 1pp | ✅ PASS (chaos-stable) |
-| **3** | LOO by book (half-strength each) | ΔDD −4.40pp (half-v7) / +0.26pp (half-v3.4), negY 0 | ΔDD ≤ +3.0pp AND negY 0 | ✅ PASS (no keystone) |
+| **3** | Coupling perturbation (±€128 Core seed) | Δfinal +0.32% / −1.10%, \|ΔDD\| ≤ 0.02pp | \|Δfinal\| < 5% AND \|ΔDD\| < 1pp | ✅ PASS (chaos-stable) |
+| **3** | LOO by book (half-strength each) | ΔDD −4.40pp (half-Core) / +0.26pp (half-Satellite), negY 0 | ΔDD ≤ +3.0pp AND negY 0 | ✅ PASS (no keystone) |
 | **3** | Fixed-schedule ablation | winner is **static** — no schedule exists | required on schedule-dependent winners | ✅ N/A by construction |
 | **4** | Breach bootstrap (5,000 paths, 20d blocks) | P(DD_worst > 30%) = **0.0020** (close 0.0010) | < 0.0118 (composite; ceiling ≤ 0.12) | ✅ PASS |
 | **4** | DSR from the ledger | **1.0000** at n = 20 trials; stable at ×2/×4 stress | DSR ≥ 0.95 | ✅ PASS |
@@ -98,10 +98,10 @@ requires the first two links to re-verify before any session). The full chain, w
 
 | Link | What it proves | Measured result | Reproduce |
 |---|---|---|---|
-| v3.4 pin, FMA2 native engine (REGISTRY FMA3-000) | the v3.4 parent lock still reproduces in its own engine | **byte-identical** (pin `v34_s10_pin_1m.json`, byte-reproduced twice on 2026-07-10) | FMA2 pin script (parent repo) |
-| v7.0 anchor, NSF5 native battery (REGISTRY FMA3-000) | the v7.0 parent anchor still reproduces in its own engine | **tier12 byte PASS** — anchor `harvest_band_sym` 89.72% / 15.70% bd / 19.44% tick / Sharpe 2.58 / €532,230 / 31 band + 0 harvest | `NSF5/mt5/reconcile/v7val/tier12.py` (~9 min) |
-| Record-engine wrapper ([verify_record_engine.json](../../research/outputs/verify_record_engine.json)) | FMA3's wrapper reproduces the FMA2 v3.4 pin end-to-end | **41/41 metric checks delta 0.0** (cagr, DD, Sharpe, final €449,707.75, 20,403 trades, 6 yearly, 24 quarterly, 4 breach) + minute-level equity/worst **curve max-abs-delta 0.0** | `python3 scripts/verify_record_engine.py` (~6–8 min) |
-| v7 anchor extraction ([v7_extract_verification.json](../../research/outputs/v7_extract_verification.json)) | the extracted v7.0 fraction matrix IS the byte-reconciled NSF5 anchor | **15/15 anchor floats delta 0.0** (incl. 31 band + 0 harvest triggers, both half-window sets); **9/9 per-leg self-test bit-exact** vs NSF5's engine; positions→equity consistency **< 2.4e-15 relative** | `python3 engine/v7_bridge/run_extract.py` (~1 min) |
+| Satellite pin, FMA2 native engine (REGISTRY FMA3-000) | the Satellite parent lock still reproduces in its own engine | **byte-identical** (pin `v34_s10_pin_1m.json`, byte-reproduced twice on 2026-07-10) | FMA2 pin script (parent repo) |
+| Core anchor, NSF5 native battery (REGISTRY FMA3-000) | the Core parent anchor still reproduces in its own engine | **tier12 byte PASS** — anchor `harvest_band_sym` 89.72% / 15.70% bd / 19.44% tick / Sharpe 2.58 / €532,230 / 31 band + 0 harvest | `NSF5/mt5/reconcile/v7val/tier12.py` (~9 min) |
+| Record-engine wrapper ([verify_record_engine.json](../../research/outputs/verify_record_engine.json)) | FMA3's wrapper reproduces the FMA2 Satellite pin end-to-end | **41/41 metric checks delta 0.0** (cagr, DD, Sharpe, final €449,707.75, 20,403 trades, 6 yearly, 24 quarterly, 4 breach) + minute-level equity/worst **curve max-abs-delta 0.0** | `python3 scripts/verify_record_engine.py` (~6–8 min) |
+| Core anchor extraction ([v7_extract_verification.json](../../research/outputs/v7_extract_verification.json)) | the extracted Core fraction matrix IS the byte-reconciled NSF5 anchor | **15/15 anchor floats delta 0.0** (incl. 31 band + 0 harvest triggers, both half-window sets); **9/9 per-leg self-test bit-exact** vs NSF5's engine; positions→equity consistency **< 2.4e-15 relative** | `python3 engine/v7_bridge/run_extract.py` (~1 min) |
 | Ext engine ([verify_record_engine_ext.json](../../research/outputs/verify_record_engine_ext.json)) | the range-parameterized copy (needed for 2026H1) did not drift | **BIT-IDENTICAL gate: 38/38 metrics exactly equal**, equity + worst curves `np.array_equal` true, tolerance zero | `python3 scripts/verify_record_engine_ext.py` (~5 min) |
 | v1.0 pin reproduction ([fma3_v1_pin.json](../../research/outputs/fma3_v1_pin.json), `fma3_lock.log`) | the shipped numbers rebuild from `FMA3_CONFIG` alone | matrix rebuilt, 24 quarters re-run, 5,000-path bootstrap re-drawn: **all 5 headline metrics delta 0.0** vs the FMA3-003 grid point (`PIN OK`, all owner gates true) | `python3 scripts/eval_fma3_pin.py` (~7 min) |
 
@@ -119,11 +119,11 @@ the H-FED-1 selection rule amended 12:29, pre-results). Every configuration is i
 ([REGISTRY.md](../REGISTRY.md)): **16 engine experiments (5 + 4 + 7) + 2 red-team probes = 18
 merged-book configs.**
 
-**(A) H-FED-1 — static federation, grid w ∈ {0.30…0.70} (v7 share).** Bars: DD < 20.72% ·
+**(A) H-FED-1 — static blend, grid w ∈ {0.30…0.70} (Core share).** Bars: DD < 20.72% ·
 Sharpe > 2.317 · negY 0 · negQ ≤ 0; winner by pre-amended rule = max Sharpe among passers
 ([hfed1_results.json](../../research/outputs/hfed1_results.json)):
 
-| w (v7 share) | CAGR | Max DD (worst) | Sharpe | COVID tail | negQ | Breach | Friction | Bars |
+| w (Core share) | CAGR | Max DD (worst) | Sharpe | COVID tail | negQ | Breach | Friction | Bars |
 |---|---|---|---|---|---|---|---|---|
 | 0.30 | +86.8% | 18.34% | 2.156 | 6.41% | 0 | 0.0088 | −3.41pp | ❌ (Sharpe) |
 | 0.40 | +88.7% | 17.88% | 2.305 | 5.75% | 0 | 0.0020 | −2.08pp | ❌ (Sharpe) |
@@ -131,12 +131,12 @@ Sharpe > 2.317 · negY 0 · negQ ≤ 0; winner by pre-amended rule = max Sharpe 
 | 0.60 | +89.3% | 15.20% | 2.458 | 5.39% | 0 | 0.0004 | −2.60pp | ✅ |
 | **0.70** | **+89.7%** | **14.38%** | **2.474** | **4.96%** | **0** | **0.0004** | **−2.70pp** | ✅ **winner** |
 
-**MECHANISM CONFIRMED** — the federation cuts DD below both parents while keeping the better
+**MECHANISM CONFIRMED** — the blend cuts DD below both parents while keeping the better
 parent's CAGR; friction is measured, not assumed (−2.1 to −3.4pp across the grid; §Honest
 caveats). *Honesty point:* Sharpe was still rising at the grid edge; the off-grid w = 0.80 was
 **NOT tested** — the pre-registered grid is binding (anti-seat-shopping rule).
 
-**(B) H-FED-2 — rebalanced federation at w70.** Bar: beat static by > +0.5pp CAGR at ≤ +0.3pp DD
+**(B) H-FED-2 — rebalanced blend at w70.** Bar: beat static by > +0.5pp CAGR at ≤ +0.3pp DD
 ([hfed2_results.json](../../research/outputs/hfed2_results.json)):
 
 | Cadence | Events / 6y | CAGR | ΔCAGR | Max DD | ΔDD | Verdict |
@@ -149,7 +149,7 @@ caveats). *Honesty point:* Sharpe was still rising at the grid edge; the off-gri
 † B_up ≤ the 0.70 target share ⇒ the band fires every 5-day min-gap ≈ a 5d calendar; the grid was
 registered pre-winner and not re-registered (anti-seat-shopping). **DECLINE all — static w70
 stands.** Mechanism reading: cross-book rebalancing **couples the disjoint troughs it harvests**
-(M-0: daily ρ +0.351; v3.4's DD at the v7 trough 0.2%, v7's at the v3.4 trough 3.9% —
+(M-0: daily ρ +0.351; Satellite's DD at the Core trough 0.2%, Core's at the Satellite trough 3.9% —
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json) `m0`).
 
 **(C) H-CAPS-1 — combined-book exposure analysis (measurement, no engine).** Guard lever,
@@ -160,7 +160,7 @@ s = 1.0 basis):
 | Exposure | p50 | p95 | p99 | max | Entitlement | Hours exceeding |
 |---|---|---|---|---|---|---|
 | Overnight joint gold (×equity) | 1.10 | 1.75 | 1.97 | **2.03** | **2.03 (exactly)** | **0** |
-| Managed crosses (EURCHF/EURSEK/EURNOK/AUDNZD) | — | — | — | ≤ 0.191 | 0.195 | 0 (v7 trades none) |
+| Managed crosses (EURCHF/EURSEK/EURNOK/AUDNZD) | — | — | — | ≤ 0.191 | 0.195 | 0 (Core trades none) |
 | USTEC joint | — | — | 1.13 | 1.78 | — (dup-edge cleared, ρ 0.046) | — |
 
 **NO-OP (verified)** — the inherited per-book caps compose correctly; no joint cap was added.
@@ -204,7 +204,7 @@ the one structural parameter (thresholds |ΔDD| ≤ 3.0pp, |ΔSharpe| ≤ 0.3):
 
 Mechanical verdict: **FAIL** (fragile on the w+20% axis only). Why it is a frontier, not a fitted
 spike: every quality metric is stable across the surface (CAGR within 0.8pp, ΔSharpe ≤ 0.06,
-negQ 0 everywhere) and DD moves **monotonically toward the measured v7-alone endpoint** (v7 @ r8:
+negQ 0 everywhere) and DD moves **monotonically toward the measured Core-alone endpoint** (Core @ r8:
 21.22%) — the geometry of a smooth frontier, corroborated by CPCV re-picking w = 0.70 in 19/28
 folds (Tier 5). Because the never-rebalanced split *drifts* (measured band ~0.63–0.75 between
 quarterly marks, `hfed2_results.json` event logs), the ceilings must hold across the ±20% probe
@@ -216,9 +216,9 @@ The other three checks:
 
 | Check | Threshold | Measured | Verdict |
 |---|---|---|---|
-| Coupling (±€128 on the v7 sub-book seed — the NSF5 chaos probe) | \|Δfinal\| < 5% AND \|ΔDD\| < 1pp | +€128: **+0.32% / +0.01pp** · −€128: **−1.10% / −0.02pp** | ✅ PASS — chaos-stable |
-| LOO by book (half-strength each sub-book; full drop = the parents themselves) | ΔDD ≤ +3.0pp AND negY 0 | half-v7: CAGR +49.6%, DD 9.98% (**ΔDD −4.40pp**), negY 0 · half-v3.4: CAGR +71.2%, DD 14.65% (**+0.26pp**), negY 0 | ✅ PASS — no keystone |
-| Fixed-schedule ablation | required on schedule-dependent winners | the winner is **static**: no federation rebalance schedule exists to freeze | ✅ N/A by construction |
+| Coupling (±€128 on the Core sub-book seed — the NSF5 chaos probe) | \|Δfinal\| < 5% AND \|ΔDD\| < 1pp | +€128: **+0.32% / +0.01pp** · −€128: **−1.10% / −0.02pp** | ✅ PASS — chaos-stable |
+| LOO by book (half-strength each sub-book; full drop = the parents themselves) | ΔDD ≤ +3.0pp AND negY 0 | half-Core: CAGR +49.6%, DD 9.98% (**ΔDD −4.40pp**), negY 0 · half-Satellite: CAGR +71.2%, DD 14.65% (**+0.26pp**), negY 0 | ✅ PASS — no keystone |
+| Fixed-schedule ablation | required on schedule-dependent winners | the winner is **static**: no blend rebalance schedule exists to freeze | ✅ N/A by construction |
 
 ---
 
@@ -248,7 +248,7 @@ tails priced in), Sharpe variance from the 16 harvested grid Sharpes, ledger n =
 | 40 (×2 stress) | 0.188 | 1.0000 | — | stable |
 | 80 (×4 stress) | 0.210 | 1.0000 | — | stable |
 
-**Meaning and limits (honest):** the DSR says the *federation's own* few-parameter selection —
+**Meaning and limits (honest):** the DSR says the *blend's own* few-parameter selection —
 one w grid, one cadence family, one scale grid — cannot explain Sharpe 2.47 by luck within FMA3's
 ledger. **It says nothing about the parents' mining of 2020–25** (FMA2 ≈ low-hundreds of trials,
 NSF5 ≈ 7,560 prescreens); the sleeves' alpha is assumed from the parents' validation records, not
@@ -289,14 +289,14 @@ re-runs. Full report: [FORWARD_ONESHOT.md](../../research/outputs/FORWARD_ONESHO
 | F1 | window worst-mark DD < 20.9% | **17.67%** (close 17.58%) | ✅ PASS |
 | F2 | window return > −10% | **+12.34%** (€10,000 → €11,234) | ✅ PASS |
 | F3 | no joint stop-out or margin-cap breach | **0 / 0** (max margin/balance 0.324 vs cap 0.90; min margin level 3.11 vs stop-out 0.50; bit-identity-gated instrumented kernel) | ✅ PASS |
-| F4 | each sub-book window return > −20% | **v7 +15.99% · v3.4 +13.59%** | ✅ PASS |
+| F4 | each sub-book window return > −20% | **Core +15.99% · Satellite +13.59%** | ✅ PASS |
 
 **4/4 → CONFIRM** per the pre-registered interpretation → proceed to MT5 demo deployment (the
 deployable arbiter). Window 2026-01-01 → 2026-04-30 (server), monthly **+14.94 / −0.25 / +0.41 /
 −2.42%**; daily Sharpe (120 obs, wide error bars) **1.17** — marginally below the pre-stated
 honest-discount band 1.2–1.5 (expectation prose, not a bar; disclosed as-is); short-window breach
 bootstrap 0.0002. Caveats disclosed in advance: USA500-proxy book ≠ deployed book (corr 0.89,
-directional confirmation only); v3.4 at ~0.88× reduced breadth (uncovered legs zeroed); Duka ≠ IC
+directional confirmation only); Satellite at ~0.88× reduced breadth (uncovered legs zeroed); Duka ≠ IC
 feed (~8pp CAGR_bd documented 2020–25 divergence); 4 months ≈ 85 trading days — the bars are
 breakdown detectors, not performance targets. The 2026H1 holdout is now permanently **CONSUMED**.
 
@@ -306,18 +306,18 @@ breakdown detectors, not performance targets. The 2026H1 holdout is now permanen
 
 - **Everything is in-sample on a twice-mined window** (parents' programs + FMA3's 18 configs);
   the DSR's reach is FMA3's own ledger only (Tier 4).
-- **Federation friction is real and measured: −2.7pp CAGR** at the locked point (ideal
+- **Blend friction is real and measured: −2.7pp CAGR** at the locked point (ideal
   bookkeeping 92.4% vs realized 89.7% at s = 1.0) — min-lot quantization at €10k sub-book seeds,
   joint margin, netting/costs on shared instruments.
-- **The v7 leg carries a ~1-bar execution lag vs its native engine** — priced identically into
+- **The Core leg carries a ~1-bar execution lag vs its native engine** — priced identically into
   references and candidates; comparisons are like-for-like but absolute levels are not the native
   book's ([RECONCILIATION.md](RECONCILIATION.md)).
 - **The capital split drifts** (~0.63–0.75 band); the probe-robust scale rule exists precisely to
   absorb this — all ceilings hold across w 0.56–0.84 at s = 1.1.
-- **Forward-honest Sharpe expectation is 1.2–1.5**, not the pinned 2.47 (v3.4's disclosed
+- **Forward-honest Sharpe expectation is 1.2–1.5**, not the pinned 2.47 (Satellite's disclosed
   in-sample→forward ratio ≈ 0.65–0.81 applied as-is); the 2026H1 window printed 1.17 on 120 obs.
 - **Crisis-tail numbers from the record engine must never be quoted against MT5 numbers** — the
-  measured 1m↔tick gap is 5.54% vs 35.6% for v7 alone; the federation's tick tail is unknown by
+  measured 1m↔tick gap is 5.54% vs 35.6% for Core alone; the blend's tick tail is unknown by
   construction until the MT5 run ([RECONCILIATION.md](RECONCILIATION.md)).
 
 ---
@@ -325,8 +325,8 @@ breakdown detectors, not performance targets. The 2026H1 holdout is now permanen
 ## Sign-off status
 
 **DONE — Python battery (in-sample IC 2020-25, engine of record):**
-- [x] Tier 1 reproduction chain — parents byte-reproduced in their native engines (v3.4 pin
-  identical; v7 tier12 byte PASS); record wrapper **41/41 delta 0.0** + minute curves 0.0; v7
+- [x] Tier 1 reproduction chain — parents byte-reproduced in their native engines (Satellite pin
+  identical; Core tier12 byte PASS); record wrapper **41/41 delta 0.0** + minute curves 0.0; Core
   extract **15/15 delta 0.0** + 9/9 legs bit-exact; ext engine **BIT-IDENTICAL (38/38)**; v1.0
   pin rebuilds from config at **delta 0.0**
 - [x] Tier 2 ladder — H-FED-1 **MECHANISM CONFIRMED** (w70: 14.38% DD / 2.474 Sharpe); H-FED-2
@@ -343,9 +343,9 @@ breakdown detectors, not performance targets. The 2026H1 holdout is now permanen
   (+9.9pp CAGR over the best parent at −5.5pp DD, −0.2pp tail, breach ÷6)
 
 **OPEN — before/at live-demo (MT5-only, cannot be closed in Python):**
-- [ ] **MT5 real-tick run of the federation book on the owner's machine** — the deployable
-  arbiter. The 1m↔tick crisis-tail gap is *measured* at 35.6% vs 5.54% for v7.0 alone; the
-  federation's tick-granularity tail is **unknown by construction**, and v3.4 has never had a
+- [ ] **MT5 real-tick run of the blend book on the owner's machine** — the deployable
+  arbiter. The 1m↔tick crisis-tail gap is *measured* at 35.6% vs 5.54% for Core alone; the
+  blend's tick-granularity tail is **unknown by construction**, and Satellite has never had a
   tick run at all. Record-engine tail numbers must never be quoted against MT5 numbers.
 - [ ] **Live demo deployment** — the pre-registered forward interpretation (CONFIRM → MT5 demo)
   authorizes it; judge the live book against the forward-honest Sharpe band **1.2–1.5**, not the

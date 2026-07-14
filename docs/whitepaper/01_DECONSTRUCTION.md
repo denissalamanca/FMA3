@@ -1,33 +1,33 @@
 # FMA3 parent deconstruction — the two frozen books
 
 **The authoritative "what & why" for the two locked parent books that FableMultiAssets3
-federates: NewStrategyFable5's v7.0 (7 equal-capital slot-equity sleeves + `BAND_SYM_25`
-concentration-band re-split + H9 delta-resize, R10) and FableMultiAssets2's v3.4
+federates: NewStrategyFable5's Core (7 equal-capital slot-equity sleeves + `BAND_SYM_25`
+concentration-band re-split + H9 delta-resize, R10) and FableMultiAssets2's Satellite
 (8 fraction-of-equity sleeves × `GLOBAL_SCALE` 10 with cash-parked weights and two structural
-hard limits, in one cross-margined account).** Code sources of truth: v7.0 =
+hard limits, in one cross-margined account).** Code sources of truth: Core =
 `NSF5/mt5/ea/PortfolioV7.mq5` + preset `V7_CORE7BAND_R10_IC.set` (MT5, live) and the READ-ONLY
 Python band engine `NSF5/mt5/reconcile/gbandrebal/sim.run_generic` (= `v51_bandharvest._run_window`);
-v3.4 = `FMA2/strategy_fable.py` (shipped config, `config_hash 48c09199fbf83d82`) +
+Satellite = `FMA2/strategy_fable.py` (shipped config, `config_hash 48c09199fbf83d82`) +
 `FMA2/research/eval_v34_pin_s10.py` on `FMA2/research/account_engine_1m.py::simulate_account_1m`;
 FMA3 measurement bridges = [`engine/record_engine.py`](../../engine/record_engine.py) +
 [`engine/v7_bridge/extract_positions.py`](../../engine/v7_bridge/extract_positions.py).
 Both parents are **FROZEN** — no sleeve internals change in this campaign
-(see [PROTOCOL.md §3](../../research/protocol/PROTOCOL.md)). The federation design built on top
+(see [PROTOCOL.md §3](../../research/protocol/PROTOCOL.md)). The blend design built on top
 of them is **[02_FEDERATION_DESIGN.md](02_FEDERATION_DESIGN.md)**; the composite benchmark that
 prices them in one accounting is
 **[COMPOSITE_BENCHMARK.md](../../research/outputs/COMPOSITE_BENCHMARK.md)**.
 
-**All numbers below are in-sample (IC 2020–25; v7.0's native MT5 headline additionally includes
+**All numbers below are in-sample (IC 2020–25; Core's native MT5 headline additionally includes
 2026-H1 real-tick). There is no post-2025 holdout in this document — the pre-registered 2026H1
 one-shot and the live demo are the falsification tests.**
 
 ---
 
-## 1. Parent A — v7.0 (NewStrategyFable5)
+## 1. Parent A — Core (NewStrategyFable5)
 
-### 1.1 What v7.0 is
+### 1.1 What Core is
 
-**v7.0 = the V6 core-7 book (7 equal-capital sleeves, 1/N, IC Markets EU Raw, €10k) with the
+**Core = the V6 core-7 book (7 equal-capital sleeves, 1/N, IC Markets EU Raw, €10k) with the
 calendar-quarterly re-split replaced by the concentration-band trigger `BAND_SYM_25`, plus the H9
 delta-resize on each re-split** (its own definition,
 [NSF5 docs/v7/STRATEGY.md §1](../../../NewStrategyFable5/docs/v7/STRATEGY.md)). Design
@@ -130,7 +130,7 @@ BTC_REP +3.93pp, S1_ETH +3.26pp (diluters).
 
 **The premium is conditional on slot-equity sizing.** Under fixed-notional sizing the DD benefit
 **flips to −7.31pp** — rebalancing re-grosses instead of de-risking (H8 M2×M4). This single fact
-is the structural firewall of §3.2: the band cannot be imported into v3.4's fixed-fraction
+is the structural firewall of §3.2: the band cannot be imported into Satellite's fixed-fraction
 convention, and any change of the sizing anchor voids the measured benefit.
 
 ### 1.6 The leverage frontier (native MT5 real-tick, reports `_32`–`_37`)
@@ -146,7 +146,7 @@ convention, and any change of the sizing anchor voids the measured benefit.
 
 The Maximal (€-worst) DD is ~R-invariant; the Relative (crisis-tail) DD scales sharply with R —
 this is why R stopped at 10, below the R12 knee. The band is what makes high R viable: V6's
-calendar re-split blew to ~37% eq-DD at R15/R20 while v7.0 held ~26%. The later V8 re-lever study
+calendar re-split blew to ~37% eq-DD at R15/R20 while Core held ~26%. The later V8 re-lever study
 confirmed tick CAGR saturates (R10→R12 = only +3.7pp at ~1:1 crisis-tail cost) and shipped
 **R10 / m=0 unchanged**.
 
@@ -162,14 +162,14 @@ guaranteed."
 
 ### 1.8 Measured record-engine profile (this campaign's accounting)
 
-FMA3 re-executed the v7.0 book **for the first time in the engine of record** (§4). The extractor
+FMA3 re-executed the Core book **for the first time in the engine of record** (§4). The extractor
 re-ran the exact anchor pipeline capturing per-1m-bar lots
 (`engine/v7_bridge/extract_positions.py`; **all 15 anchor floats delta 0.0** vs the pinned
 `engine_reproduce.json`, including 31 band + 0 harvest triggers —
 [v7_extract_verification.json](../../research/outputs/v7_extract_verification.json)). Source:
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json):
 
-| v7.0 in record engine | CAGR | Max DD (worst-mark) | Max DD (close) | Sharpe | COVID tail | negY | negQ | Breach P(DD>30%) | n_trades |
+| Core in record engine | CAGR | Max DD (worst-mark) | Max DD (close) | Sharpe | COVID tail | negY | negQ | Breach P(DD>30%) | n_trades |
 |---|---|---|---|---|---|---|---|---|---|
 | **r8 (exact)** | **+91.5%** | **21.22%** | 20.91% | **2.267** | **5.54%** | 0/6 | **0/24** | **0.012** | 6,406 |
 | r9 (linear approx†) | +106.6% | 23.75% | 23.40% | 2.264 | 6.69% | 0/6 | 1 (2022Q4) | 0.044 | 5,951 |
@@ -179,10 +179,10 @@ re-ran the exact anchor pipeline capturing per-1m-bar lots
 r9/r10 are approximations and **set no gates**. Per-year at r8 (record engine): 2020 +119.9%,
 2021 +83.8%, 2022 +55.6% (worst), 2023 +78.0%, 2024 +87.7%, 2025 +123.3%. The pinned r8 record
 run prints final equity **€492,611** (`composite_benchmark.json`); its CAGR/DD/Sharpe row above
-is the gate basis. In this accounting v7.0's 2020Q1 is **not even negative** — the −21.8% MT5
+is the gate basis. In this accounting Core's 2020Q1 is **not even negative** — the −21.8% MT5
 quarter is a real-tick artifact of the engine gap quantified in §4.
 
-### 1.9 Honest caveats (v7.0, carried forward)
+### 1.9 Honest caveats (Core, carried forward)
 
 - **Everything is in-sample**; the 2026-H1 window was already consumed by NSF5 for reporting.
 - The DD-halving is a **slot-equity-sizing × re-split product**, not a market anomaly; changing
@@ -199,11 +199,11 @@ quarter is a real-tick artifact of the engine gap quantified in §4.
 
 ---
 
-## 2. Parent B — v3.4 (FableMultiAssets2)
+## 2. Parent B — Satellite (FableMultiAssets2)
 
-### 2.1 What v3.4 is
+### 2.1 What Satellite is
 
-**v3.4 = the shipped v3 composition — 8 alpha sleeves in ONE cross-margined €10k IC Markets EU
+**Satellite = the shipped v3 composition — 8 alpha sleeves in ONE cross-margined €10k IC Markets EU
 Raw account (`ENGINE_MODEL="single"`) — mechanically re-levered from `GLOBAL_SCALE` 11 to 10 by a
 pre-registered rule** ([FMA2 docs/v3.4/STRATEGY.md](../../../FableMultiAssets2/docs/v3.4/STRATEGY.md),
 config authoritative in `FMA2/strategy_fable.py:60-110`). Each sleeve emits an hourly matrix of
@@ -262,7 +262,7 @@ The official book = `Σ(sleeve_pos × raw_weight) × GLOBAL_SCALE(10)`, then har
 the **single leverage knob**; Sharpe is leverage-invariant (~1.85 at every scale — a frictionless
 build scores 2.248; the −0.388 execution drag loses the Sharpe-2 gate). Negative quarters are
 **vol-drag artifacts of leverage** (drag ~scale²), fixable only by scale, never by composition —
-which is the entire rationale for v3.4. The re-pick rule was committed verbatim in
+which is the entire rationale for Satellite. The re-pick rule was committed verbatim in
 [FMA2 docs/v3.4/PREREGISTRATION.md](../../../FableMultiAssets2/docs/v3.4/PREREGISTRATION.md):
 *"Pin scales {9,10,11}. ADOPT the SMALLEST scale with negQ ≤ 1 AND CAGR ≥ 85%. If none satisfies
 both, KEEP scale 11."*
@@ -302,7 +302,7 @@ FMA3 engine of record (§4), so they are itemized:
 
 ### 2.7 Record-engine profile (the official pin — native and record engine coincide)
 
-v3.4's native pin **is** a record-engine number by construction. Pin:
+Satellite's native pin **is** a record-engine number by construction. Pin:
 `FMA2/research/outputs/v34_s10_pin_1m.json`, byte-reproduced through the FMA3 wrapper **twice**
 (41/41 reconciliation checks delta 0.0, curve max-abs-delta 0.0 —
 [verify_record_engine.json](../../research/outputs/verify_record_engine.json)):
@@ -312,10 +312,10 @@ v3.4's native pin **is** a record-engine number by construction. Pin:
 | **+88.66%** | **21.67%** | 1.854 | **7.84%** | 0/6 | **1 (2023Q1 −1.42%)** | **0.121** / 0.093 | **€449,708** | 20,403 |
 
 Per-year: 2020 +127.6%, 2021 +136.6%, 2022 +32.1% (worst — and exactly the year that cushions
-v7.0, whose record-engine 2022 is its own worst at +55.6%), 2023 +76.9%, 2024 +80.5%,
+Core, whose record-engine 2022 is its own worst at +55.6%), 2023 +76.9%, 2024 +80.5%,
 2025 +86.7%. Native gate score 4/5 (only the non-blocking Sharpe > 2 misses; leverage-invariant).
 
-### 2.8 Honest caveats (v3.4, carried forward)
+### 2.8 Honest caveats (Satellite, carried forward)
 
 - **All in-sample 2020–25**; the DEV/HOLD split was consumed by the v1 program; DSR 0.394 at
   honest cumulative N≈474 trials is a standing yellow flag (mitigated by trial correlation, band
@@ -323,7 +323,7 @@ v7.0, whose record-engine 2022 is its own worst at +55.6%), 2023 +76.9%, 2024 +8
 - The headline is flattered by the 2020-21 windfall (rolling Sharpe ~3.5); the durable 2022-25
   regime is ~1.76, and the parent's **disclosed forward band is Sharpe ~1.2–1.5** (honest ≈1.45)
   — the merged book must be judged against that band, not 1.85.
-- v3.4 has **no MT5 real-tick run ever** — its reconciliation verdict is PARTIAL by construction
+- Satellite has **no MT5 real-tick run ever** — its reconciliation verdict is PARTIAL by construction
   (headless brain↔pin parity is 6.66e-16, but broker fills are demo-only evidence).
 - Chop-fragility: Sharpe 0.76 in chop vs 2.31 in trend; only meanrev/intraday are chop-positive.
 - MKT-3 joint-gap stress touches the −25% kill region at s10 (−28.1% worst, ×1.5 cliff 41.2%);
@@ -333,18 +333,18 @@ v7.0, whose record-engine 2022 is its own worst at +55.6%), 2023 +76.9%, 2024 +8
 
 ## 3. The firewall history — and why both single-book import channels are CLOSED
 
-The two books were built **firewalled from each other** (v3.4 under an explicit alpha firewall
+The two books were built **firewalled from each other** (Satellite under an explicit alpha firewall
 against NewStrategyFable5; the owner lifted it for this campaign on 2026-07-10). The firewall was
 breached exactly twice, in opposite directions, under pre-registered gauntlets — and both channels
 are now formally closed. This is the negative space that defines FMA3's licensed design space.
 
-### 3.1 Channel A — the band mechanism into v3.4: NOT IMPORTABLE (H8)
+### 3.1 Channel A — the band mechanism into Satellite: NOT IMPORTABLE (H8)
 
 **Closed on structural incompatibility, not on a failed backtest.** The H8 rebalance science
 ([NSF5 docs/v7/research/H8_REBALANCE_SCIENCE.md](../../../NewStrategyFable5/docs/v7/research/H8_REBALANCE_SCIENCE.md))
 proved the re-split premium is **78% structural vol-harvesting across ~0-corr high-vol sleeves,
 conditional on slot-equity sizing**: under fixed-notional sizing the DD benefit **flips to
-−7.31pp** because rebalancing re-grosses. v3.4's fixed-fraction single account *continuously*
+−7.31pp** because rebalancing re-grosses. Satellite's fixed-fraction single account *continuously*
 rebalances to fractions by construction — it already sits at the continuously-rebalanced limit,
 and there are no slot equities for a band to measure. FMA2's own import review reached the same
 verdict independently
@@ -361,9 +361,9 @@ Seven byte-identical FMA2 sleeve streams were evaluated twice
 |---|---|---|
 | H14 crisis ADD | V6-era **quarterly** book | **+4.00pp** matched-DD (banked at the time) |
 | H14 seasonal ADD | V6-era quarterly book | +1.43pp (banked at the time) |
-| H15 T-A crisis ADD | **v7.0 band** book | **−20.89pp raw / −23.40pp matched-DD — INVERTED** |
-| H15 T-B1 carry replaces S6 | v7.0 band book | −13.47pp |
-| H15 T-B2 crisis replaces S6 | v7.0 band book | +1.35pp < +3pp gate; "plausibly 100% rebalance-schedule chaos"; **banned from re-litigation** |
+| H15 T-A crisis ADD | **Core band** book | **−20.89pp raw / −23.40pp matched-DD — INVERTED** |
+| H15 T-B1 carry replaces S6 | Core band book | −13.47pp |
+| H15 T-B2 crisis replaces S6 | Core band book | +1.35pp < +3pp gate; "plausibly 100% rebalance-schedule chaos"; **banned from re-litigation** |
 
 Final tally: **2 evaluations, 10 book-level tests, 0 adoptions.** The channel is declared
 EXHAUSTED; a third pass on the same seven streams is pre-refused as "p-hacking by installment"
@@ -371,13 +371,13 @@ EXHAUSTED; a third pass on the same seven streams is pre-refused as "p-hacking b
 crisis+seasonal figure was formally **RETIRED** as a quarterly-cadence relic
 (`NSF5/docs/v8/research/V8_RELEVER_POLICY.md`).
 
-### 3.3 Channel C — NSF5 sleeves into v3.4: the one-shot 2015-19 window is CONSUMED
+### 3.3 Channel C — NSF5 sleeves into Satellite: the one-shot 2015-19 window is CONSUMED
 
 FMA2's v3.0 gauntlet ([FMA2 docs/v3.0/RECON.md](../../../FableMultiAssets2/docs/v3.0/RECON.md))
 ran four frozen NSF5 ports through three pre-registered stages, using the clean 2015-19 pre-period
 as one-shot OOS: **S6_OPEXUSD killed** (2015-19 Sharpe −0.32), **VOLSTRUCT killed** (−0.64),
 **F1 failed** the overlay corr bar (ρ 0.685 to intraday) and lost the head-to-head on both
-windows; **MAG_XAU was the sole survivor** (Stage-2 Sharpe 0.62) and is already inside v3.4 at
+windows; **MAG_XAU was the sole survivor** (Stage-2 Sharpe 0.62) and is already inside Satellite at
 weight 0.050. That OOS window is spent for these candidates — it cannot be reused without
 converting it into in-sample data.
 
@@ -387,7 +387,7 @@ The same crisis stream is **+4.00pp on a quarterly equal-capital book and −20.
 book**: sleeve value is **cadence/structure-conditional**, and no verdict transfers across
 portfolio architectures without re-testing under the target structure. Consequently the only
 genuinely untested level left between these two programs is the one that **changes neither
-book's internal structure**: capital federation of the two books as wholes —
+book's internal structure**: capital blend of the two books as wholes —
 [02_FEDERATION_DESIGN.md](02_FEDERATION_DESIGN.md). A related standing rule: FMA2's `intraday`
 sleeve and NSF5's F1 are the **same edge** (ρ 0.87 on shared active days); a merged entity must
 never carry both. (`BOOK_USTEC` is a *different* USTEC sleeve — measured against `intraday` in
@@ -399,7 +399,7 @@ M-0 at ρ 0.046, cleared.)
 
 The owner's original six goal numbers (CAGR > 96.1 / DD < 20.9 / Sharpe > 2.03 / crisis ≤ 35.6 /
 0 negY / ≤1 negQ) **straddle two non-comparable engines**: the first four are MT5 real-tick R10
-numbers, while the negQ convention is only satisfied in Python 1m close-to-close accounting (v7.0
+numbers, while the negQ convention is only satisfied in Python 1m close-to-close accounting (Core
 itself scores 3/24 negQ on MT5 tick). No engine ever produced all six simultaneously — so
 "beats both parents" was unfalsifiable until FMA3 pinned ONE accounting.
 
@@ -409,17 +409,17 @@ wrapped by [`engine/record_engine.py`](../../engine/record_engine.py). Verificat
 
 | Bridge | Check | Result |
 |---|---|---|
-| `engine/record_engine.py` (v3.4 pin re-run) | 41 metric/curve checks vs the pinned reference | **41/41 delta 0.0**, curve max-abs-delta 0.0 ([verify_record_engine.json](../../research/outputs/verify_record_engine.json)) |
-| `engine/v7_bridge/extract_positions.py` (v7 anchor re-run + lots capture) | 15 anchor floats + trigger counts vs `engine_reproduce.json`; bit-identical core self-test; book rebuilt from captured positions | **15/15 delta 0.0**; 31 band + 0 harvest; consistency < 2.4e-15 relative ([v7_extract_verification.json](../../research/outputs/v7_extract_verification.json)) |
+| `engine/record_engine.py` (Satellite pin re-run) | 41 metric/curve checks vs the pinned reference | **41/41 delta 0.0**, curve max-abs-delta 0.0 ([verify_record_engine.json](../../research/outputs/verify_record_engine.json)) |
+| `engine/v7_bridge/extract_positions.py` (Core anchor re-run + lots capture) | 15 anchor floats + trigger counts vs `engine_reproduce.json`; bit-identical core self-test; book rebuilt from captured positions | **15/15 delta 0.0**; 31 band + 0 harvest; consistency < 2.4e-15 relative ([v7_extract_verification.json](../../research/outputs/v7_extract_verification.json)) |
 
 MT5 real-tick confirmation of the final locked book is **deferred to the owner's MT5 machine** —
-it cannot be run from Python, and v3.4 has never had a tick run at all.
+it cannot be run from Python, and Satellite has never had a tick run at all.
 
 **The measured MT5-vs-1m crisis-tail gap.** Putting both parents in one accounting produced the
 first *measurement* of the gap that was previously only an assumption
 ([COMPOSITE_BENCHMARK.md](../../research/outputs/COMPOSITE_BENCHMARK.md)):
 
-| v7.0 COVID crisis tail (2020-02-15 → 2020-04-15, worst-mark peak-to-trough) | Value |
+| Core COVID crisis tail (2020-02-15 → 2020-04-15, worst-mark peak-to-trough) | Value |
 |---|---|
 | MT5 real-tick, R10 (native headline) | **35.6%** |
 | Record engine (1m worst-mark, IC bars), r8 | **5.54%** |
@@ -428,12 +428,12 @@ first *measurement* of the gap that was previously only an assumption
 Tick-granularity spread blowouts during Mar-2020 **do not exist in 1m bars**. Consequences,
 standing for the whole campaign: (1) **crisis-tail numbers from the record engine must never be
 quoted against MT5 numbers** — same-engine comparisons only; (2) the final book's MT5 run on the
-owner's machine **remains the deployable arbiter of the tail**; (3) v7.0's −21.8% MT5 2020Q1 is a
+owner's machine **remains the deployable arbiter of the tail**; (3) Core's −21.8% MT5 2020Q1 is a
 real-tick artifact of the same gap (not negative in record accounting), so the composite negQ gate
 is a 1m-convention gate by construction.
 
 The resulting **composite gates** (primary scoreboard: dimension-wise best of the two measured
-parents — v3.4 pin, v7 r8 exact) are pre-registered in
+parents — Satellite pin, Core r8 exact) are pre-registered in
 [PROTOCOL.md §2](../../research/protocol/PROTOCOL.md) and filled by
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json):
 
@@ -446,7 +446,7 @@ straddles-two-engines caveat.
 
 **Honest note (bookkeeping discrepancy — found and RESOLVED during assembly):**
 an early draft of [COMPOSITE_BENCHMARK.md](../../research/outputs/COMPOSITE_BENCHMARK.md)'s parent
-table printed v7@r8 final equity €532,251 (the native band-engine figure), while the pinned
+table printed Core@r8 final equity €532,251 (the native band-engine figure), while the pinned
 [composite_benchmark.json](../../research/outputs/composite_benchmark.json) `v7_record.r8` block —
 the artifact the gates are derived from — prints **€492,611** with CAGR +91.5% (consistent
 internally: 49.26× over 5.996y). The MD cell was reconciled to the JSON on 2026-07-10; the
@@ -469,6 +469,6 @@ FMA3: [composite_benchmark.json](../../research/outputs/composite_benchmark.json
 [v7_extract_verification.json](../../research/outputs/v7_extract_verification.json),
 [research/intel/](../../research/intel/) recon digests.*
 
-**All numbers above are in-sample (IC 2020–25; v7.0's native MT5 headline additionally includes
+**All numbers above are in-sample (IC 2020–25; Core's native MT5 headline additionally includes
 2026-H1 real-tick). There is no post-2025 holdout in this document — the pre-registered 2026H1
 one-shot and the live demo are the falsification tests.**

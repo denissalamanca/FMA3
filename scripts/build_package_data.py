@@ -5,7 +5,7 @@ Assembles research/outputs/package_data.json strictly from PINNED artifacts
 (fma3_v1_pin.json + fma3_v1_pin_curve.parquet, composite_benchmark.json,
 hfed1/2/3_results.json, hcaps1_analysis.json, redteam/rt_perturbation.json,
 forward_oneshot.json, docs/REGISTRY.md decisions) plus pure matrix math on
-the locked federation matrix (build_locked_matrix imported from
+the locked blend matrix (build_locked_matrix imported from
 scripts/eval_fma3_pin.py — NO engine run anywhere in this script).
 
 Blocks (consumed by docs/v1.0/* writers and the dashboard):

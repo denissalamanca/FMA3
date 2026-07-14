@@ -4,7 +4,7 @@
 NSF5's V7.1 chaos study established that rebalance timing is chaotically
 equity-sensitive: a EUR 128 perturbation on the EUR 10,000 account shifted
 the single-account overlay-ring outcome by -EUR 59k.  PROTOCOL §5.7 makes a
-±EUR 128 perturbation mandatory for any adopted federation mechanic: the
+±EUR 128 perturbation mandatory for any adopted blend mechanic: the
 H-FED bookkeeping isolates each book's internal state by construction, but
 the band trigger watches the RELATIVE sub-equities, so a seed perturbation
 can shift re-split dates — the chaos channel this probe exercises.
@@ -14,7 +14,7 @@ by +128/10000 and -128/10000 (the NSF5 chaos-probe convention, both
 directions; the re-split TARGET stays the registered (w, 1-w) — only the
 seed moves).
 
-PRE-REGISTERED THRESHOLDS (a chaotic federation is undeployable):
+PRE-REGISTERED THRESHOLDS (a chaotic blend is undeployable):
   PASS iff BOTH probes satisfy
     |final_equity / final_equity_winner - 1| < 5%      and
     |maxDD_worst  - maxDD_worst_winner|      < 1pp.
@@ -70,9 +70,9 @@ def main(argv: list[str] | None = None) -> int:
     all_ok = True
     for sign, tag in ((+1, "plus128"), (-1, "minus128")):
         if args.book == "v7":
-            seed_a, seed_b = cfg.w_v7 + sign * delta, None
+            seed_a, seed_b = cfg.core_weight + sign * delta, None
         else:
-            seed_a, seed_b = None, (1.0 - cfg.w_v7) + sign * delta
+            seed_a, seed_b = None, (1.0 - cfg.core_weight) + sign * delta
         row = ses.run(cfg, label=f"rt_coupling_{args.book}_{tag}",
                       seed_a=seed_a, seed_b=seed_b,
                       run_bootstrap=not args.skip_bootstrap)

@@ -1,8 +1,8 @@
-# FMA3 v1.0 — The Federation Book
+# FMA3 v1.0 — The Fable Book
 
 **FMA3 v1.0 is the first merged descendant of two independently-derived, firewalled trading
-programs: one cross-margined €10k IC Markets EU Raw account carrying NewStrategyFable5's v7.0
-band book (70% of capital) and FableMultiAssets2's v3.4 fixed-fraction book (30%) as
+programs: one cross-margined €10k IC Markets EU Raw account carrying NewStrategyFable5's Core
+band book (70% of capital) and FableMultiAssets2's Satellite fixed-fraction book (30%) as
 never-rebalanced virtual sub-accounts at global scale 1.1 — both parents' sleeves frozen, the
 merge alpha purely structural, every decision pre-registered before its number existed.** Config
 sources of truth: [`strategy_fma3.py`](../../strategy_fma3.py) (config hash `51a7541cc2aaa593`,
@@ -18,7 +18,7 @@ arbiter.**
 
 ## Executive summary
 
-**What was built.** A capital federation. Every sleeve-level path between the two parents had
+**What was built.** A capital blend. Every sleeve-level path between the two parents had
 been formally closed by their own experiment records (the band mechanism cannot survive
 fixed-fraction sizing; FMA2's sleeves went 0-for-10 inside the band book; the one-shot OOS window
 for NSF5→FMA2 imports is spent). The only genuinely untested level left was the one that changes
@@ -26,13 +26,13 @@ for NSF5→FMA2 imports is spent). The only genuinely untested level left was th
 its own native mechanics, inside one real cross-margined account. That structure — static split
 w = 0.70/0.30, no cross-book rebalancing, no new caps, scale 1.1 — is FMA3 v1.0.
 
-**The parents, one line each.** v7.0 (NewStrategyFable5) is a 7-sleeve equal-capital
+**The parents, one line each.** Core (NewStrategyFable5) is a 7-sleeve equal-capital
 trend/momentum book whose concentration-band re-split harvests volatility across ~zero-correlated
 sleeves — MT5 real-tick 96.1% CAGR / 20.9% DD, with the COVID crisis tail as its known weakness.
-v3.4 (FableMultiAssets2) is an 8-sleeve fixed-fraction consistency book — 88.7% CAGR / 21.7% DD
+Satellite (FableMultiAssets2) is an 8-sleeve fixed-fraction consistency book — 88.7% CAGR / 21.7% DD
 with 1 negative quarter in 24, whose crisis/meanrev/seasonal seats *pay* during stress (2020 was
-its best year). The federation thesis: v3.4's stress-payers cushion exactly the tail that caps
-v7.0's leverage, and v7.0's trend capture lifts exactly the Sharpe ceiling v3.4 could not raise
+its best year). The blend thesis: Satellite's stress-payers cushion exactly the tail that caps
+Core's leverage, and Core's trend capture lifts exactly the Sharpe ceiling Satellite could not raise
 from inside. Book correlation was measured first: ρ = +0.351, drawdown troughs disjoint.
 
 **The headline (engine of record, 2020–25, €10k).**
@@ -63,7 +63,7 @@ forward-honest Sharpe expectation is ~1.6–2.0 (parents' discount convention), 
 | Doc | What it covers |
 |---|---|
 | **[01_DECONSTRUCTION.md](01_DECONSTRUCTION.md)** | The two frozen parents — what each book is, why it works, its native numbers in both engines, the firewall history, why every sleeve-level merge channel is closed, and the engine-of-record decision |
-| **[02_FEDERATION_DESIGN.md](02_FEDERATION_DESIGN.md)** | The federation architecture — virtual sub-account bookkeeping, scale-invariance proof, the anti-coupling guard, the M-0 measurements, and the full pre-registered evaluation ladder |
+| **[02_FEDERATION_DESIGN.md](02_FEDERATION_DESIGN.md)** | The blend architecture — virtual sub-account bookkeeping, scale-invariance proof, the anti-coupling guard, the M-0 measurements, and the full pre-registered evaluation ladder |
 | **[03_SCORECARD.md](03_SCORECARD.md)** | The results — the new frontier scorecard, the experiment trail, the scale-frontier adjudication, the red-team battery, reconciliation & reproduction, honest caveats, and the 2026H1 one-shot slot |
 | [docs/REGISTRY.md](../REGISTRY.md) | The honest multiple-testing ledger — every config evaluated, incl. failures and the FMA3-RT adjudication |
 | [PROTOCOL.md](../../research/protocol/PROTOCOL.md) · [HYPOTHESES.md](../../research/protocol/HYPOTHESES.md) · [FORWARD_TEST.md](../../research/protocol/FORWARD_TEST.md) | The pre-registrations (all committed before their numbers existed) |
@@ -77,12 +77,12 @@ forward-honest Sharpe expectation is ~1.6–2.0 (parents' discount convention), 
 
 - [x] Recon/assimilation of both parents (7 readers + critique, `research/intel/`)
 - [x] Pre-registered protocol + hypothesis slate (committed before any merged number)
-- [x] Engine bridges verified — record engine 41/41 delta 0.0 + curves 0.0; v7 extract 15/15
+- [x] Engine bridges verified — record engine 41/41 delta 0.0 + curves 0.0; Core extract 15/15
       delta 0.0; ext engine bit-identical ([03 §5](03_SCORECARD.md))
-- [x] Baselines byte-reproduced (v3.4 pin; v7.0 Python anchor)
+- [x] Baselines byte-reproduced (Satellite pin; Core Python anchor)
 - [x] Composite benchmark — both parents in the engine of record; gates derived; M-0 measured
-- [x] H-FED-1 static federation — mechanism confirmed, winner w = 0.70
-- [x] H-FED-2 rebalanced federation — all cadences DECLINED (static stands)
+- [x] H-FED-1 static blend — mechanism confirmed, winner w = 0.70
+- [x] H-FED-2 rebalanced blend — all cadences DECLINED (static stands)
 - [x] H-CAPS-1 combined-book caps — verified NO-OP (inherited caps compose)
 - [x] H-FED-3 scale re-pick — frontier mapped, all 7 points compliant
 - [x] Red-team battery — 6 checks; 1 FAIL adjudicated into the probe-robust scale (s = 1.1)

@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //| CheckCarryBreakout.mq5 — compile/smoke gate for                  |
-//| FMA3v34/CarryBreakout.mqh (CV34CarryBreakoutStepper).            |
+//| Sat/CarryBreakout.mqh (CSatCarryBreakoutStepper).            |
 //|                                                                  |
 //| Instantiates the stepper and feeds synthetic union hourly bars   |
 //| (8 bars/day x 66 days = 528 bars) with scattered NaN closes and  |
@@ -32,13 +32,13 @@
 //|  (python json state length for reference: 197456 chars)          |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/CarryBreakout.mqh>
+#include <Sat/CarryBreakout.mqh>
 
 //+------------------------------------------------------------------+
 void MakeCloses(const int i, double &closes[])
   {
-   double nan = V34Nan();
-   for(int j = 0; j < V34CB_N_SYM; j++)
+   double nan = SatNan();
+   for(int j = 0; j < SATCB_N_SYM; j++)
      {
       double base = 1.0 + 0.05 * j;
       double c = base * (1.0 + 0.0004 * i) + 0.001 * MathSin(0.7 * i + j);
@@ -53,9 +53,9 @@ void MakeCloses(const int i, double &closes[])
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   CV34CarryBreakoutStepper st;
-   double closes[V34CB_N_SYM];
-   double pos[V34CB_N_SYM];
+   CSatCarryBreakoutStepper st;
+   double closes[SATCB_N_SYM];
+   double pos[SATCB_N_SYM];
 
    const long day0 = 19300;            // 2022-11-04
    const int  bars_per_day = 8;
@@ -73,7 +73,7 @@ void OnStart()
       if(i == 0 || i == 100 || i == 479 || i == 480 || i == n_bars - 1)
         {
          double gross = 0.0;
-         for(int j = 0; j < V34CB_N_SYM; j++)
+         for(int j = 0; j < SATCB_N_SYM; j++)
             gross += MathAbs(pos[j]);
          PrintFormat("bar %d gross=%.10g USDJPY=%.10g XAUUSD=%.10g "
                      "USA500=%.10g USTEC=%.10g",
@@ -83,7 +83,7 @@ void OnStart()
 
    // last carry roll debug (day stamped, live pairs, USDJPY row)
    int n_dir = 0, n_sig = 0;
-   for(int j = 0; j < V34CB_N_FX; j++)
+   for(int j = 0; j < SATCB_N_FX; j++)
      {
       if(st.m_last_dir[j] != 0.0)
          n_dir++;
@@ -106,14 +106,14 @@ void OnStart()
    PrintFormat("state length=%d prefix=%s...",
                StringLen(s1), StringSubstr(s1, 0, 60));
 
-   CV34CarryBreakoutStepper st2;
+   CSatCarryBreakoutStepper st2;
    if(!st2.SetState(s1))
      {
       Print("SetState FAILED");
       return;
      }
 
-   double pos2[V34CB_N_SYM];
+   double pos2[SATCB_N_SYM];
    double maxdiff = 0.0;
    int nan_mm = 0;
    for(int i = n_bars; i < n_bars + 16; i++)
@@ -122,7 +122,7 @@ void OnStart()
       long day = day0 + i / bars_per_day;
       st.Step(day, closes, pos);
       st2.Step(day, closes, pos2);
-      for(int j = 0; j < V34CB_N_SYM; j++)
+      for(int j = 0; j < SATCB_N_SYM; j++)
         {
          bool n1 = (pos[j] != pos[j]);
          bool n2 = (pos2[j] != pos2[j]);

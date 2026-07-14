@@ -30,11 +30,11 @@
 //|     - crisis steps WEEKDAYS only ((epoch_day+3)%7 < 5); target   |
 //|       effective at res.effective = d + 1d + 13h with pandas      |
 //|       ffill semantics (NaN target never overwrites; 0.0 before   |
-//|       the first finite target) == V34CrisisExpandToHourly;       |
+//|       the first finite target) == SatCrisisExpandToHourly;       |
 //|     - the trailing (still-open) last grid day is never closed:   |
 //|       its daily targets stamp beyond the grid (no output effect, |
 //|       identical to the Python drivers' final rows).              |
-//|   * seasonal/crypto deferred emit: CV34SeasonalCryptoStepper     |
+//|   * seasonal/crypto deferred emit: CSatSeasonalCryptoStepper     |
 //|     Step() at bar t returns the finalized row of bar t-1, so the |
 //|     other 7 sleeve rows are buffered one bar and the book row of |
 //|     bar t-1 is assembled when bar t is stepped; Finalize()       |
@@ -52,14 +52,14 @@
 #property version   "1.00"
 #property description "FMA3 v34 native replay: FMA3_v34_inputs.csv -> FMA3_v34_native_actual.csv (Common Files)"
 
-#include <FMA3v34/MagXau.mqh>
-#include <FMA3v34/Intraday.mqh>
-#include <FMA3v34/MeanRev.mqh>
-#include <FMA3v34/SeasonalCrypto.mqh>
-#include <FMA3v34/CarryBreakout.mqh>
-#include <FMA3v34/Crisis.mqh>
-#include <FMA3v34/TrendV2.mqh>
-#include <FMA3v34/Ensemble.mqh>
+#include <Sat/MagXau.mqh>
+#include <Sat/Intraday.mqh>
+#include <Sat/MeanRev.mqh>
+#include <Sat/SeasonalCrypto.mqh>
+#include <Sat/CarryBreakout.mqh>
+#include <Sat/Crisis.mqh>
+#include <Sat/TrendV2.mqh>
+#include <Sat/Ensemble.mqh>
 
 #define TV34_NIN        37
 #define TV34_NKEEP      21
@@ -158,13 +158,13 @@ string TV34Cell(const double v)
 //------------------------------------------------------------------//
 // stage the 8 sleeve rows for ONE bar and write the book row       //
 //------------------------------------------------------------------//
-bool TV34StageAndWrite(CV34EnsembleStepper &shell, const int out_handle,
+bool TV34StageAndWrite(CSatEnsembleStepper &shell, const int out_handle,
                        const long ts_sec,
-                       const double &mr[],   // 16, V34MR_SYMBOLS order
+                       const double &mr[],   // 16, SatMR_SYMBOLS order
                        const double &cbk[],  // 21, TV34_CB_KEPT order
                        const double &id[],   // 2,  USA500 USTEC
-                       const double &cr[],   // 4,  V34CrisisSym order
-                       const double &tv[],   // 5,  V34TV2_SYMS order
+                       const double &cr[],   // 4,  SatCrisisSym order
+                       const double &tv[],   // 5,  SatTV2_SYMS order
                        const double &mg[],   // 1,  XAUUSD
                        const double &emit4[])// 4,  XAU BTC ETH SOL
   {
@@ -199,7 +199,7 @@ bool TV34StageAndWrite(CV34EnsembleStepper &shell, const int out_handle,
 void OnStart()
   {
    Print("TestV34Native: FMA3 v34 native replay starting ...");
-   double nan = V34Nan();
+   double nan = SatNan();
 
    //--- input file -------------------------------------------------
    int fh = FileOpen(TV34_IN_FILE, FILE_READ | FILE_TXT | FILE_ANSI |
@@ -236,14 +236,14 @@ void OnStart()
    //--- input-column maps for every sleeve --------------------------
    int mr_ix[], cb_ix[], id_ix[], tv_ix[];
    bool ok = true;
-   ok = ok && TV34MapSyms(V34MR_SYMBOLS, mr_ix);      // 16
-   ok = ok && TV34MapSyms(V34CB_SYMBOLS, cb_ix);      // 32
+   ok = ok && TV34MapSyms(SatMR_SYMBOLS, mr_ix);      // 16
+   ok = ok && TV34MapSyms(SATCB_SYMBOLS, cb_ix);      // 32
    ok = ok && TV34MapSyms(TV34_ID_SYMS,  id_ix);      // 2
-   ok = ok && TV34MapSyms(V34TV2_SYMS,   tv_ix);      // 5
-   int cr_in_ix[V34CRISIS_NIN];
-   for(int i = 0; ok && i < V34CRISIS_NIN; i++)
+   ok = ok && TV34MapSyms(SatTV2_SYMS,   tv_ix);      // 5
+   int cr_in_ix[SatCRISIS_NIN];
+   for(int i = 0; ok && i < SatCRISIS_NIN; i++)
      {
-      cr_in_ix[i] = TV34SymIndex(V34CrisisInputSym(i));
+      cr_in_ix[i] = TV34SymIndex(SatCrisisInputSym(i));
       if(cr_in_ix[i] < 0)
          ok = false;
      }
@@ -252,8 +252,8 @@ void OnStart()
    for(int k = 0; ok && k < TV34_NKEEP; k++)
      {
       cb_keep_ix[k] = -1;
-      for(int j = 0; j < V34CB_N_SYM; j++)
-         if(V34CB_SYMBOLS[j] == TV34_CB_KEPT[k])
+      for(int j = 0; j < SATCB_N_SYM; j++)
+         if(SATCB_SYMBOLS[j] == TV34_CB_KEPT[k])
            {
             cb_keep_ix[k] = j;
             break;
@@ -273,28 +273,28 @@ void OnStart()
      }
 
    //--- steppers -----------------------------------------------------
-   CV34MagXauStepper         mag;
-   CV34IntradayStepper       intr;
-   CV34MeanRevStepper        mr;
-   CV34SeasonalCryptoStepper sc;
-   CV34CarryBreakoutStepper  cb;
-   CV34CrisisStepper         crisis;
-   CV34TrendV2Stepper        tv;
+   CSatMagXauStepper         mag;
+   CSatIntradayStepper       intr;
+   CSatMeanRevStepper        mr;
+   CSatSeasonalCryptoStepper sc;
+   CSatCarryBreakoutStepper  cb;
+   CSatCrisisStepper         crisis;
+   CSatTrendV2Stepper        tv;
    intr.InitDefault();
 
    //--- ensemble shell: EXACT golden sleeve parquet columns ----------
-   string cr_syms[V34CRISIS_NOUT];
-   for(int j = 0; j < V34CRISIS_NOUT; j++)
-      cr_syms[j] = V34CrisisSym(j);
-   CV34EnsembleStepper shell;
+   string cr_syms[SatCRISIS_NOUT];
+   for(int j = 0; j < SatCRISIS_NOUT; j++)
+      cr_syms[j] = SatCrisisSym(j);
+   CSatEnsembleStepper shell;
    ok = true;
-   ok = ok && shell.AddSleeve("meanrev",        V34MR_SYMBOLS);
+   ok = ok && shell.AddSleeve("meanrev",        SatMR_SYMBOLS);
    ok = ok && shell.AddSleeve("carry_breakout", TV34_CB_KEPT);
    ok = ok && shell.AddSleeve("seasonal",       TV34_SEA_SYMS);
    ok = ok && shell.AddSleeve("intraday",       TV34_ID_SYMS);
    ok = ok && shell.AddSleeve("crisis",         cr_syms);
-   ok = ok && shell.AddSleeve("trend_v2",       V34TV2_SYMS);
-   ok = ok && shell.AddSleeve("crypto_smart",   V34_SC_CR_SYMBOLS);
+   ok = ok && shell.AddSleeve("trend_v2",       SatTV2_SYMS);
+   ok = ok && shell.AddSleeve("crypto_smart",   Sat_SC_CR_SYMBOLS);
    ok = ok && shell.AddSleeve("mag",            TV34_MAG_SYMS);
    ok = ok && shell.Finalize();
    if(!ok || shell.SymbolCount() != 31)
@@ -331,24 +331,24 @@ void OnStart()
    double tvq_w[];                          // stride 5
    long   crq_eff[];
    double crq_w[];                          // stride 4
-   double trend_cur[V34TV2_NSYM];
-   double crisis_cur[V34CRISIS_NOUT];       // NaN until first finite target
-   for(int j = 0; j < V34TV2_NSYM; j++)
+   double trend_cur[SatTV2_NSYM];
+   double crisis_cur[SatCRISIS_NOUT];       // NaN until first finite target
+   for(int j = 0; j < SatTV2_NSYM; j++)
       trend_cur[j] = 0.0;
-   for(int j = 0; j < V34CRISIS_NOUT; j++)
+   for(int j = 0; j < SatCRISIS_NOUT; j++)
       crisis_cur[j] = nan;
    // one-bar buffers for the deferred seasonal/crypto emission
    bool   have_prev = false;
    long   prev_ts = 0;
-   double prev_mr[V34MR_NSYM], prev_cbk[TV34_NKEEP], prev_id[2];
-   double prev_cr[V34CRISIS_NOUT], prev_tv[V34TV2_NSYM], prev_mg[1];
+   double prev_mr[SatMR_NSYM], prev_cbk[TV34_NKEEP], prev_id[2];
+   double prev_cr[SatCRISIS_NOUT], prev_tv[SatTV2_NSYM], prev_mg[1];
    // scratch
    double raw[TV34_NIN];
-   double mrcl[V34MR_NSYM],  cbcl[V34CB_N_SYM], idcl[2];
-   double crcl[V34CRISIS_NIN], tvcl[V34TV2_NSYM];
-   double cur_mr[], cur_id[], cb32[V34CB_N_SYM];
-   double cur_cbk[TV34_NKEEP], cur_cr[V34CRISIS_NOUT];
-   double cur_tv[V34TV2_NSYM], cur_mg[1], held[];
+   double mrcl[SatMR_NSYM],  cbcl[SATCB_N_SYM], idcl[2];
+   double crcl[SatCRISIS_NIN], tvcl[SatTV2_NSYM];
+   double cur_mr[], cur_id[], cb32[SATCB_N_SYM];
+   double cur_cbk[TV34_NKEEP], cur_cr[SatCRISIS_NOUT];
+   double cur_tv[SatTV2_NSYM], cur_mg[1], held[];
    double emit4[];
    long   bars = 0, rows = 0;
 
@@ -385,24 +385,24 @@ void OnStart()
         {
          // day closes = ffilled values as of the PREVIOUS bar (ffill[]
          // not yet updated with this bar) == resample('1D').last()
-         for(int j = 0; j < V34TV2_NSYM; j++)
+         for(int j = 0; j < SatTV2_NSYM; j++)
             tvcl[j] = ffill[tv_ix[j]];
          tv.Step(tvcl, held);
          TV34QPush(tvq_eff, tvq_w,
-                   (cur_day + 1) * 86400 + V34TV2_EXEC_HOUR * 3600,
-                   held, V34TV2_NSYM);
+                   (cur_day + 1) * 86400 + SatTV2_EXEC_HOUR * 3600,
+                   held, SatTV2_NSYM);
          if(((cur_day + 3) % 7) < 5)              // Mon..Fri only
            {
-            for(int j = 0; j < V34CRISIS_NIN; j++)
+            for(int j = 0; j < SatCRISIS_NIN; j++)
                crcl[j] = ffill[cr_in_ix[j]];
-            SV34CrisisResult res;
+            SSatCrisisResult res;
             if(!crisis.Step((datetime)(cur_day * 86400), crcl, res))
               {
                Print("TestV34Native: crisis step failed at day ", cur_day);
                break;
               }
             TV34QPush(crq_eff, crq_w, (long)res.effective, res.w,
-                      V34CRISIS_NOUT);
+                      SatCRISIS_NOUT);
            }
          cur_day = day;
         }
@@ -426,19 +426,19 @@ void OnStart()
       //--- activate pending daily targets -------------------------------
       while(ArraySize(tvq_eff) > 0 && tvq_eff[0] <= ts)
         {
-         for(int j = 0; j < V34TV2_NSYM; j++)
+         for(int j = 0; j < SatTV2_NSYM; j++)
             trend_cur[j] = tvq_w[j];
-         TV34QPop(tvq_eff, tvq_w, V34TV2_NSYM);
+         TV34QPop(tvq_eff, tvq_w, SatTV2_NSYM);
         }
       while(ArraySize(crq_eff) > 0 && crq_eff[0] <= ts)
         {
-         for(int j = 0; j < V34CRISIS_NOUT; j++)
+         for(int j = 0; j < SatCRISIS_NOUT; j++)
            {
             double v = crq_w[j];
             if(v == v)                    // NaN never overwrites (ffill)
                crisis_cur[j] = v;
            }
-         TV34QPop(crq_eff, crq_w, V34CRISIS_NOUT);
+         TV34QPop(crq_eff, crq_w, SatCRISIS_NOUT);
         }
 
       //--- current-bar rows for the 7 non-deferred sleeves --------------
@@ -446,17 +446,17 @@ void OnStart()
       idcl[0] = raw[id_ix[0]];
       idcl[1] = raw[id_ix[1]];
       intr.StepNs(ts_ns, idcl, cur_id);
-      for(int j = 0; j < V34MR_NSYM; j++)
+      for(int j = 0; j < SatMR_NSYM; j++)
          mrcl[j] = raw[mr_ix[j]];
       mr.Step((datetime)ts, mrcl, cur_mr);
-      for(int j = 0; j < V34CB_N_SYM; j++)
+      for(int j = 0; j < SATCB_N_SYM; j++)
          cbcl[j] = raw[cb_ix[j]];
       cb.Step(ts / 86400, cbcl, cb32);
       for(int k = 0; k < TV34_NKEEP; k++)
          cur_cbk[k] = cb32[cb_keep_ix[k]];
-      for(int j = 0; j < V34TV2_NSYM; j++)
+      for(int j = 0; j < SatTV2_NSYM; j++)
          cur_tv[j] = trend_cur[j];
-      for(int j = 0; j < V34CRISIS_NOUT; j++)     // 0.0 before first target
+      for(int j = 0; j < SatCRISIS_NOUT; j++)     // 0.0 before first target
          cur_cr[j] = (crisis_cur[j] == crisis_cur[j]) ? crisis_cur[j] : 0.0;
 
       //--- seasonal/crypto: deferred one-bar emission --------------------
@@ -485,15 +485,15 @@ void OnStart()
         }
 
       //--- buffer this bar's rows for the next emission -------------------
-      for(int j = 0; j < V34MR_NSYM; j++)
+      for(int j = 0; j < SatMR_NSYM; j++)
          prev_mr[j] = cur_mr[j];
       for(int k = 0; k < TV34_NKEEP; k++)
          prev_cbk[k] = cur_cbk[k];
       prev_id[0] = cur_id[0];
       prev_id[1] = cur_id[1];
-      for(int j = 0; j < V34CRISIS_NOUT; j++)
+      for(int j = 0; j < SatCRISIS_NOUT; j++)
          prev_cr[j] = cur_cr[j];
-      for(int j = 0; j < V34TV2_NSYM; j++)
+      for(int j = 0; j < SatTV2_NSYM; j++)
          prev_tv[j] = cur_tv[j];
       prev_mg[0] = cur_mg[0];
       prev_ts = ts;

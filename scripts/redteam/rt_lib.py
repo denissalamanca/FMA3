@@ -10,7 +10,7 @@ Design rules
   exact H-FED input loaders (``run_hfed1_lib.load_inputs``) and the engine of
   record (``record_engine.run_record``) so every red-team number is computed
   in the same accounting as the number it batters.
-* The bookkeeping functions replicate ``run_hfed1.build_fed_frac`` /
+* The bookkeeping functions replicate ``run_hfed1.build_book_frac`` /
   ``run_hfed2.federation_weights`` arithmetic EXACTLY (same operation order,
   same rebasing conventions) with the structural parameters exposed — seeds,
   min-gap, band edges, fixed schedules.  Replaying a winner's own
@@ -106,16 +106,16 @@ def verdict(script: str, status: str, reason: str) -> int:
 
 @dataclass(frozen=True)
 class FedConfig:
-    """Structural federation parameters (the ONLY licensed design space).
+    """Structural blend parameters (the ONLY licensed design space).
 
     kind          : "static" (H-FED-1), "quarterly" (F2a) or "band" (F2b).
-    w_v7          : v7 capital share; the re-split target is always (w, 1-w).
+    core_weight          : v7 capital share; the re-split target is always (w, 1-w).
     b_up          : band upper trigger on the v7 share (band only);
                     B_dn = 1 - b_up by the registered symmetric semantics.
     min_gap_days  : minimum days between band re-splits (run_hfed2 baseline 5).
     """
     kind: str
-    w_v7: float
+    core_weight: float
     b_up: float | None = None
     min_gap_days: int = 5
 
@@ -125,8 +125,8 @@ def load_winner(results_path: Path, key: str
     """Read a winning config out of an H-FED results JSON.
 
     Understands both runners' shapes: hfed1_results.json grid entries carry
-    ``w_v7`` (static); hfed2_results.json grid entries carry ``mode``/``b_up``
-    with the base w under ``data["base"]["w_v7"]``.  Returns (config, the raw
+    ``core_weight`` (static); hfed2_results.json grid entries carry ``mode``/``b_up``
+    with the base w under ``data["base"]["core_weight"]``.  Returns (config, the raw
     grid entry with its recorded metric block, the full JSON).
     """
     data = json.loads(Path(results_path).read_text())
@@ -155,7 +155,7 @@ def load_winner(results_path: Path, key: str
 
 
 # ---------------------------------------------------------------------------
-# federation bookkeeping (exact replicas of the H-FED runners' arithmetic)
+# blend bookkeeping (exact replicas of the H-FED runners' arithmetic)
 # ---------------------------------------------------------------------------
 
 def federation_bookkeeping(a: pd.Series, b: pd.Series,
@@ -181,11 +181,11 @@ def federation_bookkeeping(a: pd.Series, b: pd.Series,
         band winner's own event dates reproduces the winner bit-for-bit.
 
     Exactness contract: with default seeds and no fixed_edges this replicates
-    run_hfed1.build_fed_frac (static: A* = w·a_h, same float order) and
+    run_hfed1.build_book_frac (static: A* = w·a_h, same float order) and
     run_hfed2.federation_weights (quarterly rebases at the last pre-edge
     hour, band rebases at ``asof(act)`` — both copied verbatim).
     """
-    w = cfg.w_v7
+    w = cfg.core_weight
     seed_a = w if seed_a is None else float(seed_a)
     seed_b = (1.0 - w) if seed_b is None else float(seed_b)
 
@@ -290,7 +290,7 @@ def federation_bookkeeping(a: pd.Series, b: pd.Series,
     return a_star, b_star, events
 
 
-def blend_scaled(frac7: pd.DataFrame, frac34: pd.DataFrame,
+def blend_scaled(core_frac: pd.DataFrame, sat_frac: pd.DataFrame,
                  a_star: pd.Series, b_star: pd.Series,
                  scale_v7: float = 1.0, scale_v34: float = 1.0
                  ) -> pd.DataFrame:
@@ -304,11 +304,11 @@ def blend_scaled(frac7: pd.DataFrame, frac34: pd.DataFrame,
     wa = (a_star / j) * scale_v7
     wb = (b_star / j) * scale_v34
     hours = a_star.index
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    return (f7.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
-            + f34.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    return (f_core.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
+            + f_sat.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
 
 
 # ---------------------------------------------------------------------------
@@ -336,8 +336,8 @@ class EngineSession:
         self.RE, self.lib = RE, lib
         log("engine", "loading H-FED inputs (frac matrices + native curves)"
             " ...")
-        self.frac7, self.frac34, self.a, self.b = lib.load_inputs()
-        self.hours = self.frac7.index.union(self.frac34.index)
+        self.core_frac, self.sat_frac, self.a, self.b = lib.load_inputs()
+        self.hours = self.core_frac.index.union(self.sat_frac.index)
         log("engine", f"inputs ready in {time.time() - t0:.0f}s")
 
     def run(self, cfg: FedConfig, label: str, *,
@@ -345,18 +345,18 @@ class EngineSession:
             fixed_edges: list | None = None,
             scale_v7: float = 1.0, scale_v34: float = 1.0,
             run_bootstrap: bool = True, save_curve: bool = True) -> dict:
-        """One record-engine pass of a (possibly perturbed) federation config.
+        """One record-engine pass of a (possibly perturbed) blend config.
 
         Returns the standard FMA3 metric row; persists the 1m curves to
         research/outputs/redteam/<label>_curve.parquet for later autopsies.
         """
         t0 = time.time()
-        eff_seed_a = cfg.w_v7 if seed_a is None else float(seed_a)
-        eff_seed_b = (1.0 - cfg.w_v7) if seed_b is None else float(seed_b)
+        eff_seed_a = cfg.core_weight if seed_a is None else float(seed_a)
+        eff_seed_b = (1.0 - cfg.core_weight) if seed_b is None else float(seed_b)
         a_star, b_star, events = federation_bookkeeping(
             self.a, self.b, self.hours, cfg,
             seed_a=seed_a, seed_b=seed_b, fixed_edges=fixed_edges)
-        fed = blend_scaled(self.frac7, self.frac34, a_star, b_star,
+        fed = blend_scaled(self.core_frac, self.sat_frac, a_star, b_star,
                            scale_v7, scale_v34)
         res = self.RE.run_record(fed, label=label, verbose=False,
                                  run_bootstrap=run_bootstrap)

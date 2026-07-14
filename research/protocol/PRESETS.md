@@ -5,13 +5,13 @@ s ≤ 1.4 grid was computed).** Owner risk-appetite revision, dated and
 attributed: *"I can stomach 30% max DD; breach P(DD>30%) = 0.002 is too low —
 push CAGR and flex the breach"* (owner, 2026-07-10). Owner confirmed:
 negQ gate stays ≤ 1/24 on both presets. The BOOK is unchanged (static
-federation w=0.70, config `51a7541cc2aaa593`); only the risk dial forks.
+blend w=0.70, config `51a7541cc2aaa593`); only the risk dial forks.
 One ledger entry per preset (FMA3-004, FMA3-005).
 
 **Standing caveat (both presets):** the record engine understates real-tick
-drawdowns (measured on v7.0: COVID tail 35.6% MT5 vs ~7% record). Both
+drawdowns (measured on Core: COVID tail 35.6% MT5 vs ~7% record). Both
 shipped preset dials are **provisional pending v1.1's MT5 reconciliation**,
-which measures the federation's record→tick DD ratio k. Pre-commitment: the
+which measures the blend's record→tick DD ratio k. Pre-commitment: the
 final dial re-picks such that record-DD × k respects each account's true
 limit. Until then the presets are backtest-official, not live-final.
 
@@ -24,7 +24,7 @@ limit. Until then the presets are backtest-official, not live-final.
   negQ ≤ 1/24 · breach P(maxDD>30%) ≤ **0.20** (owner Pareto revision
   2026-07-10, from 0.15 — a risk-appetite point choice on the mapped
   breach-vs-CAGR frontier, strategy frozen; 0.20 is within house precedent,
-  v3.4 scale-11 ran 0.198). **Shipped: s=1.6** (FMA3-004c) — CAGR +170.2% /
+  Satellite scale-11 ran 0.198). **Shipped: s=1.6** (FMA3-004c) — CAGR +170.2% /
   DD 22.6% / breach 0.095 nominal, worst ±20%-drift probe breach 0.180 < 0.20
   & DD 27.6% < 30%. s=1.7 rejected (w84 drift breach 0.280).
 - **Grid:** extend the measured frontier with s ∈ {1.5, 1.6, 1.7, 1.8}
@@ -158,6 +158,6 @@ preset: mt5/ea/presets/FED_FTMO.set.
 
 ## Explicitly out of scope for this fork
 
-Any book change (weights, sleeves, w, federation mechanics). Any change to
+Any book change (weights, sleeves, w, blend mechanics). Any change to
 the negQ/negY gates. Off-grid scale picks. Re-running either preset's grid
 after seeing results ("the grid is the grid").

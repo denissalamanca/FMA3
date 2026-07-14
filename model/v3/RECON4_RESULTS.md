@@ -8,16 +8,16 @@ EA: `FableFederation_V3.ex5` — sha `d516350b…` (runs 1–3) → **sha `740da
 
 | Run | Preset | Dial | Book | v3 equity | Model | v3/model | Rejects | Fidelity (median `after/want`) |
 |---|---|---|---|---:|---:|---:|---:|---:|
-| 1 | `FED_V3_PARITY_S10` | s=1.0 | €10k→€391,873 | €391,873 | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
-| 2 | `FED_V3_IC` | s=1.6 | €10k→€2,544,423 | €2,544,423 | €3,872,872 | **0.66** | 51,346¹ | 1.000 |
-| 3 | `FED_V3_FTMO` | s=0.7 | €100k→€1,265,541 | €1,265,541 | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
+| 1 | `FABLE_PARITY_S10` | s=1.0 | €10k→€391,873 | €391,873 | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
+| 2 | `FABLE_IC` | s=1.6 | €10k→€2,544,423 | €2,544,423 | €3,872,872 | **0.66** | 51,346¹ | 1.000 |
+| 3 | `FABLE_FTMO` | s=0.7 | €100k→€1,265,541 | €1,265,541 | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 ¹ Pre-fix reject *spin* on volume-limited legs (v3 retried the un-holdable excess every bar). The volume-limit clamp removes the spin; the **equity is unchanged** because the cap is physical. Run 2 re-run (sha `740da0ff`) pending for a clean record.
 
 ## What is proven
 
 1. **v3 holds the model's exact target position.** `after/want` — algebraically the ratio of v3's held fraction to the model's target fraction — has **median 1.000, p10 = 1.000** in all three runs. Where v3 *can* place the order, it holds precisely `fed_frac·s`.
-2. **The v34 sleeve is alive.** All 33 symbols trade, including the 7 that were dead in v1/v2 (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) — the unconditional full-map eurq works end-to-end in MT5.
+2. **The Satellite sleeve is alive.** All 33 symbols trade, including the 7 that were dead in v1/v2 (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) — the unconditional full-map eurq works end-to-end in MT5.
 3. **The breaker works.** FTMO fired **28** times (model 26) on the previous-day-close anchor + worst-mark `eq_w`; the +2 is v3's worst-mark being marginally more sensitive (conservative). Margin never stressed (ML min 376%, median 1346%).
 
 ## Why the equity gap — three physical constraints the record ignores
@@ -52,11 +52,11 @@ The cap is a **capacity ceiling that scales with account size**, not a dial-shif
 
 **FTMO (€100k, breaker, volume never binds at this scale):** ret/DD peaks at **s=0.5** (4.78, DD 7.82%) vs shipped s=0.7 (4.05, DD 13.33%) — supports cutting the FTMO dial.
 
-**Deployment reframe (owner leverage: IC 1:30, FTMO 1:100):** at 1:30 the MARGIN ceiling binds first (~s0.7), keeping the IC book small enough that volume never engages — so **margin, not volume, sets the IC dial.** Volume is a large-account/high-leverage capacity concern only. Deployable dials being fixed by MT5 sweeps at the real leverages (FED_V3_IC_S06/07/08 @1:30; FED_V3_FTMO_S04/05 @1:100).
+**Deployment reframe (owner leverage: IC 1:30, FTMO 1:100):** at 1:30 the MARGIN ceiling binds first (~s0.7), keeping the IC book small enough that volume never engages — so **margin, not volume, sets the IC dial.** Volume is a large-account/high-leverage capacity concern only. Deployable dials being fixed by MT5 sweeps at the real leverages (FABLE_IC_S06/07/08 @1:30; FABLE_FTMO_S04/05 @1:100).
 
 ## Deployment-dial decision (at owner's real leverage: IC 1:30, FTMO 1:100)
 - **IC = s=1.6 (provisional, owner-accepted).** v3 @ 1:30 s=1.6 ran the full backtest at **min ML 121%** — liquidation-safe vs IC's **50% stop-out** (needs ~55% peak-book DD to breach vs 21% historical worst); ~11pp above the owner's ML≥110% self-limit. Same €2,552,961.62 as 1:500 (v3's margin cap is account-leverage-independent). The old "not deployable at 1:30" flag is DISPROVEN for v3. **Real-tick run in progress (~1h) to confirm intra-bar min ML holds >110%** before final commit.
-- **FTMO — recommend s≈0.5** (ret/DD 4.78, worst-DD 7.8% vs 0.7's 13.3%); pending 1:100 sweep (FED_V3_FTMO_S04/05). Margin non-issue at 1:100; the −10%/−5% rules govern.
+- **FTMO — recommend s≈0.5** (ret/DD 4.78, worst-DD 7.8% vs 0.7's 13.3%); pending 1:100 sweep (FABLE_FTMO_S04/05). Margin non-issue at 1:100; the −10%/−5% rules govern.
 
 ## Standing items
 - Run 2 clean re-run (sha `740da0ff`) → confirmed: 0 rejects, €2,552,961.62 (physical cap). ✓

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """FMA3 v1.0 OFFICIAL PIN — the single source of truth for shipped numbers.
 
-Rebuilds the locked federation matrix from strategy_fma3.FMA3_CONFIG
-(static federation, w=0.70, s=1.1 — the FMA3-RT probe-robust adjudication of
+Rebuilds the locked blend matrix from strategy_fma3.FMA3_CONFIG
+(static blend, w=0.70, s=1.1 — the FMA3-RT probe-robust adjudication of
 H-FED-3's ceiling-rule s=1.4), runs the engine of record end-to-end WITH the
 house bootstrap, verifies against the corresponding H-FED-3 grid point
 (key derived from the config scale), and emits:
@@ -42,16 +42,16 @@ def build_locked_matrix() -> pd.DataFrame:
     """The locked construction, verbatim from FMA3_CONFIG['construction']."""
     w = FMA3_CONFIG["w_v7"]
     s = FMA3_CONFIG["global_scale"]
-    frac7, frac34, a, b = load_inputs()
-    hours = frac7.index.union(frac34.index)
+    core_frac, sat_frac, a, b = load_inputs()
+    hours = core_frac.index.union(sat_frac.index)
     a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     j = w * a_h + (1 - w) * b_h
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    fed = (f7.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
-           + f34.reindex(columns=cols, fill_value=0.0)
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    fed = (f_core.reindex(columns=cols, fill_value=0.0).mul(w * a_h / j, axis=0)
+           + f_sat.reindex(columns=cols, fill_value=0.0)
            .mul((1 - w) * b_h / j, axis=0))
     return fed * s
 

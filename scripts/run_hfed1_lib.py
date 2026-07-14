@@ -33,16 +33,16 @@ def crisis_tail(eq_close: pd.Series, eq_worst: pd.Series) -> float:
 
 def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Native frac matrices + native equity curves normalized to 1.0 at t0."""
-    frac7 = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
-    frac34 = books.build_v34_frac_1h()
-    eq7 = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_equity_1m.parquet")["eqc"]
-    eq34 = pd.read_parquet(
+    core_frac = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_frac_1h.parquet")
+    sat_frac = books.build_sat_frac_1h()
+    core_eq = pd.read_parquet(RE.PATHS.OUTPUTS / "v7_book_equity_1m.parquet")["eqc"]
+    sat_eq = pd.read_parquet(
         RE.PATHS.BASELINES / "fma2" / "v34_s10_pin_curve.parquet")["equity"]
-    return frac7, frac34, eq7 / eq7.iloc[0], eq34 / eq34.iloc[0]
+    return core_frac, sat_frac, core_eq / core_eq.iloc[0], sat_eq / sat_eq.iloc[0]
 
 
 def ideal_metrics(ideal_daily: pd.Series) -> dict:
-    """Frictionless bookkeeping-curve metrics (federation friction reference)."""
+    """Frictionless bookkeeping-curve metrics (blend friction reference)."""
     r = ideal_daily.pct_change().dropna()
     cum = ideal_daily / ideal_daily.iloc[0]
     yrs = (ideal_daily.index[-1] - ideal_daily.index[0]).days / 365.25

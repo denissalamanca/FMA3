@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""FMA3-002: H-FED-2 — rebalanced federation (cross-book vol-harvesting).
+"""FMA3-002: H-FED-2 — rebalanced blend (cross-book vol-harvesting).
 
 Pre-registered in research/protocol/HYPOTHESES.md. Adds periodic re-split of
 TOTAL account equity back to (w, 1-w) between the two books, on top of the
-H-FED-1 static federation at the winning w (selection rule: all-bars pass,
+H-FED-1 static blend at the winning w (selection rule: all-bars pass,
 max Sharpe — amended into HYPOTHESES.md 2026-07-10 12:29 before any H-FED-1
 result was read; this script reads the winner from hfed1_results.json at
 runtime and refuses to run if no grid point passed).
@@ -16,17 +16,17 @@ Variants (each a separate ledger sub-entry):
 
 BOOKKEEPING EXACTNESS
 ---------------------
-Within a federation segment, each book's sub-equity evolves by its NATIVE
+Within a blend segment, each book's sub-equity evolves by its NATIVE
 curve's growth factor: A*(t) = A*(seg_start) * A(t)/A(seg_start). This is
 exact, not approximate, because both books' internal dynamics are
 scale-invariant in fraction space: the v7 band/harvest triggers fire on slot
 RATIOS (and k*seed thresholds that scale with seed), and the v3.4 book sizes
 positions as fractions of its sub-equity. Rebasing a book's capital at a
-federation edge rescales all its slots linearly and changes nothing internal.
+blend edge rescales all its slots linearly and changes nothing internal.
 (Min-lot quantization is not scale-invariant, but fills are realized by the
 record engine on the joint account — bookkeeping only sets targets.)
 The anti-coupling guard (PROTOCOL §5.7) holds: neither book's internal state
-ever sees the other's P&L; only the federation allocator does, causally
+ever sees the other's P&L; only the blend allocator does, causally
 (decisions on daily close, action next server midnight).
 
 BARS (pre-registered): same as H-FED-1, PLUS the rebalanced variant must beat
@@ -62,7 +62,7 @@ def federation_weights(a: pd.Series, b: pd.Series, w: float,
                        hours: pd.DatetimeIndex,
                        mode: str, b_up: float | None = None
                        ) -> tuple[pd.Series, pd.Series, list[dict]]:
-    """Piecewise sub-equity bookkeeping with federation re-splits.
+    """Piecewise sub-equity bookkeeping with blend re-splits.
 
     Returns hourly (A*, B*) bookkeeping sub-equity series on `hours` plus the
     re-split event list. `a`, `b` are the native 1m curves normalized to 1.0.
@@ -150,15 +150,15 @@ def federation_weights(a: pd.Series, b: pd.Series, w: float,
     return a_star, b_star, events
 
 
-def blend(frac7, frac34, a_star, b_star) -> pd.DataFrame:
+def blend(core_frac, sat_frac, a_star, b_star) -> pd.DataFrame:
     j = a_star + b_star
     wa, wb = a_star / j, b_star / j
     hours = a_star.index
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
-    cols = sorted(set(f7.columns) | set(f34.columns))
-    return (f7.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
-            + f34.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
+    cols = sorted(set(f_core.columns) | set(f_sat.columns))
+    return (f_core.reindex(columns=cols, fill_value=0.0).mul(wa, axis=0)
+            + f_sat.reindex(columns=cols, fill_value=0.0).mul(wb, axis=0))
 
 
 def main() -> int:
@@ -187,8 +187,8 @@ def main() -> int:
           f"CAGR {static['cagr']:+.4f} DDw {static['maxdd_worst']:.4f} "
           f"Sh {static['sharpe']:.3f}", flush=True)
 
-    frac7, frac34, a, b = load_inputs()
-    hours = frac7.index.union(frac34.index)
+    core_frac, sat_frac, a, b = load_inputs()
+    hours = core_frac.index.union(sat_frac.index)
 
     variants = [("f2a_quarterly", "quarterly", None)] + \
                [(f"f2b_band{int(bu*100)}", "band", bu) for bu in B_UP_GRID]
@@ -199,7 +199,7 @@ def main() -> int:
         print(f"[{lbl}] bookkeeping + engine pass "
               f"({time.time()-t0:.0f}s elapsed) ...", flush=True)
         a_star, b_star, events = federation_weights(a, b, w, hours, mode, bu)
-        fed = blend(frac7, frac34, a_star, b_star)
+        fed = blend(core_frac, sat_frac, a_star, b_star)
         res = RE.run_record(fed, label=lbl, verbose=False)
         tail = crisis_tail(res["curves"]["equity"], res["curves"]["worst"])
         d_cagr = (res["cagr"] - static["cagr"]) * 100

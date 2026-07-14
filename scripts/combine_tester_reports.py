@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline federation combination of the two MT5 sub-book tester runs.
+"""Offline blend combination of the two MT5 sub-book tester runs.
 
 The MT5 Strategy Tester runs ONE EA per pass. The FMA3 tester protocol is
 therefore two separate sub-book runs — the v7 EA (dial carrying w*s) and,
@@ -7,7 +7,7 @@ once its EA audit clears, the v3.4 stack — combined OFFLINE by deterministic
 arithmetic (mt5/README.md section c). This script consumes the two tester
 exports and produces:
 
-  * the federation equity curve (daily, CSV),
+  * the blend equity curve (daily, CSV),
   * per-book and joint metrics (CAGR, maxDD, Sharpe, COVID crisis tail),
   * the k ratios of DEMO_PREREGISTRATION.md section 5:
         k_dd   = tick worst-mark maxDD / record worst-mark maxDD
@@ -43,7 +43,7 @@ Usage:
       [--initial 10000] [--outdir research/outputs/mt5]
 
 v7-only mode (no --v34): reports v7 metrics + v7 k ratios and marks the
-federation columns "pending v3.4 EA audit" — the pre-registered interim
+blend columns "pending v3.4 EA audit" — the pre-registered interim
 asymmetry (DEMO_PREREGISTRATION.md section 5.1).
 """
 from __future__ import annotations
@@ -244,11 +244,11 @@ def main() -> None:
 
     results = {"preset": a.preset, "initial": a.initial, "books": {}, "k": {}}
 
-    eq7, st7 = load_curve(a.v7)
+    core_eq, st7 = load_curve(a.v7)
     # k ratios are computed on the record window only (same-window rule)
-    eq7_rw = eq7[(eq7.index >= RECORD_WINDOW[0]) & (eq7.index <= RECORD_WINDOW[1])]
-    m7_full = metrics(eq7, a.initial, "v7 sub-book (full run)", st7["equity_dd_max_pct"])
-    m7_rw = metrics(eq7_rw, a.initial, "v7 sub-book (record window 2020-2025)",
+    core_eq_rw = core_eq[(core_eq.index >= RECORD_WINDOW[0]) & (core_eq.index <= RECORD_WINDOW[1])]
+    m7_full = metrics(core_eq, a.initial, "v7 sub-book (full run)", st7["equity_dd_max_pct"])
+    m7_rw = metrics(core_eq_rw, a.initial, "v7 sub-book (record window 2020-2025)",
                     st7["equity_dd_max_pct"])
     results["books"]["v7_full"] = m7_full
     results["books"]["v7_record_window"] = m7_rw
@@ -256,19 +256,19 @@ def main() -> None:
 
     fed_daily = None
     if a.v34:
-        eq34, st34 = load_curve(a.v34)
+        sat_eq, st34 = load_curve(a.v34)
         init34 = st34.get("initial_deposit") or a.initial
         if abs(init34 - a.initial) > 1e-6:
-            eq34 = eq34 * (a.initial / init34)
+            sat_eq = sat_eq * (a.initial / init34)
             results["books"]["v34_rescale"] = f"x{a.initial / init34:.4f} (seed {init34} -> {a.initial})"
-        eq34_rw = eq34[(eq34.index >= RECORD_WINDOW[0]) & (eq34.index <= RECORD_WINDOW[1])]
-        m34_rw = metrics(eq34_rw, a.initial, "v3.4 sub-book (record window)",
+        sat_eq_rw = sat_eq[(sat_eq.index >= RECORD_WINDOW[0]) & (sat_eq.index <= RECORD_WINDOW[1])]
+        m34_rw = metrics(sat_eq_rw, a.initial, "v3.4 sub-book (record window)",
                          st34["equity_dd_max_pct"])
         results["books"]["v34_record_window"] = m34_rw
         results["k"]["v34"] = k_ratios(m34_rw, rec["v34"])
 
-        d7 = eq7.resample("1D").last().dropna()
-        d34 = eq34.resample("1D").last().dropna()
+        d7 = core_eq.resample("1D").last().dropna()
+        d34 = sat_eq.resample("1D").last().dropna()
         grid = d7.index.union(d34.index)
         fed_daily = (d7.reindex(grid).ffill().bfill()
                      + d34.reindex(grid).ffill().bfill() - a.initial)

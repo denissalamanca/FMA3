@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FMA3-003: H-FED-3 — scale re-pick on the winning federation structure.
+"""FMA3-003: H-FED-3 — scale re-pick on the winning blend structure.
 
 THE LAST LEVER (pre-registered in HYPOTHESES.md; scale is never tuned
 alongside other levers). Mechanical shipping rule, committed 2026-07-10
@@ -17,7 +17,7 @@ before any scaled number was computed:
 Winner selection: reads hfed2_results.json; per HYPOTHESES.md the rebalanced
 variant must have paid for its cadence (pays_for_cadence AND hfed1_bars_pass)
 — the best such variant by Sharpe wins; otherwise the static H-FED-1 winner
-stands. The federation matrix is rebuilt from the winner's declared
+stands. The blend matrix is rebuilt from the winner's declared
 construction (mode + params), never loaded from a tuned artifact.
 
 Run: python3 /Users/dsalamanca/vs_env/FableMultiAssets3/scripts/run_hfed3.py
@@ -70,24 +70,24 @@ def pick_winner() -> dict:
 
 
 def build_matrix(winner: dict) -> pd.DataFrame:
-    frac7, frac34, a, b = load_inputs()
-    hours = frac7.index.union(frac34.index)
+    core_frac, sat_frac, a, b = load_inputs()
+    hours = core_frac.index.union(sat_frac.index)
     w = winner["w_v7"]
     if winner["structure"] == "static":
         a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours).fillna(1.0)
         b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours).fillna(1.0)
         j = w * a_h + (1 - w) * b_h
-        f7 = frac7.reindex(hours).fillna(0.0)
-        f34 = frac34.reindex(hours).fillna(0.0)
-        cols = sorted(set(f7.columns) | set(f34.columns))
-        return (f7.reindex(columns=cols, fill_value=0.0)
+        f_core = core_frac.reindex(hours).fillna(0.0)
+        f_sat = sat_frac.reindex(hours).fillna(0.0)
+        cols = sorted(set(f_core.columns) | set(f_sat.columns))
+        return (f_core.reindex(columns=cols, fill_value=0.0)
                 .mul(w * a_h / j, axis=0)
-                + f34.reindex(columns=cols, fill_value=0.0)
+                + f_sat.reindex(columns=cols, fill_value=0.0)
                 .mul((1 - w) * b_h / j, axis=0))
     a_star, b_star, _ = federation_weights(
         a, b, w, hours, winner["structure"],
         winner["params"].get("b_up"))
-    return blend(frac7, frac34, a_star, b_star)
+    return blend(core_frac, sat_frac, a_star, b_star)
 
 
 def main() -> int:

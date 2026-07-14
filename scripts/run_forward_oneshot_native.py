@@ -22,9 +22,9 @@ fwd_tradable_symbols, fwd_bar_files, restrict_to_forward, blend_static):
     no native 2026 curve artifact, so B comes from ONE ext-engine run of the
     v3.4 forward matrix alone (seeded (1-w)*E0 = EUR 3,000), executed FIRST
     within the same gated one-shot session (documented two-step; the alone
-    run and the federation run together are the single consumption — no
+    run and the blend run together are the single consumption — no
     iteration on either).
-  * fed = [frac7*(w*A_h/J_h) + frac34*((1-w)*B_h/J_h)] * s with w = 0.70,
+  * fed = [core_frac*(w*A_h/J_h) + sat_frac*((1-w)*B_h/J_h)] * s with w = 0.70,
     s = 1.1, J = w*A + (1-w)*B, curves sampled causally at hour h
     (run_forward_oneshot.blend_static — the exact H-FED-1 / eval_fma3_pin
     bookkeeping), run through engine/record_engine_ext.py on 2026Q1..2026Q2
@@ -68,7 +68,7 @@ Modes
   oneshot : the single gated consumption of the 2026H1 holdout. Writes
       research/outputs/forward_oneshot.json (GATE 2 flips permanently),
       forward_oneshot_curve.parquet, forward_oneshot_v34sub_curve.parquet,
-      research/outputs/fwd/fed_frac_1h_fwd.parquet and
+      research/outputs/fwd/book_frac_1h_fwd.parquet and
       research/outputs/FORWARD_ONESHOT.md.
 
 CPU etiquette: waits for the verify_record_engine_ext/eval_fma3_pin lock
@@ -108,7 +108,7 @@ OUT_SUB_CURVE = RX.PATHS.OUTPUTS / "forward_oneshot_v34sub_curve.parquet"
 OUT_FED_FRAC = FWD_DIR / "fed_frac_1h_fwd.parquet"
 OUT_MD = RX.PATHS.OUTPUTS / "FORWARD_ONESHOT.md"
 
-W_V7: float = float(FMA3_CONFIG["w_v7"])            # 0.70
+CORE_WEIGHT: float = float(FMA3_CONFIG["w_v7"])            # 0.70
 SCALE: float = float(FMA3_CONFIG["global_scale"])   # 1.1
 INITIAL: float = 10_000.0                            # house standard, FORWARD_TEST.md
 
@@ -174,10 +174,10 @@ def load_v7_native_inputs(seed: pd.Timestamp, slice_from: pd.Timestamp
     """
     utc_floor = slice_from - pd.Timedelta(hours=12)   # server leads UTC by 2-3h
 
-    f7 = pd.read_parquet(FWD_DIR / "v7_book_frac_1h_fwd.parquet")
-    f7 = f7.loc[f7.index >= utc_floor]
-    f7s, dup_f = frame_to_server(f7)
-    f7s = f7s.loc[f7s.index >= slice_from]
+    f_core = pd.read_parquet(FWD_DIR / "v7_book_frac_1h_fwd.parquet")
+    f_core = f_core.loc[f_core.index >= utc_floor]
+    f_core_s, dup_f = frame_to_server(f_core)
+    f_core_s = f_core_s.loc[f_core_s.index >= slice_from]
 
     eq = pd.read_parquet(FWD_DIR / "v7_book_equity_1m_fwd.parquet")["eqc"]
     eq = eq.loc[eq.index >= utc_floor]
@@ -187,23 +187,23 @@ def load_v7_native_inputs(seed: pd.Timestamp, slice_from: pd.Timestamp
         raise ValueError(f"v7 native curve has no marks at/after {seed}")
     a = eqs / float(eqs.iloc[0])
     info = {
-        "frac_rows": int(len(f7s)), "frac_span":
-            [str(f7s.index[0]), str(f7s.index[-1])],
+        "frac_rows": int(len(f_core_s)), "frac_span":
+            [str(f_core_s.index[0]), str(f_core_s.index[-1])],
         "curve_first_mark": str(eqs.index[0]),
         "curve_last_mark": str(eqs.index[-1]),
         "curve_norm_base": float(eqs.iloc[0]),
         "fold_dups_dropped": {"frac": dup_f, "curve": dup_e},
         "source": "v7_book_{frac_1h,equity_1m}_fwd.parquet (TRUE UTC) -> server",
     }
-    return f7s, a, info
+    return f_core_s, a, info
 
 
 def load_v34_forward_matrix(slice_from: pd.Timestamp) -> pd.DataFrame:
     """v3.4 forward fraction matrix (already server time), sliced."""
-    f34 = pd.read_parquet(FWD_DIR / "v34_frac_1h_fwd.parquet")
-    if f34.index.tz is not None:
+    f_sat = pd.read_parquet(FWD_DIR / "v34_frac_1h_fwd.parquet")
+    if f_sat.index.tz is not None:
         raise ValueError("v34 forward matrix must be tz-naive server time")
-    return f34.loc[f34.index >= slice_from]
+    return f_sat.loc[f_sat.index >= slice_from]
 
 
 # ---------------------------------------------------------------------------
@@ -538,35 +538,35 @@ def run_pipeline(*, seed: pd.Timestamp, slice_from: pd.Timestamp,
                  window_end: pd.Timestamp, quarters: tuple[str, str],
                  bar_files: Mapping[str, object] | None,
                  label: str) -> dict:
-    """Two-step native-curve federation run. Returns the full result bundle."""
+    """Two-step native-curve blend run. Returns the full result bundle."""
     t0 = time.time()
     tradable = OS.fwd_tradable_symbols("drop")   # the 14 real Duka symbols
 
     # -- inputs -------------------------------------------------------------
-    f7s, a_curve, v7_info = load_v7_native_inputs(seed, slice_from)
-    f34s = load_v34_forward_matrix(slice_from)
-    frac7, drop7 = OS.restrict_to_forward(f7s, tradable)
-    frac34, drop34 = OS.restrict_to_forward(f34s, tradable)
+    f_core_s, a_curve, v7_info = load_v7_native_inputs(seed, slice_from)
+    f_sat_s = load_v34_forward_matrix(slice_from)
+    core_frac, drop7 = OS.restrict_to_forward(f_core_s, tradable)
+    sat_frac, drop34 = OS.restrict_to_forward(f_sat_s, tradable)
 
     # -- step 1: v3.4 native forward curve (alone run, (1-w)*E0 seed) --------
-    sub_initial = (1.0 - W_V7) * INITIAL
+    sub_initial = (1.0 - CORE_WEIGHT) * INITIAL
     res34 = run_record_with_events(
-        frac34, quarters=quarters, bar_files=bar_files,
+        sat_frac, quarters=quarters, bar_files=bar_files,
         initial=sub_initial, label=f"{label}_v34_alone")
     b_curve = res34["curves"]["equity"] / float(
         res34["curves"]["equity"].iloc[0])
 
-    # -- step 2: federation matrix + record run ------------------------------
-    fed = OS.blend_static(frac7, frac34, W_V7, a_curve, b_curve) * SCALE
+    # -- step 2: blend matrix + record run ------------------------------
+    fed = OS.blend_static(core_frac, sat_frac, CORE_WEIGHT, a_curve, b_curve) * SCALE
     # internal consistency: at hours before both curves' first marks the
     # blend weights must be exactly (w, 1-w)
     h0 = fed.index[0]
     if h0 < min(a_curve.index[0], b_curve.index[0]):
-        c7 = frac7.reindex([h0]).reindex(columns=fed.columns,
+        c7 = core_frac.reindex([h0]).reindex(columns=fed.columns,
                                          fill_value=0.0).fillna(0.0)
-        c34 = frac34.reindex([h0]).reindex(columns=fed.columns,
+        c34 = sat_frac.reindex([h0]).reindex(columns=fed.columns,
                                            fill_value=0.0).fillna(0.0)
-        chk = (c7 * W_V7 + c34 * (1 - W_V7)) * SCALE
+        chk = (c7 * CORE_WEIGHT + c34 * (1 - CORE_WEIGHT)) * SCALE
         if not np.allclose(chk.to_numpy(), fed.loc[[h0]].to_numpy(),
                            atol=1e-12):
             raise AssertionError("seed-row blend weights are not (w, 1-w)")
@@ -600,7 +600,7 @@ def run_pipeline(*, seed: pd.Timestamp, slice_from: pd.Timestamp,
         "config_hash": config_hash(),
         "mechanism": {
             "construction": FMA3_CONFIG["construction"],
-            "w_v7": W_V7, "scale": SCALE, "initial": INITIAL,
+            "w_v7": CORE_WEIGHT, "scale": SCALE, "initial": INITIAL,
             "A": "v7 native forward curve (v7_book_equity_1m_fwd.parquet "
                  "eqc, UTC->server), renormalized to 1.0 at first mark >= "
                  f"{seed} server",
@@ -634,8 +634,8 @@ def run_pipeline(*, seed: pd.Timestamp, slice_from: pd.Timestamp,
             },
         },
         "inputs": {"v7": v7_info,
-                   "v34": {"rows": int(len(f34s)),
-                           "span": [str(f34s.index[0]), str(f34s.index[-1])]},
+                   "v34": {"rows": int(len(f_sat_s)),
+                           "span": [str(f_sat_s.index[0]), str(f_sat_s.index[-1])]},
                    "v7_dropped": drop7, "v34_dropped": drop34,
                    "tradable": tradable,
                    "bar_files": ({k: str(v) for k, v in bar_files.items()}

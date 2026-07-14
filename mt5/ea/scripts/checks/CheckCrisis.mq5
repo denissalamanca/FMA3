@@ -1,13 +1,13 @@
 //+------------------------------------------------------------------+
-//| CheckCrisis.mq5 — compile/smoke gate for FMA3v34/Crisis.mqh      |
-//| Instantiates CV34CrisisStepper, feeds 80 synthetic daily bars    |
+//| CheckCrisis.mq5 — compile/smoke gate for Sat/Crisis.mqh      |
+//| Instantiates CSatCrisisStepper, feeds 80 synthetic daily bars    |
 //| (leading NaNs, one interior NaN, two stale-holiday rows), prints |
 //| weights + diag, round-trips GetState/SetState and verifies bit-  |
-//| identical continuation, and smokes V34CrisisExpandToHourly.      |
+//| identical continuation, and smokes SatCrisisExpandToHourly.      |
 //| NO trading functions.                                            |
 //+------------------------------------------------------------------+
 #property script_show_inputs false
-#include <FMA3v34/Crisis.mqh>
+#include <Sat/Crisis.mqh>
 
 // deterministic LCG in [0,1): x = (1103515245 x + 12345) mod 2^31
 long   g_seed = 42;
@@ -30,24 +30,24 @@ bool SameD(const double a, const double b)
 //+------------------------------------------------------------------+
 void OnStart()
   {
-   double nan = V34Nan();
+   double nan = SatNan();
    const int NBARS = 80;
 
    // ---- synthetic daily close grid: 10 symbols x 80 bars -----------
-   // start levels per V34CrisisInputSym order
-   double base[V34CRISIS_NIN] =
+   // start levels per SatCrisisInputSym order
+   double base[SatCRISIS_NIN] =
      {15000.0, 28000.0, 7500.0, 34000.0, 4500.0, 15500.0,   // indices
       1900.0,                                               // XAUUSD
       95.0, 88.0, 108.0};                                   // JPY crosses
-   double closes[80][V34CRISIS_NIN];
-   double lvl[V34CRISIS_NIN];
-   for(int i = 0; i < V34CRISIS_NIN; i++)
+   double closes[80][SatCRISIS_NIN];
+   double lvl[SatCRISIS_NIN];
+   for(int i = 0; i < SatCRISIS_NIN; i++)
       lvl[i] = base[i];
 
    for(int t = 0; t < NBARS; t++)
      {
       bool holiday = (t == 12 || t == 40);      // stale ffilled closes
-      for(int i = 0; i < V34CRISIS_NIN; i++)
+      for(int i = 0; i < SatCRISIS_NIN; i++)
         {
          if(!holiday)
            {
@@ -71,12 +71,12 @@ void OnStart()
    datetime t0 = D'2024.01.01 00:00';
 
    // ---- main run: print selected bars -------------------------------
-   CV34CrisisStepper st;
-   SV34CrisisResult  res;
-   double            row[V34CRISIS_NIN];
+   CSatCrisisStepper st;
+   SSatCrisisResult  res;
+   double            row[SatCRISIS_NIN];
    for(int t = 0; t < NBARS; t++)
      {
-      for(int i = 0; i < V34CRISIS_NIN; i++)
+      for(int i = 0; i < SatCRISIS_NIN; i++)
          row[i] = closes[t][i];
       datetime ts = (datetime)((long)t0 + (long)t * 86400);
       if(!st.Step(ts, row, res))
@@ -112,19 +112,19 @@ void OnStart()
 
    // ---- warm-start round trip: B(40 bars) -> state -> C, then both
    //      step bars 40..79 and every w must be bit-identical ----------
-   CV34CrisisStepper sb;
-   SV34CrisisResult  rb, rc;
+   CSatCrisisStepper sb;
+   SSatCrisisResult  rb, rc;
    for(int t = 0; t < 40; t++)
      {
-      for(int i = 0; i < V34CRISIS_NIN; i++)
+      for(int i = 0; i < SatCRISIS_NIN; i++)
          row[i] = closes[t][i];
       sb.Step((datetime)((long)t0 + (long)t * 86400), row, rb);
      }
    double state[];
    int n = sb.GetState(state);
-   PrintFormat("state size: %d (expect %d)", n, V34CRISIS_STATE_SIZE);
+   PrintFormat("state size: %d (expect %d)", n, SatCRISIS_STATE_SIZE);
 
-   CV34CrisisStepper sc;
+   CSatCrisisStepper sc;
    if(!sc.SetState(state))
      {
       Print("CheckCrisis: FAIL SetState rejected state");
@@ -133,12 +133,12 @@ void OnStart()
    bool ok = true;
    for(int t = 40; t < NBARS; t++)
      {
-      for(int i = 0; i < V34CRISIS_NIN; i++)
+      for(int i = 0; i < SatCRISIS_NIN; i++)
          row[i] = closes[t][i];
       datetime ts = (datetime)((long)t0 + (long)t * 86400);
       sb.Step(ts, row, rb);
       sc.Step(ts, row, rc);
-      for(int j = 0; j < V34CRISIS_NOUT; j++)
+      for(int j = 0; j < SatCRISIS_NOUT; j++)
         {
          if(!SameD(rb.w[j], rc.w[j]) || !SameD(rb.s_eq, rc.s_eq)
             || !SameD(rb.vol[j], rc.vol[j]))
@@ -163,7 +163,7 @@ void OnStart()
    for(int i = 0; i < 9; i++)
       hrs[i] = 5 + 5 * i;
    double hw[];
-   V34CrisisExpandToHourly(deff, dw, hrs, hw);
+   SatCrisisExpandToHourly(deff, dw, hrs, hw);
    string s = "expand_to_hourly: ";
    for(int i = 0; i < 9; i++)
       s += StringFormat("%g ", hw[i]);

@@ -4,7 +4,7 @@ Prepared 2026-07-11 (autonomous, pending owner RUN 2). Fill the **MEASURED** cel
 after each F7. This closes Task #13 (final IC dial) + Gate 6.
 
 ## Identity
-- **RECON_MODEL_HASH:** `51a7541cc2aaa593` (frozen federation: v7 band w_v7=0.70 + v3.4 replay, cross-margined)
+- **RECON_MODEL_HASH:** `51a7541cc2aaa593` (frozen blend: Core band w_v7=0.70 + Satellite replay, cross-margined)
 - **EA hash:** `f71bd67d` (RUN 1b binary) → **`1a36fcbf`** (governor build, 127,770 B, 2026-07-11)
 - **Governor parity gate: PASSED** — `_59.xlsx` (`FED_IC_G3B`, `InpMinMarginLevel=0`, 1m-OHLC) reproduced RUN 1b **€51,479.93 to the cent** over 17,945 deals → governor provably inert at default; frozen book bit-identical.
 - **Friction k (deploy dial multiplier):** **0.96** (~1). Proven: imposing the EA's real COVID
@@ -70,4 +70,4 @@ margin readout known to be a lower bound). Presets ready:
 ## What RUN 2 resolves that the pre-scan could not
 1. **True unconstrained retail-1:30 load** (the record engine's margin_cap=0.9 hides it) — the Gate-6 verdict.
 2. **Real Mar-2020 tick spread/gap/stop-out** (the pre-scan priced COVID on 1m-OHLC worst-mark; the −40%→−18.6% scaled DD leans on a thin post-midnight EURGBP ask_h extreme that real ticks confirm or soften).
-Everything else (warm-era pricing k=0.96, warm DD, federation config) is already proven faithful.
+Everything else (warm-era pricing k=0.96, warm DD, blend config) is already proven faithful.

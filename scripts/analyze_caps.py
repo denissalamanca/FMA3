@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """H-CAPS-1 measurement: combined-book structural exposure analysis (no engine).
 
-Measures, on a federation matrix (CLI: hfed1 winner by default, or a results
+Measures, on a blend matrix (CLI: hfed1 winner by default, or a results
 key), the joint exposures that v3.4's two structural hard limits governed
 single-book:
 
@@ -44,28 +44,28 @@ V34_CROSS_CAP = 0.5
 
 
 def main() -> int:
-    frac7, frac34, a, b = load_inputs()
+    core_frac, sat_frac, a, b = load_inputs()
     h1 = json.loads((RE.PATHS.OUTPUTS / "hfed1_results.json").read_text())
     key = sys.argv[1] if len(sys.argv) > 1 else max(
         (k for k, v in h1["grid"].items() if v["bars_pass"]),
         key=lambda k: h1["grid"][k]["sharpe"])
     w = h1["grid"][key]["w_v7"]
 
-    hours = frac7.index.union(frac34.index)
+    hours = core_frac.index.union(sat_frac.index)
     a_h = a.reindex(a.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     b_h = b.reindex(b.index.union(hours)).ffill().reindex(hours).fillna(1.0)
     j = w * a_h + (1 - w) * b_h
     sh7, sh34 = w * a_h / j, (1 - w) * b_h / j
 
-    f7 = frac7.reindex(hours).fillna(0.0)
-    f34 = frac34.reindex(hours).fillna(0.0)
+    f_core = core_frac.reindex(hours).fillna(0.0)
+    f_sat = sat_frac.reindex(hours).fillna(0.0)
 
     night = (hours.hour >= 21) | (hours.hour < 6)
     out: dict = {"config": key, "w_v7": w, "n_hours": int(len(hours))}
 
     # 1. overnight gold
-    g7 = f7.get("XAUUSD", pd.Series(0.0, index=hours)) * sh7
-    g34 = f34.get("XAUUSD", pd.Series(0.0, index=hours)) * sh34
+    g7 = f_core.get("XAUUSD", pd.Series(0.0, index=hours)) * sh7
+    g34 = f_sat.get("XAUUSD", pd.Series(0.0, index=hours)) * sh34
     joint = (g7 + g34)[night]
     entitle = (g7.abs() + (V34_GOLD_CAP * sh34).clip(
         upper=V34_GOLD_CAP))[night]  # v7 intent + v34 cap contribution
@@ -85,9 +85,9 @@ def main() -> int:
     # 2. managed crosses
     mc = {}
     for c in MANAGED:
-        jc = (f7.get(c, pd.Series(0.0, index=hours)) * sh7
-              + f34.get(c, pd.Series(0.0, index=hours)) * sh34)
-        v7_trades_it = bool(c in f7.columns and f7[c].abs().max() > 1e-9)
+        jc = (f_core.get(c, pd.Series(0.0, index=hours)) * sh7
+              + f_sat.get(c, pd.Series(0.0, index=hours)) * sh34)
+        v7_trades_it = bool(c in f_core.columns and f_core[c].abs().max() > 1e-9)
         mc[c] = {"joint_abs_max": float(jc.abs().max()),
                  "entitlement_max": float((V34_CROSS_CAP * sh34).max()),
                  "v7_trades_it": v7_trades_it,
@@ -96,8 +96,8 @@ def main() -> int:
     out["managed_crosses"] = mc
 
     # 3. USTEC
-    u = (f7.get("USTEC", pd.Series(0.0, index=hours)) * sh7
-         + f34.get("USTEC", pd.Series(0.0, index=hours)) * sh34)
+    u = (f_core.get("USTEC", pd.Series(0.0, index=hours)) * sh7
+         + f_sat.get("USTEC", pd.Series(0.0, index=hours)) * sh34)
     out["ustec"] = {"joint_abs_p99": float(u.abs().quantile(0.99)),
                     "joint_abs_max": float(u.abs().max())}
 

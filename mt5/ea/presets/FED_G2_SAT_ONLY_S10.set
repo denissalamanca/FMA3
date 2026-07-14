@@ -1,0 +1,53 @@
+; FED_G2_SAT_ONLY_S10 — gate G2b: v3.4-only replay at the NATIVE scale-10 book,
+; unscaled (InpV34Mult=1.0), vs the 88.66% record pin (v34_s10_pin_1m.json).
+; Window 2020-01-02 -> 2025-12-31. PASS: tester CAGR >= 0.85 x 88.66%,
+; volume_rejects=0; equity-DD reported (feeds the v3.4 k — the COVID tail is the
+; measurement, not a gate). Requires Common\Files\FMA3_v34_replay.csv
+; (scripts/export_v34_replay.py --install; header hash 51a7541cc2aaa593).
+; Market Watch must hold the 31 replay symbols (RUNSHEET.md list).
+; --- v7 core block (v7 DISABLED — weights zeroed; dials inert) ---
+InpRisk=8.96
+InpInitial=10000.0
+InpRebalBand=0.25
+InpMarginCap=0.9
+InpMagicBase=360000
+InpLog=true
+InpEnableFXTUJ=false
+InpEnableAU=false
+InpEnableEU=false
+InpEnableS6=true
+InpEnableBTC=true
+InpEqualWeight=true
+InpMagCap=6.0
+InpMagVt=0.15
+InpBtcVt=0.40
+InpBtcCap=1.2
+InpBtcHurdle=0.40
+InpBtcLb=63
+InpBtcRegime=200
+InpHarvestK=2.5
+InpBandUp=0.25
+InpBandDownDiv=1.75
+InpBandMinGapDays=5
+InpXAU=XAUUSD
+InpUS500=USTEC
+InpUSDJPY=USDJPY
+InpETH=ETHUSD
+InpEURGBP=EURGBP
+InpAUD=AUDUSD
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpNZD=NZDUSD
+InpBTC=BTCUSD
+; --- F3 federation block ---
+InpEnableV7=false
+InpV34Mode=1
+InpV34Mult=1.0
+InpV34ReplayFile=FMA3_v34_replay.csv
+InpV34LiveFile=fma3\targets.json
+InpV34StaleMin=150
+InpMagicBaseV34=8400000
+InpDailyStopX=0.0
+InpWv7=0.70
+InpScale=1.60
+InpV34SymbolMap=USA500=US500;DAX=DE40
