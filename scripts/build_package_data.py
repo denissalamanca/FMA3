@@ -8,7 +8,7 @@ forward_oneshot.json, docs/REGISTRY.md decisions) plus pure matrix math on
 the locked blend matrix (build_locked_matrix imported from
 scripts/eval_fma3_pin.py — NO engine run anywhere in this script).
 
-Blocks (consumed by docs/v1.0/* writers and the dashboard):
+Blocks (consumed by archive/docs-v1.0/* writers and the dashboard):
   1. weekly equity series (pin curve, W-last close-mark) + both parents'
      native curves normalized to EUR 10k (overlay context; v7 = band engine)
   2. daily worst-mark drawdown series (dd_t = 1 - worst_t/cummax(close_t),

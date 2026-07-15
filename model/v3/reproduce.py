@@ -2,7 +2,7 @@
 """STABLE MODEL OF RECORD v3 — golden reproduction (IC + FTMO).
 
 This is the SINGLE source of truth for the blended model behind
-docs/v1.0/DASHBOARD_IC.html and DASHBOARD_FTMO.html. It is self-contained: it
+archive/docs-v1.0/DASHBOARD_IC.html and DASHBOARD_FTMO.html. It is self-contained: it
 inlines the blend (so it does NOT depend on the scattered
 scripts/run_hrisk1.py, run_hfed3.py, run_fma3_008.py, ownjoint_* artifacts) and
 depends only on the pinned engine + the four FROZEN input artifacts.

@@ -14,7 +14,7 @@ engine constants), [`PINNED_INPUTS.md`](../../model/v3/PINNED_INPUTS.md) (frozen
 [`EA_V3_DESIGN.md`](../../model/v3/EA_V3_DESIGN.md) (the executor design),
 [`RECON4_RESULTS.md`](../../model/v3/RECON4_RESULTS.md) (the execution reconciliation). The
 strategy-selection decision trail (why two books, why `w = 0.70`, why static, the grids) is
-unchanged from v1.0 and lives in **[../v1.0/STRATEGY.md](../v1.0/STRATEGY.md)** — cross-linked here,
+unchanged from v1.0 and lives in **[../../archive/docs-v1.0/STRATEGY.md](../../archive/docs-v1.0/STRATEGY.md)** — cross-linked here,
 not re-litigated. The MT5 executor is `mt5/ea/FableBook.mq5`
 (`FableFederation_V3.ex5`, sha `740da0ff…`); the stream exporter is
 [`scripts/export_book_frac_v3.py`](../../scripts/export_book_frac_v3.py); the reconciliation protocol
@@ -63,7 +63,7 @@ equity is less than the record (§8).
 ## 2. Design philosophy — a blend of two frozen books
 
 The strategy design is **inherited from v1.0 unchanged** and is summarized here; the full grids,
-red-team battery, and selection rules are in **[../v1.0/STRATEGY.md](../v1.0/STRATEGY.md)**.
+red-team battery, and selection rules are in **[../../archive/docs-v1.0/STRATEGY.md](../../archive/docs-v1.0/STRATEGY.md)**.
 
 **FMA3 = ONE cross-margined account running BOTH frozen parent books side by side as virtual
 sub-accounts** — the NSF5 **Core band book** at capital share `w = 0.70`, and the FMA2 **Satellite
@@ -248,7 +248,7 @@ pinned hash re-opens the model.
 ## 7. What was tried and declined
 
 The strategy-level ledger (rebalance cadences, aggressive-frontier scales, off-grid `w`, joint caps)
-is v1.0 material — see **[../v1.0/STRATEGY.md §10](../v1.0/STRATEGY.md)**. The **execution-level**
+is v1.0 material — see **[../../archive/docs-v1.0/STRATEGY.md §10](../../archive/docs-v1.0/STRATEGY.md)**. The **execution-level**
 declines new to v3:
 
 | Tried | Result | Why declined |

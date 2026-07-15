@@ -7,7 +7,7 @@ at the IC preset dial, plus the offline blend-combination step. Per the EA split
 runtime logs are named `portfolio_v7_*`), compiled untouched.
 
 **Why two runs + arithmetic:** the MT5 Strategy Tester runs ONE EA per pass. The Fable book
-is operationally two parent stacks (docs/v1.0/DEMO.md), so the tester protocol is **two separate
+is operationally two parent stacks (archive/docs-v1.0/DEMO.md), so the tester protocol is **two separate
 sub-book runs** (Core now; Satellite pending its EA audit — §d) combined **offline** by
 [`scripts/combine_tester_reports.py`](../scripts/combine_tester_reports.py) (deterministic
 arithmetic; the construction is already Python-validated — §c).
@@ -33,7 +33,7 @@ Files here:
 
 ## The dial arithmetic (and the honest DEMO.md reconciliation)
 
-Formula (docs/v1.0/DEMO.md §"The two risk dials", generic-in-s form in
+Formula (archive/docs-v1.0/DEMO.md §"The two risk dials", generic-in-s form in
 research/protocol/DEMO_PREREGISTRATION.md §2): **`InpRisk = 8 × 0.70 × s = 5.6·s`**
 (Core native R8 anchor × capital share w=0.70 × global scale s).
 
@@ -175,7 +175,7 @@ deploy-time addendum:
 ## (c) Offline blend combination
 
 **Arithmetic** (the deployed two-EA model — each stack compounds its OWN internal seeds on the
-shared account, docs/v1.0/DEMO.md "What does NOT exist yet" item 2, so EUR P&L is additive):
+shared account, archive/docs-v1.0/DEMO.md "What does NOT exist yet" item 2, so EUR P&L is additive):
 
 ```
 E_fed(t) = E_v7(t) + E_v34(t) − 10,000        (daily grid, both runs seeded €10k,
@@ -262,7 +262,7 @@ fractions by 0.70·s without re-clipping; the EA at `InpRisk = 5.6·s` re-applie
 ---
 
 *Sources: NSF5 `mt5/ea/FableMultiAsset1_V7.mq5` + `mt5/presets/FableMultiAsset1_V7_CORE7BAND_R8_IC.set`
-+ `docs/v7/DEMO.md`/`PERFORMANCE.md`; FMA3 `docs/v1.0/DEMO.md` (dial arithmetic),
++ `docs/v7/DEMO.md`/`PERFORMANCE.md`; FMA3 `archive/docs-v1.0/DEMO.md` (dial arithmetic),
 `research/protocol/PRESETS.md` (FMA3-004c/005c), `research/protocol/DEMO_PREREGISTRATION.md`
 (§2 dial table, §3 B1/B3, §5 k protocol), `research/outputs/v7_book_equity_1m.parquet` (the
 scaled-prediction source), `hrisk1_results.json` / `hrisk2_results.json` (the Fable book record

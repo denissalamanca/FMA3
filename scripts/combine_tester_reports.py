@@ -14,7 +14,7 @@ exports and produces:
         k_tail = tick COVID tail       / record COVID tail
     computed on the record window (2020-01-02 .. 2025-12-31), same dial.
 
-Combination arithmetic (the deployed two-EA model, docs/v1.0/DEMO.md
+Combination arithmetic (the deployed two-EA model, archive/docs-v1.0/DEMO.md
 "What does NOT exist yet" item 2 — each stack compounds its OWN internal
 seeds on the shared account, so EUR P&L is additive):
 

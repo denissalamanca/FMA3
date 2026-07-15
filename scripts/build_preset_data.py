@@ -9,7 +9,7 @@ plus the s<=1.4 frontier from hfed3_results.json for the IC scale-frontier
 panel.  NO engine run anywhere (matrix/curve reads only).
 
 The two packs feed the two preset dashboards (DASHBOARD_IC.html /
-DASHBOARD_FTMO.html), which mirror docs/v1.0/DASHBOARD.html look-and-feel.
+DASHBOARD_FTMO.html), which mirror archive/docs-v1.0/DASHBOARD.html look-and-feel.
 
 Run (after both preset grids ship):
   python3 scripts/build_preset_data.py

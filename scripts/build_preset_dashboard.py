@@ -3,11 +3,11 @@
 
 Turns a preset data pack (research/outputs/preset_{ic,ftmo}_data.json, produced
 by scripts/build_preset_data.py) into a self-contained dashboard HTML that
-duplicates docs/v1.0/DASHBOARD.html's exact look-and-feel.  Two dashboards are
-produced on every update: docs/v1.0/DASHBOARD_IC.html and DASHBOARD_FTMO.html.
+duplicates archive/docs-v1.0/DASHBOARD.html's exact look-and-feel.  Two dashboards are
+produced on every update: archive/docs-v1.0/DASHBOARD_IC.html and DASHBOARD_FTMO.html.
 
 The v1.0 CSS is embedded VERBATIM (byte-for-byte copy of the <style> block in
-docs/v1.0/DASHBOARD.html — see V1_STYLE below).  Charts are built as static
+archive/docs-v1.0/DASHBOARD.html — see V1_STYLE below).  Charts are built as static
 inline SVG in Python, mirroring the log-scale equity + worst-mark drawdown
 approach of the v1.0 client-side charting code.  No external resources.
 
@@ -38,7 +38,7 @@ OUT = _FMA3 / "research" / "outputs"
 DOCS = _FMA3 / "docs" / "v1.0"
 
 # ---------------------------------------------------------------------------
-# v1.0 CSS — copied VERBATIM from docs/v1.0/DASHBOARD.html.  Do not edit; this
+# v1.0 CSS — copied VERBATIM from archive/docs-v1.0/DASHBOARD.html.  Do not edit; this
 # is the visual contract.  scripts/build_preset_dashboard.py --byte-check (and
 # the smoke test) assert this equals the file's <style> block byte-for-byte.
 # ---------------------------------------------------------------------------
@@ -269,7 +269,7 @@ def _gate_tile(g) -> str:
 
 
 # ---------------------------------------------------------------------------
-# SVG charts — static, built in Python, mirroring docs/v1.0/DASHBOARD.html
+# SVG charts — static, built in Python, mirroring archive/docs-v1.0/DASHBOARD.html
 # ---------------------------------------------------------------------------
 def _svg_equity(weekly, initial: float) -> str:
     W, H, pl, pr, pt, pb = 560, 250, 44, 40, 10, 22
@@ -583,7 +583,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Build the two preset dashboards.")
     ap.add_argument("--fixture", help="dir holding preset_{ic,ftmo}_data.json "
                     "(smoke test; output defaults to the same dir)")
-    ap.add_argument("--out", help="output dir (default: docs/v1.0, or --fixture dir)")
+    ap.add_argument("--out", help="output dir (default: archive/docs-v1.0, or --fixture dir)")
     a = ap.parse_args(argv)
 
     src_dir = Path(a.fixture) if a.fixture else OUT

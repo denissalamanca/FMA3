@@ -11,7 +11,7 @@ HEDGING, 1:500). Every claim is cited to a file. Purpose: answer *"does the v3 E
 the frozen `static_fed(0.70)` model on MT5, what did the adversarial review change, and what stands
 between here and (a) the real-tick run, (b) live deploy."*
 
-> **SUPERSEDES `docs/v1.0/FMA2_EA_AUDIT.md` for the shipping EA.** That audit covered the FMA2 Satellite
+> **SUPERSEDES `archive/docs-v1.0/FMA2_EA_AUDIT.md` for the shipping EA.** That audit covered the FMA2 Satellite
 > *sub-book* run through the Python-brain bridge (a tester-replay of one sleeve). v3 is a different,
 > single-binary architecture: it discards the entire v1/v2 signal+sizing stack and replays ONE
 > unified 33-symbol netted `fed_frac` stream. The v1.0 audit remains valid as the record of the Satellite
@@ -292,5 +292,5 @@ exercises it, so its absence is untested against a real tail, not proven safe.
 *Sources: `mt5/ea/FableBook.mq5`, `mt5/ea/Include/FMA3v3/{FedConvert,FedReplay,FedExec,Guardian}.mqh`,
 `model/v3/{README,MODEL_SPEC,PINNED_INPUTS,EA_V3_DESIGN,RECON4_RESULTS}.md`,
 `scripts/{export_fed_frac_v3,sweep_s_volcap}.py`, `research/protocol/RECONCILIATION.md`,
-`docs/v1.0/FMA2_EA_AUDIT.md` (superseded for the shipping EA). All numbers are canonical to the v3
+`archive/docs-v1.0/FMA2_EA_AUDIT.md` (superseded for the shipping EA). All numbers are canonical to the v3
 model of record; none recomputed here.*

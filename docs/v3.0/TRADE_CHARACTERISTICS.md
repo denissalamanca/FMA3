@@ -179,7 +179,7 @@ the full model. At the deployable FTMO scale volume never binds.
 - **Active share is carried from v1.0's locked matrix (measured at s=1.1) and is scale-invariant** — the
   dial changes fraction *magnitudes*, not *which hours* a symbol is on, so the active-share column holds at
   the s=1.6 / s=0.7 dials. The mean |frac| magnitudes are NOT reproduced here because they scale with the
-  dial; see [v1.0 TRADE_CHARACTERISTICS](../v1.0/TRADE_CHARACTERISTICS.md) for the s=1.1 magnitudes.
+  dial; see [v1.0 TRADE_CHARACTERISTICS](../../archive/docs-v1.0/TRADE_CHARACTERISTICS.md) for the s=1.1 magnitudes.
 - **No per-symbol trade-count table is pinned from RECON-4.** Run 1 confirmed all 33 symbols trade and the
   7 revived ones each trade > 0 deals, with position fidelity median 1.000 — it did **not** pin a per-symbol
   ledger-fill count. Do not quote a per-symbol number; the canonical facts are "33/33 trade" and ">0 deals

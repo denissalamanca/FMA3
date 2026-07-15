@@ -9,8 +9,8 @@ One blended book, config **`51a7541cc2aaa593`**, `w_v7 = 0.70` (the Core weight)
 
 | Preset | Seed | Dial | Final equity | CAGR | MaxDD (worst) | Dashboard |
 |---|---:|---|---:|---:|---:|---|
-| **IC** (H-RISK-1) | €10,000 | s=1.6 compounding | **€3,872,872** | +170.2% | 22.58% | `docs/v1.0/DASHBOARD_IC.html` |
-| **FTMO** (H-RISK-2b) | €100,000 | s=0.7 + breaker x=3.0% | **€1,332,404** | +54.02% | 13.33% | `docs/v1.0/DASHBOARD_FTMO.html` |
+| **IC** (H-RISK-1) | €10,000 | s=1.6 compounding | **€3,872,872** | +170.2% | 22.58% | `archive/docs-v1.0/DASHBOARD_IC.html` |
+| **FTMO** (H-RISK-2b) | €100,000 | s=0.7 + breaker x=3.0% | **€1,332,404** | +54.02% | 13.33% | `archive/docs-v1.0/DASHBOARD_FTMO.html` |
 
 Full math, engine constants, and the breaker are in [`MODEL_SPEC.md`](MODEL_SPEC.md). The exact frozen inputs are pinned in [`PINNED_INPUTS.md`](PINNED_INPUTS.md).
 

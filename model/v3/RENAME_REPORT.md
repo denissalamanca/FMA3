@@ -48,7 +48,7 @@ The rename retired the legacy `v7` / `v34` / `federation` lineage on the
 and fall into four buckets:
 
 ### Bucket A — sanctioned legacy (NOMENCLATURE §Presets / provenance) — KEEP
-- `mt5/ea/FableFederation_V1.mq5` (15 lines), `FableFederation_V2.mq5` (15 lines) — earlier EA builds, retained on disk, referenced in `mt5/ea/SPEC.md` + `RUNSHEET.md`.
+- `archive/ea-v1-v2/FableFederation_V1.mq5` (15 lines), `FableFederation_V2.mq5` (15 lines) — earlier EA builds, retained on disk, referenced in `mt5/ea/SPEC.md` + `RUNSHEET.md`.
 - `mt5/ea/Include/FMA3/**` — 5 files (`V7Core.mqh`, `V34Exec.mqh`, `V34Live.mqh`, `V34Replay.mqh`, `Federation.mqh`): the include set for the V1/V2 EAs, not the current EA.
 - `mt5/ea/presets/FED_*.set` — 11 deep-legacy run presets (`FED_IC_RESEED_*`, `FED_IC_RUN2_*`, `FED_IC_G3B`, `FED_V2_*`), explicitly kept as-is by `NOMENCLATURE.md` line 66.
 
@@ -62,7 +62,7 @@ Renaming any of these would break a hash, a file path, or a data contract:
 ### Bucket C — historical / descriptive prose (research + design layer) — low stakes
 - `scripts/*.py` — 22 files whose doc-comments describe "the v3.4 book" / the historical "federation" structure or delegate to the frozen FMA2 constructor (analysis/reporting layer, not gate-covered).
 - `model/v3/DESIGN_COMPARISON.md`, `DESIGN_OPT1_NATIVE_MQL5.md`, `DESIGN_OPT2_PYTHON_BOT.md` — design-exploration docs discussing the (legitimately still-present) `V7Core.mqh` class and hypothetical `V7Sim/V34Sim` options.
-- `docs/v1.0/**`, `docs/v3.0/**`, `docs/whitepaper/**` prose referencing the model lineage.
+- `archive/docs-v1.0/**`, `docs/v3.0/**`, `archive/whitepaper/**` prose referencing the model lineage.
 
 ### Bucket D — genuine, non-gating, optionally-actionable residuals
 These are the only occurrences that are neither provenance nor sanctioned-legacy
