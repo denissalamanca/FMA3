@@ -1,5 +1,7 @@
 # V3.0 performance analysis
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **v3.0 is the faithful-executor release.** v1.0 shipped the **model** — a Python record-engine book
 (the static blend of the Core band book at capital share w = 0.70 and the Satellite fixed-fraction
 book at 0.30, run through FMA2's 1-minute worst-mark single cross-margined account engine). v3.0
@@ -53,7 +55,7 @@ Three tester runs, IC Markets account 11078280, 1m-OHLC, HEDGING, 1:500 for repr
 | Run | Preset | Dial | Seed | v3 equity | Model | v3/model | Rejects | Fidelity (median after/want) |
 |---|---|---|---:|---:|---:|---:|---:|---:|
 | 1 | `FABLE_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84×** | 0 | **1.000** (33/33 symbols) |
-| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66×** | 0¹ | **1.000** |
+| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | €3,872,872 | **0.66×** | 0¹ | **1.000** |
 | 3 | `FABLE_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95×** | 0 | **1.000** (0 volume-capped) |
 
 ¹ After the volume-limit fix (sha `740da0ff…`): 0 rejects, €2,552,961.62 (physical cap). The
@@ -151,7 +153,7 @@ volume, sets the IC dial*. Volume is a large-account / high-leverage capacity co
 
 | Preset | Ship dial | Basis | Status |
 |---|---|---|---|
-| **IC** | **s = 1.6** | EUR 2.55M @ 1:30, min ML **121%** (vs IC's 50% stop-out, owner's ML≥110% floor), worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12; PROVISIONAL** pending real-tick intra-bar min-ML confirm (>110%) |
+| **IC** | **s = 1.6** | EUR 2.55M @ 1:30 *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)*, min ML **121%** (vs IC's 50% stop-out, owner's ML≥110% floor), worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12; PROVISIONAL** pending real-tick intra-bar min-ML confirm (>110%) |
 | **FTMO** | **s ≈ 0.5** RECOMMENDED | sweep ret/DD 4.78, worst-DD **7.8%** vs s0.7's 13.3%; warm-COVID flag says s0.7 breaches the −10% rule | **PROVISIONAL** pending a 1:100 confirm run (FABLE_FTMO_S04/05) |
 
 The IC decision reverses the pre-v3 "not deployable at 1:30" flag: v3's self-limiting margin cap

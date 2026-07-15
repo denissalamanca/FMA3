@@ -1,5 +1,7 @@
 # FableFederation_V3 EA audit — the faithful-executor release (v3.0)
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **Audited 2026-07-12.** Scope: the shipping EA `mt5/ea/FableBook.mq5` (sha `740da0ff…`)
 and its four-file include tree `mt5/ea/Include/FMA3v3/{FedConvert,FedReplay,FedExec,Guardian}.mqh`,
 against the model of record in `model/v3/` (`README`, `MODEL_SPEC`, `PINNED_INPUTS`, `EA_V3_DESIGN`,
@@ -26,7 +28,7 @@ between here and (a) the real-tick run, (b) live deploy."*
    order, it holds precisely `fed_frac·s`. The EA is the executor the campaign set out to build.
 2. **The equity gap is friction, not defect — 0.66–0.95× the frictionless record by dial/scale.**
    Parity s=1.0 → €391,873 (**0.84×** the €464,991 record), IC s=1.6 → **€2,552,962** (**0.66×** the
-   €3,872,872 record), FTMO s=0.7 → **€1,265,541** (**0.95×** the €1,332,404 record). Every gap is a
+   €3,872,872 record) *(RECON-4/FableFederation_V3; superseded — native `FableBookNative` EA: €2.93M / 0.76×, see CURRENT_STATE.md)*, FTMO s=0.7 → **€1,265,541** (**0.95×** the €1,332,404 record). Every gap is a
    *named physical constraint the record engine does not model* (§3): transaction friction, broker
    `SYMBOL_VOLUME_LIMIT`, broker margin. None of them is an EA bug.
 3. **The replay decision was correct and is load-bearing.** The model's share weights `w·a_h/j`,
@@ -51,6 +53,8 @@ between here and (a) the real-tick run, (b) live deploy."*
 ---
 
 ## 1. Architecture map — how the executor works
+
+*(This section describes the superseded `FableFederation_V3` **CSV-replay** design. The current executor is the native, **compute-live** `FableBookNative` EA — see `model/v3/` and CURRENT_STATE.md.)*
 
 ### 1.1 Components (all under `mt5/ea/`, single binary, no external process)
 
@@ -242,7 +246,7 @@ exercises it, so its absence is untested against a real tail, not proven safe.
    Neither is a rebuild; v3 is dial-agnostic, so each is a preset edit.
 3. **Do not present any record number as a deployable promise.** Achievable equity is **0.66–0.95×**
    the record by dial/scale. The €3,872,872 IC figure is a frictionless ceiling; the honest deployable
-   IC reproduction on one retail account is ~€2.55M @ s1.6 (or lower at a volume-safe scale), and the
+   IC reproduction on one retail account is ~€2.55M @ s1.6 *(RECON-4/FableFederation_V3; superseded — native `FableBookNative` EA: €2.93M / 0.76×, see CURRENT_STATE.md)* (or lower at a volume-safe scale), and the
    clean FTMO reproduction is €1,265,541 @ s0.7 (0.95×, zero rejects).
 4. **Add the joint stop-out before any live-crisis fidelity claim** (§4.3), and **score the FTMO
    curve warm** (T3) before trusting s0.7 against the −10% rule — the cold-start gates understate

@@ -1,5 +1,7 @@
 # V3.0 validation analysis
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **FMA3 v3.0 = the faithful-executor release.** v1.0 shipped the **model** — a Python record-engine
 book, validated in-sample as the first fully-parent-dominant blend. v3.0 ships the **EA that
 provably executes that model on MT5**, plus the honest deployable reality: two dials, three named
@@ -30,7 +32,7 @@ never present the record number as a deployable promise.
 
 | Preset | Seed | Dial | **Model (record engine)** | **v3 executor (RECON-4, 1m-OHLC)** | v3 / model | Position fidelity |
 |---|---:|---|---:|---:|---:|---:|
-| **IC** (H-RISK-1) | €10,000 | s = 1.6 compounding | **€3,872,872** · +170.2% · 22.58% DD · Sharpe 2.465 | **€2,552,962** (min ML 121% @ 1:30) | **0.66×** | median after/want **1.000** |
+| **IC** (H-RISK-1) | €10,000 | s = 1.6 compounding | **€3,872,872** · +170.2% · 22.58% DD · Sharpe 2.465 | **€2,552,962** (min ML 121% @ 1:30) *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | **0.66×** | median after/want **1.000** |
 | **FTMO** (H-RISK-2b) | €100,000 | s = 0.7 + breaker x=3.0% | **€1,332,404** · +54.02% · 13.33% DD · 26 fires | **€1,265,541** (28 breaker fires) | **0.95×** | median after/want **1.000** |
 | **PARITY** (sanity) | €10,000 | s = 1.0 | €464,991 (record base point) | **€391,873** (0 rejects, 33/33 trade) | **0.84×** | median after/want **1.000** |
 
@@ -55,9 +57,9 @@ necessary (below).
 | **1** | Frozen-input pins (4 artifacts + 2 scalars) | 3 parquet sha256 + config hash `51a7541cc2aaa593` re-verified 2026-07-12 | any hash change re-opens the model | ✅ PASS |
 | **2** | Exporter self-check — `export_book_frac_v3.py` | re-parsed stream reproduces `static_fed(0.70)` to **< 1e-12**; record engine on the stream = **€3,872,872 / €1,332,404** to the euro | matrix < 1e-12 AND equities to the euro | ✅ PASS |
 | **2** | EA compile + hash | `FableFederation_V3.ex5` compiles **0/0**, sha **`740da0ff…`** (post volume-limit fix); stream sha `d00b614b…`, fmt=3 | clean compile, hash recorded to RECON row | ✅ PASS |
-| **3** | **Position-level fidelity (the real test)** | median `after/want` = **1.000**, p10 = 1.000, **all 3 runs** | held frac == fed_frac·s within lot-step | ✅ PASS |
+| **3** | **Position-level fidelity (the real test)** | median `after/want` = **1.000**, p10 = 1.000, **all 3 runs** *(RECON-4/FableFederation_V3; superseded — native EA full-window fidelity is 69 self-check mismatches over 6 years, see CURRENT_STATE.md)* | held frac == fed_frac·s within lot-step | ✅ PASS |
 | **3** | PARITY s=1.0 | €391,873 (**0.84×**), **0 rejects**, all 33 symbols trade | fraction == exposure sanity point | ✅ PASS |
-| **3** | IC s=1.6 | €2,552,962 (**0.66×**), 0 rejects after the volume-limit fix | reproduces up to physical caps | ✅ PASS (capped) |
+| **3** | IC s=1.6 | €2,552,962 (**0.66×**), 0 rejects after the volume-limit fix *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | reproduces up to physical caps | ✅ PASS (capped) |
 | **3** | FTMO s=0.7 | €1,265,541 (**0.95×**), **0 rejects, 0 volume-capped** | deployable dial reproduces cleanly | ✅ PASS |
 | **4** | Satellite sleeve revival | **all 33/33 symbols trade** — incl. the 7 dead in v1/v2 (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) | full-map eurq revives every leg | ✅ PASS |
 | **5** | FTMO breaker fidelity | fires **28×** (model 26); worst-mark `eq_w` + prev-day-close anchor | fires ≈ model, conservative direction | ✅ PASS |
@@ -130,7 +132,7 @@ so v3 reaches the record; retail 1:30 is the separate *deployment* constraint, m
 | Run | Preset | Dial | Seed → v3 equity | Model | v3 / model | Rejects | Fidelity (median after/want) |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | `FABLE_PARITY_S10` | s = 1.0 | €10k → **€391,873** | €464,991 | **0.84** | 0 | **1.000** (33/33 symbols) |
-| 2 | `FABLE_IC` | s = 1.6 | €10k → **€2,552,962** | €3,872,872 | **0.66** | 0¹ | **1.000** |
+| 2 | `FABLE_IC` | s = 1.6 | €10k → **€2,552,962** | €3,872,872 | **0.66** | 0¹ | **1.000** *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* |
 | 3 | `FABLE_FTMO` | s = 0.7 | €100k → **€1,265,541** | €1,332,404 | **0.95** | 0 | **1.000** (0 volume-capped) |
 
 ¹ Pre-fix, Run 2 spun **51,346 rejects** on volume-limited legs (v3 retried the un-holdable excess
@@ -233,7 +235,8 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 
 ## Deployable dials (owner leverage: IC 1:30, FTMO 1:100)
 
-- **IC = s=1.6** — OWNER-ACCEPTED 2026-07-12 (€2,552,962 @ 1:30, min ML 121%, worst-DD 22.6%).
+- **IC = s=1.6** — OWNER-ACCEPTED 2026-07-12 (€2,552,962 @ 1:30, min ML 121%, worst-DD 22.6%)
+  *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)*.
   **PROVISIONAL** pending a real-tick intra-bar min-ML confirmation (> 110%).
 - **FTMO = s≈0.5 RECOMMENDED** — sweep ret/DD 4.78, worst-DD 7.8% vs s0.7's 13.3%; the warm-COVID
   honesty flag says s0.7 + 3% breaker breaches the −10% rule by 7.5–10.8pp. **PROVISIONAL** pending a

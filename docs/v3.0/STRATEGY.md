@@ -1,5 +1,7 @@
 # V3.0 strategy design — the what & why
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 The authoritative "what + why" for the FMA3 **v3.0 — faithful-executor release**. v1.0 shipped the
 **model**: a Python record-engine book (blended book, config hash **`51a7541cc2aaa593`**,
 locked 2026-07-10). v3.0 ships the **EA that provably executes that model on MT5**, plus the honest
@@ -20,7 +22,7 @@ is [`research/protocol/RECONCILIATION.md`](../../research/protocol/RECONCILIATIO
 
 **All model figures are in-sample record reads (IC 2020-25). MT5 real-tick + live demo are the
 remaining falsification tests. Achievable equity is 0.66–0.95× the record depending on dial/scale
-(FMA3-RECON-4). Do NOT present the model number as a deployable promise.**
+(FMA3-RECON-4). *(RECON-4/FableFederation_V3 replay figure; superseded — native `FableBookNative` EA now nets €2.93M / 0.76×, see CURRENT_STATE.md)* Do NOT present the model number as a deployable promise.**
 
 ---
 
@@ -48,7 +50,7 @@ against friction, volume limits, and margin (FMA3-RECON-4):
 |---|---|---|
 | **Record engine (model of record)** | `static_fed(0.70) × 1.6`, IC 2020-25, €10k | **€10,000 → €3,872,872 / +170.2% CAGR / 22.58% worst-mark DD / Sharpe 2.465** |
 | **Record engine (FTMO dial)** | `static_fed(0.70) × 0.7` + breaker 3.0%, €100k | **€100,000 → €1,332,404 / +54.02% CAGR / 13.33% DD / 26 breaker fires** |
-| **v3 EA (FMA3-RECON-4)** | same stream, MT5 tester, 1m-OHLC | **position fidelity 1.000; equity 0.66× (IC s1.6) → 0.95× (FTMO s0.7) of the record** |
+| **v3 EA (FMA3-RECON-4)** | same stream, MT5 tester, 1m-OHLC | **position fidelity 1.000; equity 0.66× (IC s1.6) → 0.95× (FTMO s0.7) of the record** *(RECON-4/FableFederation_V3 replay; superseded — native EA: €2.93M / 0.76× IC s1.6, see CURRENT_STATE.md)* |
 | MT5 real-tick / live demo | — | **the deployable arbiter — the remaining falsification test** |
 
 **Read the marks carefully.** The model figures are **in-sample record reads**. The record engine is
@@ -140,6 +142,8 @@ This is the target. Everything in §5 exists to hold *this* position on a live M
 ---
 
 ## 5. The v3 execution architecture — replay, not compute-live
+
+*(RECON-4/`FableFederation_V3`; superseded — the current executor `FableBookNative` computes the blend **live/native** on MT5, not by CSV replay; the blend/sizing math below is unchanged, only the execution path is. See CURRENT_STATE.md.)*
 
 **The one decision that defines v3: replay a precomputed unified `fed_frac` stream — do NOT compute
 the blend live.** This is why v1/v2 diverged and v3 does not.
@@ -267,7 +271,7 @@ physical* constraint the record engine does not model — not an EA defect. Test
 | Run | Preset | Dial | v3 equity | Model | v3/model | Rejects | Fidelity (median `after/want`) |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | PARITY | s=1.0 | €391,873 | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
-| 2 | IC | s=1.6 | €2,552,962 | €3,872,872 | **0.66** | 0 (after volume-limit fix) | 1.000; min ML 121% at 1:30 |
+| 2 | IC | s=1.6 | €2,552,962 *(RECON-4/FableFederation_V3 replay; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | €3,872,872 | **0.66** | 0 (after volume-limit fix) | 1.000; min ML 121% at 1:30 |
 | 3 | FTMO | s=0.7 | €1,265,541 | €1,332,404 | **0.95** | 0 | 1.000; 28 breaker fires (model 26) |
 
 **What is proven:**
@@ -336,7 +340,7 @@ run **only after** the 1m-OHLC smoke passes.
 - **Everything model-side is in-sample, on a twice-mined window.** IC 2020-25 was both parents'
   development sample; FMA3 added its own selection ledger. The model figures are **record reads**, not
   deployable promises. **MT5 real-tick + live demo are the remaining falsification tests.**
-- **Achievable equity is 0.66–0.95× the record** by dial/scale (FMA3-RECON-4). The €3.87M IC-s=1.6
+- **Achievable equity is 0.66–0.95× the record** by dial/scale (FMA3-RECON-4) *(RECON-4/FableFederation_V3 replay; superseded — native `FableBookNative` EA nets €2.93M / 0.76× IC s1.6, see CURRENT_STATE.md)*. The €3.87M IC-s=1.6
   figure is a **frictionless ceiling, not physically reachable on one retail account at that scale** —
   volume limits and margin both bind. Do not quote €3.87M as a deployable target.
 - **The IC s=1.6 deployable dial is PROVISIONAL.** Owner-accepted 2026-07-12 at min ML 121% (1:30),

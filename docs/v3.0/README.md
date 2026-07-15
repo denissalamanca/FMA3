@@ -11,6 +11,16 @@ between the frictionless record and a real retail account. The canonical model
 now lives in its own home — **[`model/v3/`](../../model/v3/README.md)** — and
 this page is the one-screen index to the v3.0 doc package that surrounds it.
 
+> **⚡ CURRENT STATE (2026-07-15) — read [`CURRENT_STATE.md`](CURRENT_STATE.md) first.**
+> The executor is now the **native, live-computing** EA **`FableBookNative`** (supersedes
+> the `FableFederation_V3` replay EA the rest of this package describes). Full-window
+> **2020-2025** real ICMarketsEU execution, s=1.6: net **€2,934,301** (0.76× the
+> frictionless record), **RECONCILED** on engine fidelity — drawdown matches the golden to
+> **+0.7pp**, position fidelity **~perfect** (69 self-check mismatches over 6 years). The
+> −12.9pp CAGR gap vs the golden is **execution friction, swap-led** (swap 66%, spread 19%,
+> commission 5%; de-levering and signal-drift both ~0). `CURRENT_STATE.md` is the live
+> status layer and **wins** wherever it disagrees with the RECON-4-era docs below.
+
 > **In-sample honesty banner.** Every model figure below is an **in-sample
 > RECORD read** (IC 2020-25, engine of record: Python 1-minute worst-mark,
 > reproduced to the euro by `model/v3/reproduce.py`, config hash
@@ -63,6 +73,7 @@ constraint**, not a defect. Full record:
 
 | Doc | What it is |
 |---|---|
+| **[CURRENT_STATE.md](CURRENT_STATE.md)** | ⚡ **The live status layer (2026-07-15)** — the native `FableBookNative` EA, the full-window real-execution result (net €2.93M, 0.76×), the performance-variation decomposition (swap-led friction), and the RECON-8 reconciliation. **Wins over the docs below.** |
 | **[STRATEGY.md](STRATEGY.md)** | The "what & why" for v3 — the frozen 33-symbol netted book, the `fed_frac` bookkeeping formula, why the a/j·b/j share weights force **replay over compute-live**, the Satellite-sleeve revival (7 symbols the EurPerQuote bug silently killed in v1/v2), and the two-dial (IC / FTMO) split. |
 | **[PERFORMANCE.md](PERFORMANCE.md)** | The canonical performance read — both frozen dials, the friction ladder (0.95× @ s0.7 → 0.84× @ s1.0 → 0.66× @ s1.6), the volume-limit s-sweep (FMA3-024, cap cost 0–6% @ €10k, 17–40% @ €1M), and the deployable-dial reframe (margin, not volume, sets the IC dial at 1:30). |
 | **[VALIDATION.md](VALIDATION.md)** | The execution-validation battery — the exact reproduction chain (`reproduce.py` to the euro), FMA3-RECON-4 position-level fidelity (after/want median 1.000), the volume-limit sweep, the 1:30 margin finding, and sign-off status. |

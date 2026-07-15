@@ -1,5 +1,7 @@
 # V3.0 model↔EA reconciliation — one model, one faithful executor
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **Verdict: `reconciled_with_notes`.** FMA3 v3.0's model of record — the frozen `static_fed(0.70) × s`
 matrix run through the 1-minute worst-mark record engine (config hash `51a7541cc2aaa593`,
 `w_v7 = 0.70`) — is executed by `FableFederation_V3.ex5` (sha `740da0ff…`) at **exact
@@ -38,7 +40,7 @@ replays the precomputed unified 33-symbol netted `fed_frac` stream and sizes eac
 | Layer | What it is | Numbers it owns |
 |---|---|---|
 | **Model of record** (frozen) | `static_fed(0.70) × s` through `record_engine` (IC) / `record_engine_ext` (FTMO); reproduced euro-exact by [`reproduce.py`](../../model/v3/reproduce.py) | IC (H-RISK-1) s=1.6: €10k → **€3,872,872 / +170.2% CAGR / 22.58% worst-mark DD / Sharpe 2.465**. FTMO (H-RISK-2b) s=0.7 + breaker x=3.0%: €100k → **€1,332,404 / +54.02% / 13.33% DD / 26 breaker fires** |
-| **The EA** (faithful executor) | `FableFederation_V3.ex5` sha `740da0ff…`; replays `FMA3_fed_frac_v3.csv` (fmt=3); ONE net position + ONE magic per symbol; full-map eurq; FTMO daily breaker | Three MT5 runs below — position fidelity median 1.000, 0 rejects, 0.66–0.95× the record |
+| **The EA** (faithful executor) | `FableFederation_V3.ex5` sha `740da0ff…`; replays `FMA3_fed_frac_v3.csv` (fmt=3); ONE net position + ONE magic per symbol; full-map eurq; FTMO daily breaker *(RECON-4 map; superseded by RECON-8 native `FableBookNative` EA — see CURRENT_STATE.md for the RECON-8l result)* | Three MT5 runs below — position fidelity median 1.000, 0 rejects, 0.66–0.95× the record |
 | **MT5 real-tick** (deployable arbiter — **not yet run**) | tick-granularity on the owner's machine; the 1m-OHLC smoke cannot see intra-bar spread/ML | Owed. The IC min-ML>110% confirm and the crisis tail are unknown by construction until this runs |
 | **FTMO @ 1:100** (deployable-dial arbiter — **not yet run**) | the recommended FTMO dial re-run at owner leverage | Owed. Sweep favours s≈0.5 (ret/DD 4.78, DD 7.8%) but the 1:100 confirm is pending |
 
@@ -61,7 +63,7 @@ gap. Measured on the same book, same tester:
 | Run | Preset | Dial | Book | v3 equity | Model | v3/model | Rejects | Fidelity (median `after/want`) |
 |---|---|---|---|---:|---:|---:|---:|---:|
 | 1 | `FABLE_PARITY_S10` | s=1.0 | €10k | **€391,873** | €464,991 | **0.84** | 0 | 1.000 (33/33 symbols) |
-| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** | €3,872,872 | **0.66** | 0 (after fix) | 1.000 |
+| 2 | `FABLE_IC` | s=1.6 | €10k | **€2,552,962** *(RECON-4/FableFederation_V3 CSV-replay; superseded — native `FableBookNative` EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | €3,872,872 | **0.66** | 0 (after fix) | 1.000 |
 | 3 | `FABLE_FTMO` | s=0.7 | €100k | **€1,265,541** | €1,332,404 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 The friction ladder **0.95 @ s0.7 → 0.84 @ s1.0 → 0.66 @ s1.6** is the price of leverage on real
