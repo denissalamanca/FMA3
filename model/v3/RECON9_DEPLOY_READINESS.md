@@ -23,8 +23,10 @@ to a live forward demo?*
 3. **Live capital: a separate owner decision *after* the demo**, weighing the in-sample discount
    (§3) and the concentration tail (§2). Recommend demo-forward first, then decide.
 
-The honest **live** expectation is **well below the in-sample +158%** — the one OOS forward
-realized +12.34% (§3). Anchor on that, not the in-sample headline or the frictionless ceiling.
+The honest **live** expectation is **well below the in-sample +158%**, but it is *unquantified*:
+there is **no valid OOS forward** yet (the earlier 2026-H1 one-shot was not properly conducted
+and is not usable for decisions). Anchor on the **risk envelope**, not the in-sample headline or
+the frictionless ceiling — the **demo-forward will produce the first valid OOS read.**
 
 ---
 
@@ -63,10 +65,10 @@ an over-levered pyramid. The executor is sound.
    relaxed **0.15→0.20** (FMA3-004c). It is a *documented owner risk choice*, not a hidden flaw
    — but it *is* the top of the tested frontier, so the tail sensitivity is real.
 2. **In-sample selection.** 2020-2025 is the design/mining window (pre-mined by both parent
-   programs; DSR n=20). **+158% is an in-sample number.** The single OOS datum (2026-H1 forward,
-   FMA3-FWD) ran at **s=1.1 on the record engine, a Duka proxy feed, 14 symbols, ~85 days** and
-   realized **+12.34% / Sharpe 1.17** against a pre-stated +40-70%/yr band. So discount the live
-   expectation heavily; the demo is the load-bearing OOS test.
+   programs; DSR n=20). **+158% is an in-sample number**, and **there is no valid out-of-sample
+   forward** to anchor a live expectation on (the earlier 2026-H1 one-shot was not conducted
+   properly and is not usable). So discount the in-sample headline heavily; **the demo is the
+   load-bearing — and first valid — OOS test.**
 3. **Concentration tail.** A simultaneous gold **and** tech reversal — a regime the 2020-2025
    window did not contain — would hit both big legs, both sleeves, and the biggest swap payers
    at once. Real, undiversified, and untested.
@@ -91,7 +93,7 @@ start small and scale slowly. Ship the Task-17 governor before meaningful size.
 
 The **executor is genuinely certified**, and **our own full-window run measured a ~22.9% worst
 drawdown that survived** — within the owner's stated risk appetite. The honest cautions are
-about **generalization** (in-sample +158% vs a live expectation anchored on the ~+12% OOS
-forward), the **aggressive s=1.6 dial** (owner's documented choice, top of the tested frontier),
+about **generalization** (in-sample +158% with no valid OOS forward yet — the demo produces the
+first), the **aggressive s=1.6 dial** (owner's documented choice, top of the tested frontier),
 and **concentration** — not a hidden crash tail. **GO for demo-forward**; the live-capital step
 is a downstream owner decision, made with the in-sample discount and concentration in full view.
