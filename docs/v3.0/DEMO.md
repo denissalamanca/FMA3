@@ -1,5 +1,7 @@
 # V3.0 demo deployment + monitoring plan — the faithful executor
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **The operator's plan for the MT5 demo forward-test of FMA3 v3.0 — the release where, for the first
 time, there IS a single FMA3 EA.** v1.0 shipped the *model* (a Python 1-minute worst-mark record
 engine) executed live as two parent EA stacks plus a capital split. v3.0 ships
@@ -101,7 +103,7 @@ capacity concern only; it never binds at FTMO scale (Run 3, 0 volume caps).
    (FTMO). ⚠️ **Leverage is the reproduction-vs-deployment fork:** the RECON-4 reproduction ran at
    **1:500** so the model's per-symbol margin cap binds before the broker's; the **deployment**
    account is the owner's real leverage — **IC 1:30, FTMO 1:100.** v3's margin cap is
-   account-leverage-independent, so s=1.6 gives the **same €2,552,962** at 1:30 as at 1:500 (only the
+   account-leverage-independent, so s=1.6 gives the **same €2,552,962** *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* at 1:30 as at 1:500 (only the
    min-ML headroom differs; see the dials).
 2. **Install the stream.** The unified fed_frac stream lives at
    [`research/outputs/mt5/FMA3_fed_frac_v3.csv`](../../research/outputs/mt5/FMA3_fed_frac_v3.csv).
@@ -144,7 +146,7 @@ dial.** The two shipped presets and their deployment status:
 
 | Preset | Ship dial | Account / leverage | Reproduced equity | Margin fingerprint | Status |
 |---|---|---|---:|---|---|
-| **IC** | **s = 1.6** | €10k / **1:30** | **€2,552,962** (0.66× record) | **min ML 121%** (IC stop-out 50%; ~11pp over the ML≥110% floor); worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12, PROVISIONAL** — pending a real-tick intra-bar **min-ML > 110%** confirm |
+| **IC** | **s = 1.6** | €10k / **1:30** | **€2,552,962** (0.66× record) *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | **min ML 121%** (IC stop-out 50%; ~11pp over the ML≥110% floor); worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12, PROVISIONAL** — pending a real-tick intra-bar **min-ML > 110%** confirm |
 | **FTMO** | **s ≈ 0.5 (recommended)** | €100k / **1:100** | (sweep) ret/DD **4.78**, worst-DD **7.8%** | margin a non-issue at 1:100; the −10%/−5% rules govern | **PROVISIONAL** — pending a 1:100 confirm run (`FABLE_FTMO_S04/05`) |
 
 Three honest notes on those dials:
@@ -273,7 +275,7 @@ per-preset; IC and FTMO reconcile on separate runs against separate thresholds).
   (min ML 121% at 1:30) but sits only ~11pp above the ML≥110% floor; the intra-bar real-tick min-ML
   confirm is outstanding. A 1m-OHLC bar can hide a deeper wick than its marks — real-tick traverses it.
 - **The €3.87M IC-s1.6 record is not physically reachable on one retail account at scale.** XAUUSD's
-  10-lot limit caps it past ~€2M/s. The deployable IC figure is **€2,552,962** (0.66×), and reaching
+  10-lot limit caps it past ~€2M/s. The deployable IC figure is **€2,552,962** (0.66×) *(RECON-4/FableFederation_V3; superseded — native EA full-window 2020-2025: €2,934,301 / 0.76×, see CURRENT_STATE.md)*, and reaching
   the model aggregate needs the higher-tier or N-account scaling lever — a deliberate decision, not an
   assumption.
 - **FTMO carries a compound-vs-withdraw contradiction and a cold-start crisis gap.** The €1.33M is
@@ -349,5 +351,3 @@ outstanding real-tick confirms and the scaling decision, not an automatic conseq
 Config `51a7541cc2aaa593`, `w_v7 = 0.70`. All model numbers are in-sample RECORD reads; MT5 real-tick +
 live demo are the remaining falsification tests; achievable equity is 0.66–0.95× the record by
 dial/scale.*
-</content>
-</invoke>

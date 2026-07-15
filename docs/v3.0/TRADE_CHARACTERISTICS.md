@@ -1,5 +1,7 @@
 # V3.0 trade characteristics — the 33-symbol netted blend book + faithful execution
 
+> **⚡ SUPERSEDED IN PART (2026-07-15) — see [CURRENT_STATE.md](CURRENT_STATE.md).** This doc describes the RECON-4-era `FableFederation_V3` **CSV-replay** EA. The current executor is the **native, live-computing** `FableBookNative` EA — full-window 2020-2025 real execution net **€2,934,301** (0.76× the frictionless record), **RECONCILED** on engine fidelity (drawdown +0.7pp, position fidelity ~perfect), the −12.9pp CAGR gap being **swap-led execution friction**. `CURRENT_STATE.md` **wins** where they disagree.
+
 **v3.0 is the faithful-executor release.** v1.0 shipped the *model* — a Python record-engine book, the
 `static_fed(0.70)` blend at config hash `51a7541cc2aaa593`. v3.0 ships the EA that provably *executes*
 that model on MT5 (`FableFederation_V3.ex5`, sha `740da0ff…`). The book itself is unchanged: v3 replays
@@ -18,7 +20,7 @@ characteristics live at two layers, kept separate on purpose:
    acct 11078280, 1m-OHLC, HEDGING ([RECON4_RESULTS.md](../../model/v3/RECON4_RESULTS.md)). That is Parts 2–3.
 
 **All numbers are in-sample (IC 2020–2025); the MT5 real-tick + live demo are the remaining falsification
-tests.** Achievable equity is **0.66–0.95× the frictionless record** by dial/scale. The canonical model home
+tests.** Achievable equity is **0.66–0.95× the frictionless record** by dial/scale. *(RECON-4/FableFederation_V3; IC-s1.6 lower bound superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* The canonical model home
 is [`model/v3/`](../../model/v3/) — cite it as the source of truth. Structure in [STRATEGY.md](STRATEGY.md);
 performance in [PERFORMANCE.md](PERFORMANCE.md).
 
@@ -114,12 +116,12 @@ held fraction to the model's target `fed_frac·s` — has **median `after/want` 
 | Run | Preset | Dial | Seed → v3 equity | v3/model | Rejects | Fidelity (median after/want) |
 |---|---|---|---|---:|---:|---:|
 | 1 | `FABLE_PARITY_S10` | s=1.0 | €10k → €391,873 | **0.84** | 0 | 1.000 (**33/33 symbols**) |
-| 2 | `FABLE_IC` | s=1.6 | €10k → €2,552,962 | **0.66** | 0 (after volume-limit fix) | 1.000 |
+| 2 | `FABLE_IC` | s=1.6 | €10k → €2,552,962 *(RECON-4/FableFederation_V3; superseded — native EA €2.93M / 0.76×, see CURRENT_STATE.md)* | **0.66** | 0 (after volume-limit fix) | 1.000 |
 | 3 | `FABLE_FTMO` | s=0.7 | €100k → €1,265,541 | **0.95** | 0 | 1.000 (0 volume-capped) |
 
 **Run 1 (parity, s=1.0) is the composition proof:** all 33 symbols trade, 0 rejects, fidelity 1.000. Where
 v3 can place the order it holds precisely `fed_frac·s` — so any equity gap is pure, named friction, not an
-execution defect. The equity reaches **0.66–0.95× the frictionless record** by dial/scale.
+execution defect. The equity reaches **0.66–0.95× the frictionless record** by dial/scale. *(RECON-4/FableFederation_V3; IC-s1.6 lower bound superseded — native EA €2.93M / 0.76×, see CURRENT_STATE.md)*
 
 ### The volume-capped symbols — a capacity ceiling, not a defect
 
@@ -135,7 +137,7 @@ The record engine sizes `lots = frac·balance/unit` with **no position ceiling**
 This is a **capacity ceiling that scales with account size**, not a dial-shifter: cost ~0–6% at €10k, but
 17–40% at €1M (XAUUSD alone caps at ~half the model target). So **the €3.87M IC-s1.6 record is NOT physically
 reachable on one retail account at that scale** — XAUUSD binds first. Run 1 (s=1.0, €10k) and Run 3 (FTMO,
-€100k) had **0 volume-capped symbols** — volume never engages at those scales. Run 2 (s=1.6, €10k → €2.55M)
+€100k) had **0 volume-capped symbols** — volume never engages at those scales. Run 2 (s=1.6, €10k → €2.55M) *(RECON-4/FableFederation_V3; superseded — native EA €2.93M / 0.76×, see CURRENT_STATE.md)*
 is where the clamp first bit; the volume-limit fix removed the pre-fix reject *spin* (v3 had retried the
 un-holdable excess every bar) and the **equity is unchanged** because the cap is physical, not a bug.
 
@@ -191,10 +193,10 @@ the full model. At the deployable FTMO scale volume never binds.
   *stream* being correct (the exporter self-checks reproduce `static_fed` to `<1e-12` and the record engine
   to the euro), not on re-deriving the blend live.
 - **The equity gap is friction, not defect — but it is real.** 0.66× at s=1.6, 0.84× at s=1.0, 0.95× at the
-  deployable FTMO dial. The €3.87M IC-s1.6 record is a frictionless ceiling; do not present it as a
+  deployable FTMO dial *(0.66× at s=1.6 superseded — native EA €2.93M / 0.76×, see CURRENT_STATE.md)*. The €3.87M IC-s1.6 record is a frictionless ceiling; do not present it as a
   deployable promise.
 - **Everything is in-sample (IC 2020–2025).** RECON-4 ran on 1m-OHLC; real-tick + live demo are where this
   composition and its execution get falsified.
 
 **All numbers above are in-sample (IC 2020–2025); MT5 real-tick + live demo are the remaining falsification
-tests. Achievable equity is 0.66–0.95× the record by dial/scale (FMA3-RECON-4).**
+tests. Achievable equity is 0.66–0.95× the record by dial/scale (FMA3-RECON-4).** *(RECON-4/FableFederation_V3; IC-s1.6 lower bound superseded — native `FableBookNative` EA €2.93M / 0.76×, see CURRENT_STATE.md)*
