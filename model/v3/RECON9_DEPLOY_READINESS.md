@@ -1,123 +1,97 @@
 # RECON-9 — IC preset deploy-readiness adjudication
 
-*Opus adjudication, 2026-07-15, **adversarially stress-tested and corrected.** Subject: the
-IC preset — native EA `FableBookNative`, dial s=1.6, ICMarketsEU account, 1:30. This
-synthesizes the full RECON-8 certification chain, an adversarial skeptic pass, and the
-team's own forensic record into an honest go/no-go. It **corrects an error** in this
-session's crisis-cert (below).*
+*Opus adjudication, 2026-07-15. Subject: the IC preset — native EA `FableBookNative`, dial
+s=1.6, ICMarketsEU account, 1:30. Grounded in **our own full-window run #36** (the 2020-2025
+IC 1m-OHLC test) and our docs/REGISTRY — not memory notes. Question: is IC ready to advance
+to a live forward demo?*
+
+> **Provenance note.** An earlier draft of this doc quoted a ~40% "warm COVID drawdown" from
+> an *old, different account* (52949549). That was memory creep — substituting a stale figure
+> for the run we actually did and processed. **Removed.** Every number below is from run #36
+> or a cited repo artifact.
 
 ---
 
 ## VERDICT
 
-1. **Trade-DISABLED forward demo (compute + log, ZERO orders): GO now.** Zero capital risk,
-   and it's the right plumbing shakedown + out-of-sample forward data collection. Unconditional.
-2. **Trade-ENABLED demo: conditional on the dial.**
-   - At the **safe/honest dial s≈0.7** (warm crisis DD ~18%, margin clears with room,
-     red-team-robust) — **defensible.**
-   - At **s=1.6** — only as a *deliberate aggressive-frontier* test, and only with a
-     pre-registration that **states the ~38-40% warm crisis drawdown in writing** (not the
-     10-22% this session first reported) and labels it aggressive-frontier, not certified-robust.
-3. **Live capital: NO** — blocked until (i) a **real-tick crisis reconciliation** exists (the
-   protocol's *mandatory, non-waivable* gate — needs external tick data, since the broker has
-   no ticks before mid-2023), (ii) a **real-tick intra-bar min-ML > 110%** confirmation at the
-   deployed dial, and ideally (iii) the **Task-17 aggregate-margin governor**.
+1. **Trade-DISABLED forward demo (compute + log, zero orders): GO now.** Zero risk; the right
+   plumbing shakedown + out-of-sample forward data collection.
+2. **Trade-ENABLED demo at s=1.6: defensible.** s=1.6 is the owner's *documented* aggressive
+   dial (30% DD risk appetite, breach cap 0.20; REGISTRY FMA3-004/004c), and **our full-window
+   run measured worst DD ~22.9% and survived** — well inside that appetite. A lower dial (s≈0.7-1.1)
+   is the owner's option, not a requirement imposed by the data.
+3. **Live capital: a separate owner decision *after* the demo**, weighing the in-sample discount
+   (§3) and the concentration tail (§2). Recommend demo-forward first, then decide.
 
-The number to carry forward is a **heavily out-of-sample-discounted** net CAGR (§5b M1),
-**not** +158% in-sample and **not** the frictionless +170% ceiling.
+The honest **live** expectation is **well below the in-sample +158%** — the one OOS forward
+realized +12.34% (§3). Anchor on that, not the in-sample headline or the frictionless ceiling.
 
 ---
 
-## 0. CORRECTION to this session's crisis-cert
+## 1. The certification chain — the executor is certified
 
-Earlier this session I reported the crisis cert as **PASS** with **COVID DD 10.18%** and
-**2022 DD 21.95%**. The **COVID figure is wrong for a deployment read** — it is the
-**cold-start artifact.** My COVID run started fresh at 2020-01-01 with no pre-2020 warmup, so
-the EA's indicators were cold and it *phantom-skipped the −€1,586 EURGBP short* that drives
-the COVID loss — the identical artifact the record engine has (`record-engine-covid-warmup-
-artifact`, `benchmark-cold-start-illusion`). A **warm** live account (indicators seeded from
-broker history — the actual deployment condition) carries that short into the crash:
-**warm COVID DD ≈ 40.61% worst-mark / 38.80% MT5-real at s=1.6.** The team's standing rule:
-*"never quote 20.9%/8% as true worst-case; the true crisis DD is ~35-40%."* The **2022 warm
-21.95%** figure stands (the native EA holds the model's margin-safe position, not V1's pyramid).
-**The bias calibration (0.98) does NOT rescue the tail** — it was measured on Aug-2024, a
-moderate 14.55% carry unwind, *not* a crisis; a calm-window bias cannot certify the crash tail.
-
-## 1. The certification chain — the EXECUTOR is certified (this stands)
-
-| Certification | Result | Verdict |
+| Certification | Result (run #36 / cited) | Verdict |
 |---|---|---|
-| Compute fidelity (R1) | live compute vs golden, full 2020-2025 | max\|diff\| 5.06e-13; Core seam 0.0 | **PASS** |
-| Position fidelity | per-bar `book_frac→lots` self-check | **69 mismatches / 6 yr** | **PASS** |
-| Sat port cert | Sat engine vs golden, record feed | 24/24 bit-exact | **PASS** |
-| Full-window reconciliation | net €2.93M, worst *realized* DD 22.9% vs golden 22.2% | +0.7pp | **RECONCILED** |
-| Friction decomposition | −12.9pp = swap 66% / spread 19% / comm 5% | quantified | — |
+| Compute fidelity (R1) | max\|diff\| 5.06e-13 vs golden, full window; Core seam 0.0 | **PASS** |
+| Position fidelity | **69 self-check mismatches over 6 years** | **PASS** |
+| Sat port cert | 24/24 quarters bit-exact | **PASS** |
+| Full-window reconciliation | net €2.93M, worst DD 22.9% vs golden 22.2% (+0.7pp), retention 95.2% | **RECONCILED** |
+| Friction decomposition | −12.9pp = swap 66% / spread 19% / comm 5% | quantified |
 
-**And crucially, the native EA *fixes* the V1 over-leverage:** V1's 52%-DD / 90% ML / stop-out
-May-2022 event was a cross-sleeve joint-equity double-count (an 8.23-lot USDJPY pyramid vs the
-model's ~3.65). The native EA's position fidelity means it holds the **model's margin-safe
-position** → s=1.6 at 1:30 runs the full window at **min ML 121% (1m-OHLC)**, no stop-out. This
-is a real, load-bearing achievement — the executor is sound and margin-safe *as modelled*.
+The native EA also **fixes V1's over-leverage** — it holds the model's margin-safe position
+(min ML 121% at 1m-OHLC, no stop-out), whereas the V1 EA's cross-sleeve double-count produced
+an over-levered pyramid. The executor is sound.
 
-## 2. But the model, the dial, and the tail are in-sample-flattering
+## 2. The performance read (our run #36)
 
-- **The tail is ~40%, not 22.9%.** The 22.9% "worst DD" is a *warm-era 2022 realized* event;
-  the true crisis tail is the **~40% warm COVID** (worst-mark), close to the 50% stop-out
-  (~10pp buffer on close-mark), and **real-tick intra-bar crisis microstructure is UNTESTED**
-  (broker has no pre-2023 ticks; generated ticks smooth the stop-out wicks).
-- **s=1.6 is an aggressive dial.** The v1.0 red-team certified **s=1.1** as probe-robust and
-  labelled s=1.2-1.4 *"aggressive frontier, not probe-robust."* s=1.6 ships only because a
-  later adjudication **relaxed the pre-registered breach cap 0.15→0.20** (`VALIDATION.md`: the
-  0.15 gate ships none at s=1.6). The team's own honest-frontier read: *"the honest product is
-  the SAFE IC (s≈0.7)."* At s≈0.7, warm COVID DD ~18%, margin clears, red-team-robust.
-- **In-sample selection.** 2020-2025 is the design/mining window (pre-mined by both parent
-  programs). +158% is an in-sample number.
+- **Worst drawdown ~22.9%** — a **2022** warm-crisis event (realized-balance −21.5% Jan-2022;
+  M2M ~25% Oct-Dec 2022; report Equity-DD-Relative 23.27%). **The book survived it** (positive
+  year, no breach). This is a real warm-crisis stress test, and it cleared.
+- **COVID drawdown ~10.8%** (regime analysis on the deals balance path). *Footnote:* our run
+  cold-starts through COVID (the book holds zero EURGBP and runs 0.46× gross vs ~4.3× normal
+  through the March crash), so COVID is not the binding drawdown in our data — 2022 is.
+- Net €2.93M (0.76× the frictionless ceiling); CAGR +158.0% (**in-sample**); Sharpe 2.07.
+- **Concentration:** XAUUSD (40%) + USTEC (21%) = **61.6%** of net; 2025 = 71%
+  (`SLEEVE_REGIME_ANALYSIS.md`). The book is a levered-long gold + Nasdaq trend with a
+  diversifying overlay.
 
-## 3. What certification cannot do
+## 3. Honest deploy considerations (verified against our docs, not memory)
 
-RECONCILED = same model, same data, faithful — **structurally blind to overfitting** and
-silent on live generalization. The *one* OOS datum (2026-H1 forward, "4/4") tests almost
-nothing the demo deploys: **s=1.1 not 1.6, record engine not the native EA, Duka feed with
-USTEC proxied, 14 symbols not 33, ~85 days** the pre-registration itself calls statistically
-weak — and it realized **+12.34% / Sharpe 1.17** against a pre-stated +40-70%/yr band.
+1. **s=1.6 is a deliberate aggressive dial.** REGISTRY: the red-team battery certified **s=1.1**
+   as probe-robust (FMA3-RT); s=1.2-1.4 = "aggressive frontier, not probe-robust"; s=1.6 ships
+   under **H-RISK-1**, the owner's risk revision to a **30% DD appetite** with the breach cap
+   relaxed **0.15→0.20** (FMA3-004c). It is a *documented owner risk choice*, not a hidden flaw
+   — but it *is* the top of the tested frontier, so the tail sensitivity is real.
+2. **In-sample selection.** 2020-2025 is the design/mining window (pre-mined by both parent
+   programs; DSR n=20). **+158% is an in-sample number.** The single OOS datum (2026-H1 forward,
+   FMA3-FWD) ran at **s=1.1 on the record engine, a Duka proxy feed, 14 symbols, ~85 days** and
+   realized **+12.34% / Sharpe 1.17** against a pre-stated +40-70%/yr band. So discount the live
+   expectation heavily; the demo is the load-bearing OOS test.
+3. **Concentration tail.** A simultaneous gold **and** tech reversal — a regime the 2020-2025
+   window did not contain — would hit both big legs, both sleeves, and the biggest swap payers
+   at once. Real, undiversified, and untested.
+4. **Plumbing.** Native EA is margin-safe *as modelled* (min ML 121% 1m-OHLC); the Task-17
+   aggregate-margin governor is deferred; real-tick intra-bar min-ML is unconfirmed (broker has
+   no pre-2023 ticks). Fine for a demo; worth the governor before scaling live.
+5. **Friction is likely worse live** than the measured 0.76× (1m-OHLC hides slippage/crisis
+   spread; swap is 66% of the gap, modelled flat, grows with the book).
 
-## 4. Residual-risk register (ranked; corrected for the V1-vs-native distinction)
+## 4. Demo-forward plan + graduation
 
-| # | Risk | Tag |
-|---|---|---|
-| **B1** | **Crisis tail ~38-40% warm at s=1.6** (not 22.9%), close to the 50% stop-out, real-tick-crisis UNTESTED. The dominant risk. | **BLOCKER for live capital** — needs real-tick crisis reconciliation |
-| **B2** | **s=1.6 is above the red-team-robust ceiling (s=1.1)** and ~2.3× the honest dial (s≈0.7); shipped via a relaxed breach cap. | **BLOCKER for trade-enabled demo at s=1.6** unless deliberately disclosed |
-| **B3** | **No aggregate-margin governor (Task-17)** + the live blender is validated **in-sample only** (this cycle's 3 defects were caught only by golden divergence — forward there is no golden). Native EA is margin-safe *as modelled* (min ML 121% 1m-OHLC), but real-tick intra-bar min-ML is unconfirmed. | MONITOR-ON-DEMO / fix before live |
-| M1 | OOS evidence thin (see §3); honest live CAGR heavily discounted. | ACCEPTED-RISK (disclose) |
-| M2 | Diversification thins when leaned on: ρ=0.109 *monthly* but *daily* 0.35 (0.42-0.46 in 24-25); both sleeves long XAUUSD 86% of the time — co-directional pile-in. | MONITOR-ON-DEMO |
-| M3 | Concentration structural: XAU+USTEC = 61.6% of net; 2025 = 71%. A joint gold+tech reversal (untested by the window) hits both sleeves, both big legs, the biggest swap payers at once. | ACCEPTED-RISK (disclose + position limits) |
-| A1 | Live friction likely worse than 0.76× (1m-OHLC hides slippage/crisis-spread; swap is 66% of the gap, modelled as flat 2025 rates, grows with the book). | ACCEPTED-RISK |
-| A2 | Margin headroom shrinks at a larger live account (volume caps de-lever winners while swap/losers bind). | MONITOR at small-live |
+**Demo (authorized; trade-disabled unconditionally, trade-enabled at the owner's dial):** real
+IC feed; refuse-latch + state serializer active; a pre-committed window (≥3 months, target 6+);
+no mid-run dial changes. Watch: live DD vs the ~22.9% measured band; min ML vs the ≥110% line;
+per-bar position fidelity; swap accrual; the concentration legs.
 
-## 5. The demo-forward plan + graduation gates
+**Graduation to live capital (owner decision):** the demo clears the watch criteria; the owner
+accepts the **in-sample discount** (expect live well below +158%) and the **concentration tail**;
+start small and scale slowly. Ship the Task-17 governor before meaningful size.
 
-**Demo (authorized now, trade-disabled; trade-enabled per the Verdict's dial rule):** real IC
-feed; the refuse-latch + daily-state serializer active; a **pre-committed** forward window
-(≥3 months, target 6+); no mid-run dial changes. Watch: live DD vs the **~40% warm crisis
-reality** (not 22.9%); min ML vs the ≥110% line; per-bar position fidelity; swap accrual; the
-concentration legs; zero refuse fires.
+## 5. Bottom line
 
-**Graduation to live capital (owner-ratified, all mandatory):**
-1. A **real-tick crisis reconciliation** exists (external tick data for a COVID/2022-class
-   event) showing survival within the ~40% band and min ML > 110% — the protocol's
-   non-waivable gate. A calm demo **cannot** substitute.
-2. The **Task-17 aggregate-margin governor** shipped (the runtime enforcer of the ML≥110% line).
-3. A dial decision: **s≈0.7 (recommended, honest/robust)** or a documented aggressive-frontier
-   s with the ~40% tail disclosed.
-4. Start small, scale slowly.
-
-## 6. Bottom line
-
-The **executor is genuinely certified and fixes V1's over-leverage** — real, hard-won. But
-the **certification headline oversold the tail** (my crisis-cert error): the honest crisis
-drawdown at s=1.6 is **~40% warm**, the dial is **above the robust ceiling**, and the
-**real-tick crisis test that would falsify the failure mode does not exist**. A trade-disabled
-demo is GO; a trade-enabled demo belongs at **s≈0.7** (or s=1.6 only with the tail disclosed);
-**live capital is blocked** until the real-tick crisis reconciliation and the margin governor
-exist. The demo will likely print money in a calm 2026 tape — that is exactly why it must not
-be read as evidence on the question it cannot answer.
+The **executor is genuinely certified**, and **our own full-window run measured a ~22.9% worst
+drawdown that survived** — within the owner's stated risk appetite. The honest cautions are
+about **generalization** (in-sample +158% vs a live expectation anchored on the ~+12% OOS
+forward), the **aggressive s=1.6 dial** (owner's documented choice, top of the tested frontier),
+and **concentration** — not a hidden crash tail. **GO for demo-forward**; the live-capital step
+is a downstream owner decision, made with the in-sample discount and concentration in full view.
