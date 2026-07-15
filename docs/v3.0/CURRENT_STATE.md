@@ -90,7 +90,7 @@ shared event, not an EA artifact (no margin call, no feed spike, no single-symbo
 ## 6. Open items (roadmap)
 
 1. ~~Sat record-feed port cert~~ — **DONE** (24/24 quarters bit-exact, `sat_mql5_parity.json`; PR #3 merged).
-2. **Real-tick crisis certification** — COVID/2022 on real ticks (the gate 1m-OHLC can't satisfy).
+2. **Real-tick crisis certification** — **on-broker crises DONE** (RECON-12: IC real-tick 2023-2025, report `_43`; Aug-2024 + Apr-2025 real-tick crisis DDs track the record at **k≈1.0** vs the COVID `f_tail` 6.5×; min ML 130%). **Open: COVID/2022** (pre-2023, un-real-tickable on this broker) — the Phase-2 tail: the `f_tail` imputed bound vs the Dukascopy faithful-proxy campaign.
 3. ~~FTMO dial~~ — **DECIDED: s≈0.70** under a ≤1-breach/year policy (owner withdraws monthly; native-EA runs A/B; ~0.7 breaches/yr, the 10% max-loss rule binds; s≈0.65 for crisis margin). See [FTMO_DIAL_DECISION.md](FTMO_DIAL_DECISION.md) / RECON-10. Open: ±20% weight-probe pass + FTMO demo-forward.
 4. **RECON-9 adjudication** (Opus) → **deploy decision** (owner, demo-forward first).
 
