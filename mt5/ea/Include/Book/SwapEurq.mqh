@@ -634,6 +634,31 @@ public:
         }
       return true;
      }
+
+   //--- LIVE warm-start additive accessors (Book/CoreLiveDrive.mqh) ---
+   //--- pure reads/setters over EXISTING fields; the generator law    ---
+   //--- (Start/OnCrossBar/Step) is untouched.                        ---
+   long              NextDay(void)   const { return m_next_day; }
+   bool              StartedGen(void) const { return m_started;  }
+   void              RestoreClock(const long next_day) { m_next_day=next_day; }
+   bool              CrossGet(const int c, double &b, double &a, bool &seeded) const
+     {
+      if(c<0 || c>=SE_NCROSS)
+         return false;
+      b=m_cross[c].bid_c;
+      a=m_cross[c].ask_c;
+      seeded=m_cross[c].seeded;
+      return true;
+     }
+   bool              CrossRestore(const int c, const double b, const double a, const bool seeded)
+     {
+      if(c<0 || c>=SE_NCROSS)
+         return false;
+      m_cross[c].bid_c=b;
+      m_cross[c].ask_c=a;
+      m_cross[c].seeded=seeded;
+      return true;
+     }
   };
 
 #endif // __SWAPEURQ_MQH__

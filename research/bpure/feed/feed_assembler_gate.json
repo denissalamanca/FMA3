@@ -1,0 +1,516 @@
+{
+ "generated": "2026-07-15T02:39:55",
+ "recon_assert": {
+  "AUDCAD": {
+   "bars": 2235293,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "AUDJPY": {
+   "bars": 2236100,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "AUDNZD": {
+   "bars": 2235191,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "AUDUSD": {
+   "bars": 2233223,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "CADCHF": {
+   "bars": 2234114,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "CADJPY": {
+   "bars": 2235197,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "EURCAD": {
+   "bars": 2235438,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURCHF": {
+   "bars": 2230620,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURGBP": {
+   "bars": 2234313,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURJPY": {
+   "bars": 2235653,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "EURNOK": {
+   "bars": 2191609,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURNZD": {
+   "bars": 2234861,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURSEK": {
+   "bars": 2193138,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "EURUSD": {
+   "bars": 2234871,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "GBPJPY": {
+   "bars": 2235816,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "GBPUSD": {
+   "bars": 2234416,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "NZDCAD": {
+   "bars": 2234644,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "NZDJPY": {
+   "bars": 2235252,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "NZDUSD": {
+   "bars": 2232575,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "USDCHF": {
+   "bars": 2229531,
+   "recon_ok": true,
+   "digits": 5
+  },
+  "USDJPY": {
+   "bars": 2233629,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "BTCUSD": {
+   "bars": 2925842,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "ETHUSD": {
+   "bars": 2619688,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "SOLUSD": {
+   "bars": 1914613,
+   "recon_ok": true,
+   "digits": 4
+  },
+  "XRPUSD": {
+   "bars": 2614541,
+   "recon_ok": true,
+   "digits": 4
+  },
+  "DAX": {
+   "bars": 2051640,
+   "recon_ok": true,
+   "digits": 1
+  },
+  "JP225": {
+   "bars": 2070377,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "UK100": {
+   "bars": 2031748,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "US30": {
+   "bars": 2113969,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "USA500": {
+   "bars": 2098479,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "USTEC": {
+   "bars": 2114245,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "XAGUSD": {
+   "bars": 2123392,
+   "recon_ok": true,
+   "digits": 3
+  },
+  "XAUUSD": {
+   "bars": 2123532,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "XBRUSD": {
+   "bars": 1970524,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "XNGUSD": {
+   "bars": 1989979,
+   "recon_ok": true,
+   "digits": 4
+  },
+  "XPTUSD": {
+   "bars": 2115790,
+   "recon_ok": true,
+   "digits": 2
+  },
+  "XTIUSD": {
+   "bars": 2103871,
+   "recon_ok": true,
+   "digits": 2
+  }
+ },
+ "quarters": [
+  {
+   "quarter": "2020Q1",
+   "rows": 92155,
+   "golden_rows": 92155,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 95293,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2020Q2",
+   "rows": 93581,
+   "golden_rows": 93581,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 93581,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2020Q3",
+   "rows": 95034,
+   "golden_rows": 95034,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 95034,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2020Q4",
+   "rows": 93236,
+   "golden_rows": 93236,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 93236,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2021Q1",
+   "rows": 116614,
+   "golden_rows": 116614,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 116614,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2021Q2",
+   "rows": 124502,
+   "golden_rows": 124502,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 124502,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2021Q3",
+   "rows": 125964,
+   "golden_rows": 125964,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 125964,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2021Q4",
+   "rows": 125942,
+   "golden_rows": 125942,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 125942,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2022Q1",
+   "rows": 122817,
+   "golden_rows": 122817,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 97891,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2022Q2",
+   "rows": 128381,
+   "golden_rows": 128381,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2022Q3",
+   "rows": 131633,
+   "golden_rows": 131633,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2022Q4",
+   "rows": 131857,
+   "golden_rows": 131857,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2023Q1",
+   "rows": 128781,
+   "golden_rows": 128781,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2023Q2",
+   "rows": 130239,
+   "golden_rows": 130239,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2023Q3",
+   "rows": 131510,
+   "golden_rows": 131510,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2023Q4",
+   "rows": 131619,
+   "golden_rows": 131619,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2024Q1",
+   "rows": 129610,
+   "golden_rows": 129610,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2024Q2",
+   "rows": 130158,
+   "golden_rows": 130158,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2024Q3",
+   "rows": 131688,
+   "golden_rows": 131688,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2024Q4",
+   "rows": 131638,
+   "golden_rows": 131638,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2025Q1",
+   "rows": 128145,
+   "golden_rows": 128145,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2025Q2",
+   "rows": 130256,
+   "golden_rows": 130256,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2025Q3",
+   "rows": 131548,
+   "golden_rows": 131548,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  },
+  {
+   "quarter": "2025Q4",
+   "rows": 131742,
+   "golden_rows": 131742,
+   "union_grid_ok": true,
+   "has_ok": true,
+   "pre_rule_hits": 0,
+   "value_cells_mismatched": 0,
+   "max_abs_diff": 0.0,
+   "bit_exact": true
+  }
+ ],
+ "h1": {
+  "rows": 49379,
+  "golden_rows": 49379,
+  "union_grid_ok": true,
+  "value_cells_mismatched": 0,
+  "max_abs_diff": 0.0,
+  "bit_exact": true
+ },
+ "daily_mids": {
+  "XAUUSD": {
+   "days": 1549,
+   "bit_exact": true
+  },
+  "USTEC": {
+   "days": 1550,
+   "bit_exact": true
+  },
+  "USDJPY": {
+   "days": 1557,
+   "bit_exact": true
+  },
+  "ETHUSD": {
+   "days": 2081,
+   "bit_exact": true
+  },
+  "EURGBP_pre20": {
+   "days": 1557,
+   "bit_exact": true
+  },
+  "AUDUSD": {
+   "days": 1557,
+   "bit_exact": true
+  },
+  "NZDUSD": {
+   "days": 1557,
+   "bit_exact": true
+  },
+  "BTCUSD": {
+   "days": 2081,
+   "bit_exact": true
+  },
+  "all_bit_exact": true
+ },
+ "stream": {
+  "window": [
+   "2020-01-02",
+   "2020-01-22"
+  ],
+  "rows_stream": 20160,
+  "rows_ref": 20160,
+  "m1_cells_mismatched": 0,
+  "h1_cells_mismatched": 0,
+  "daily_mids_checked": 104,
+  "daily_mids_mismatched": 0,
+  "pre_seed_hits": 37,
+  "bit_exact": true
+ },
+ "findings": [],
+ "overall_pass": true,
+ "runtime_seconds": 129.6
+}

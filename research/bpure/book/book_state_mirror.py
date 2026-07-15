@@ -63,6 +63,15 @@ import numpy as np
 
 SCHEMA = "fma3.bookstate"
 VERSION = 1
+# UNIT B (S2): version 2 == version-1 whole-book ledger + a folded
+# "coresignal" block {"sig": <CCoreSignal.GetState>, "trig":
+# <CCoreTrigger.GetState>} carrying the LIVE Core target source (8 daily-mid
+# rings + BOTH XAU Donchian last-breach flags b50/b100, unbounded ffill,
+# carried EXPLICITLY) + the causal trigger's slot-equity segment cursor. The
+# v1 emission path (VERSION) is BYTE-UNCHANGED so RECON-8e/8f stay
+# reproducible; load_state_file simply ALSO accepts version 2.
+VERSION_CS = 2
+ACCEPTED_VERSIONS = (1, 2)
 J_TOL = 1e-9
 FNV_OFFSET = 14695981039346656037
 FNV_PRIME = 1099511628211
@@ -185,8 +194,9 @@ def load_state_file(path) -> dict:
         raise StateRefuse(f"state json malformed: {e}")
     if state.get("schema") != SCHEMA:
         raise StateRefuse(f"schema '{state.get('schema')}' != '{SCHEMA}'")
-    if state.get("version") != VERSION:
-        raise StateRefuse(f"state version {state.get('version')} != {VERSION}")
+    if state.get("version") not in ACCEPTED_VERSIONS:
+        raise StateRefuse(f"state version {state.get('version')} not in "
+                          f"{ACCEPTED_VERSIONS}")
     if state.get("eof") is not True:
         raise StateRefuse("TORN WRITE: eof field not true")
     return state

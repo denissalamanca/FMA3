@@ -89,6 +89,43 @@ public:
    double Balance(void)    const { return m_balance;  }
    string LastError(void)  const { return m_err;      }
 
+   //=================================================================
+   // LIVE-DRIVE additive hooks (Book/CoreLiveDrive.mqh) — pure reads
+   // / setters over EXISTING fields, zero compute-path change.  The
+   // batch replay (TestCoreSim/TestBook) never calls any of these.
+   //=================================================================
+   double CurPos(void)   const { return m_pos;   }
+   double CurEntry(void) const { return m_entry; }
+
+   // restore a mid-segment account snapshot (live warm-start only)
+   void RestoreAccount(const double balance, const double pos,
+                       const double entry, const double legcap)
+     {
+      m_balance = balance;
+      m_pos     = pos;
+      m_entry   = entry;
+      m_legcap  = legcap;
+     }
+
+   // live memory bound: drop captured history, keep ONLY the last bar.
+   // Legal ONLY on legs whose captures are never re-read as a series
+   // (the live drive reads just the newest capture; FinishSegment /
+   // ComputeFCore are never called on live-drive-owned legs).
+   void CompactCapture(void)
+     {
+      if(m_n <= 1)
+         return;
+      int last = m_n - 1;
+      m_ts[0] = m_ts[last];
+      m_c[0]  = m_c[last];
+      m_w[0]  = m_w[last];
+      m_m[0]  = m_m[last];
+      m_p[0]  = m_p[last];
+      m_mc[0] = m_mc[last];
+      m_qe[0] = m_qe[last];
+      m_n = 1;
+     }
+
    // fresh sub-account at segment start: legcap = (seed*W)/slot_legs,
    // computed by the caller so the float order is owned in ONE place.
    void ResetSegment(const double legcap)
@@ -559,6 +596,33 @@ public:
          for(int i = 0; i < n*m_nNet; i++) m_fv[i]  = v[i];
         }
       m_fn = n;
+      return true;
+     }
+
+   //=================================================================
+   // LIVE-MODE hourly ledger append (BookOrchestrator.LiveCoreAppend).
+   // Rows are FINAL when appended — the live drive emits an hour only
+   // after that hour has completed on the union clock, so the batch
+   // "seam straddle heal" (same-hour overwrite) never applies here.
+   // Ascending-guarded; the batch paths above are untouched.
+   //=================================================================
+   bool AppendFCoreRow(const long hour, const double &v[])
+     {
+      if(m_nNet <= 0)           { m_err = "AppendFCoreRow: SetNets first"; return false; }
+      if(ArraySize(v) < m_nNet) { m_err = "AppendFCoreRow: v short";       return false; }
+      if(m_fn > 0 && hour <= m_fts[m_fn-1])
+        { m_err = "AppendFCoreRow: hour not ascending"; return false; }
+      int cap = ArraySize(m_fts);
+      if(m_fn >= cap)
+        {
+         int want = cap + CORESIM_GROW;
+         if(ArrayResize(m_fts, want) != want)          { m_err = "ArrayResize fts"; return false; }
+         if(ArrayResize(m_fv, want*m_nNet) != want*m_nNet) { m_err = "ArrayResize fv"; return false; }
+        }
+      m_fts[m_fn] = hour;
+      for(int s = 0; s < m_nNet; s++)
+         m_fv[m_fn*m_nNet + s] = v[s];
+      m_fn++;
       return true;
      }
 };

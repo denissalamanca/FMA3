@@ -578,6 +578,34 @@ def restore_fidelity(st: dict) -> dict:
 
 
 # ==========================================================================
+# S2 — CoreSignal Class-S warm-blob completeness (UNIT B)
+# ==========================================================================
+def coresignal_class_s(scratch: Path) -> dict:
+    """Certify the version-2 warm blob's FOLDED CoreSignal chain (the live
+    Core target source + causal trigger detector). Runs the measured
+    save->restore->resume split gate (run_coresignal_ws_gate.py): the resumed
+    target + trigger-telemetry tail must be BITWISE identical to an
+    uninterrupted run, and three negative controls (drop the XAU Donchian
+    breach flag b50 = discrete/exact; drop a rolling-window ring = continuous;
+    drop the trigger segment cursor) MUST each diverge — i.e. those fields are
+    load-bearing and cannot be reconstructed from a bounded ring rescan, so
+    they MUST be carried explicitly (which CoreSignal.mqh's GetState does).
+    Per the ratified bit-zero achievement, the positive resume is EXACT."""
+    gate = HERE / "run_coresignal_ws_gate.py"
+    out_json = HERE / "coresignal_ws_gate.json"
+    try:
+        r = subprocess.run(["/usr/local/bin/python3", str(gate)],
+                           capture_output=True, text=True, timeout=600)
+        rep = json.loads(out_json.read_text())
+        rep["gate_rc"] = r.returncode
+        rep["ok"] = bool(rep.get("verdict") == "PASS")
+        return rep
+    except Exception as e:                                 # noqa: BLE001
+        return {"ok": False, "verdict": "FAIL",
+                "error": f"{type(e).__name__}: {e}"}
+
+
+# ==========================================================================
 # C — output re-derivation from the RESTORED state
 # ==========================================================================
 def rederive(candidate: Path, hours: int, scratch: Path) -> dict:
@@ -838,6 +866,10 @@ def certify(candidate: Path, reference: Path | None, boundary: int,
     rep["R_restore_fidelity"] = rf
     rep["R_restore_fidelity_ok"] = all(v["ok"] for v in rf.values())
 
+    # ---- S2: CoreSignal Class-S warm-blob completeness (UNIT B, additive) --
+    rep["S_coresignal"] = coresignal_class_s(scratch)
+    rep["S_coresignal_ok"] = bool(rep["S_coresignal"].get("ok"))
+
     # ---- C: output re-derivation ------------------------------------------
     if do_rederive:
         rep["C_rederive"] = rederive(candidate, hours, scratch)
@@ -852,7 +884,8 @@ def certify(candidate: Path, reference: Path | None, boundary: int,
              "E_anchors": rep["E_anchors_ok"],
              "R_restore_fidelity": rep["R_restore_fidelity_ok"],
              "P_class_p": rep["P_class_p"]["ok"],
-             "S_class_s": rep["S_class_s"]["ok"]}
+             "S_class_s": rep["S_class_s"]["ok"],
+             "S_coresignal": rep["S_coresignal_ok"]}
     if do_rederive:
         gates["C_rederive"] = rep["C_rederive"]["ok"]
     rep["sub_checks"] = gates

@@ -1,0 +1,9 @@
+{
+ "blend_grid_hours": 49379,
+ "first": 1577923200,
+ "last": 1767222000,
+ "noncontiguous_successors": 197,
+ "noncontig_pct": 0.399,
+ "seasonal_gate_flips_at_gaps": 69,
+ "note": "LiveEmitStaged early-emit can differ from the batch emission ONLY on the seasonal XAU leg, ONLY at a non-contiguous successor whose hold gate flips; measured over the full golden 2020-2025 grid"
+}

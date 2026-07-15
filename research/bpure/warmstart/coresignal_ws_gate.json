@@ -1,0 +1,30 @@
+{
+ "gate": "FMA3 UNIT-B CoreSignal warm-blob resume gate",
+ "ndays": 130,
+ "boundary_day": 115,
+ "xau_b50_at_boundary": 1.0,
+ "xau_b100_at_boundary": 1.0,
+ "G1_positive": {
+  "tail_rows": 14,
+  "targets_bitwise_identical": true,
+  "trigger_telemetry_bitwise_identical": true,
+  "first_divergent_row": null,
+  "pass": true
+ },
+ "G2_drop_b50": {
+  "diverged": true,
+  "first_divergent_row": 0,
+  "pass": true
+ },
+ "G3_drop_vol_ring": {
+  "diverged": true,
+  "first_divergent_row": 0,
+  "pass": true
+ },
+ "G4_drop_trigger_cursor": {
+  "diverged": true,
+  "pass": true
+ },
+ "breach_latched_before_boundary": true,
+ "verdict": "PASS"
+}

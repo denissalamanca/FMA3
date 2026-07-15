@@ -62,6 +62,19 @@
 
 #define BOOKSTATE_SCHEMA   "fma3.bookstate"
 #define BOOKSTATE_VERSION  1
+// UNIT B (S2 warm-blob completeness): version 2 == version-1 whole-book
+// ledger + a folded "coresignal" block carrying the LIVE Core target
+// source (CCoreSignal: 8 daily-mid rings + BOTH XAU Donchian last-breach
+// flags b50/b100 — formally UNBOUNDED, ffill-from-2020, carried EXPLICITLY,
+// a ring rescan is NOT sufficient — + defer_reopen holds + current-day
+// coefficients) AND the causal trigger detector (CCoreTrigger: slot-equity
+// segment cursor, seed, seg_start_day, per-slot day/carry rings). The v1
+// path (Save/Load below) is BYTE-UNCHANGED so RECON-8e/8f stay reproducible;
+// the v2 path (SaveWithCoreSignal/LoadWithCoreSignal) is purely additive and
+// reuses every safety mechanism (atomic write, fnv64 trailer, refuse latch,
+// continuity guard) verbatim. The "coresignal" block is emitted AFTER the
+// whole-book ledger (peer.BsWriteState) and BEFORE the continuity block.
+#define BOOKSTATE_VERSION_CS  2
 #define BOOKSTATE_J_TOL    1e-9          // refuse-to-trade splice threshold
 #define BOOKSTATE_FLUSH    262144        // writer part-flush threshold (chars)
 
@@ -893,6 +906,296 @@ public:
          Refuse(StringFormat("J-SPLICE DISCONTINUITY: j_restored %.17g vs "
                              "j_saved %.17g (rel %.3g > %g) — REFUSE TO TRADE",
                              cr.j, cs.j, m_rel_jump, BOOKSTATE_J_TOL));
+         return false;
+        }
+
+      m_loaded = true;
+      return true;
+     }
+
+   //===============================================================//
+   // UNIT B — version-2 COMPLETE warm blob (whole-book ledger +    //
+   // CCoreSignal/CCoreTrigger live state). Byte-for-byte identical //
+   // to the v1 envelope EXCEPT (a) version == 2 and (b) a          //
+   // "coresignal" object folded in between the peer ledger and the //
+   // continuity block. The cs peer must expose:                    //
+   //     bool   BsWriteCoreSignal(CBookStateWriter &w);            //
+   //     bool   BsSetCoreSignal(CBookStateTok &tk);                //
+   //     string LastError() const;                                 //
+   // (CCoreSignalState in Book/CoreSignalState.mqh is the wrapper.) //
+   // Every safety mechanism is reused verbatim.                    //
+   //===============================================================//
+   template<typename TPeer, typename TCs>
+   bool              SaveWithCoreSignal(TPeer &peer, TCs &cs, const string fname)
+     {
+      m_err = "";
+      CBookStateWriter w;
+      w.Raw("{\"schema\": \"" + BOOKSTATE_SCHEMA + "\", \"version\": "
+            + IntegerToString(BOOKSTATE_VERSION_CS) + ", ");
+      if(!peer.BsWriteState(w))
+        {
+         m_err = "BsWriteState: " + peer.LastError();
+         return false;
+        }
+      // ---- folded CoreSignal block (between ledger and continuity) ----
+      w.CK("coresignal");
+      if(!cs.BsWriteCoreSignal(w))
+        {
+         m_err = "BsWriteCoreSignal: " + cs.LastError();
+         return false;
+        }
+      SBookStateContinuity c;
+      if(!peer.BsContinuity(c))
+        {
+         m_err = "BsContinuity: " + peer.LastError();
+         return false;
+        }
+      w.Raw(", \"continuity\": {\"have\": ");
+      w.B(c.have);
+      w.KI("j_hour", c.j_hour);
+      w.KD("a_h", c.a_h);
+      w.KD("b_h", c.b_h);
+      w.KD("w", c.w);
+      w.KD("j", c.j);
+      w.KD("a_first", c.a_first);
+      w.KD("b_first", c.b_first);
+      w.Raw("}");
+
+      // ---- stream to tmp, fnv over every payload byte (== v1) ----------
+      string tmp = fname + ".tmp";
+      int fh = FileOpen(tmp, FILE_WRITE | FILE_BIN | FILE_COMMON);
+      if(fh == INVALID_HANDLE)
+        {
+         m_err = StringFormat("FileOpen('%s') failed (%d)", tmp, GetLastError());
+         return false;
+        }
+      ulong h = BOOKSTATE_FNV_OFFSET;
+      int np = w.Parts();
+      for(int i = 0; i < np; i++)
+        {
+         string part = w.Part(i);
+         uchar bytes[];
+         int nb = StringToCharArray(part, bytes, 0, WHOLE_ARRAY, CP_UTF8) - 1;
+         if(nb < 0)
+            nb = 0;
+         h = BookStateFnv1a(bytes, nb, h);
+         if(nb > 0 && FileWriteArray(fh, bytes, 0, nb) != (uint)nb)
+           {
+            FileClose(fh);
+            m_err = "FileWriteArray short write";
+            return false;
+           }
+        }
+      string trailer = StringFormat(", \"fnv64\": \"%016I64x\", \"eof\": true}", h);
+      uchar tb[];
+      int ntb = StringToCharArray(trailer, tb, 0, WHOLE_ARRAY, CP_UTF8) - 1;
+      if(FileWriteArray(fh, tb, 0, ntb) != (uint)ntb)
+        {
+         FileClose(fh);
+         m_err = "trailer short write";
+         return false;
+        }
+      FileClose(fh);
+
+      if(FileIsExist(fname, FILE_COMMON) && !FileDelete(fname, FILE_COMMON))
+        {
+         m_err = StringFormat("FileDelete('%s') failed (%d)", fname, GetLastError());
+         return false;
+        }
+      if(!FileMove(tmp, FILE_COMMON, fname, FILE_COMMON | FILE_REWRITE))
+        {
+         m_err = StringFormat("FileMove('%s'->'%s') failed (%d)",
+                              tmp, fname, GetLastError());
+         return false;
+        }
+      return true;
+     }
+
+   template<typename TPeer, typename TCs>
+   bool              LoadWithCoreSignal(TPeer &peer, TCs &cs, const string fname)
+     {
+      ResetLatch();
+
+      int fh = FileOpen(fname, FILE_READ | FILE_BIN | FILE_COMMON);
+      if(fh == INVALID_HANDLE)
+        {
+         Refuse(StringFormat("state file '%s' missing/unreadable (%d)",
+                             fname, GetLastError()));
+         return false;
+        }
+      int n = (int)FileSize(fh);
+      uchar bytes[];
+      if(n <= 0 || FileReadArray(fh, bytes, 0, n) != (uint)n)
+        {
+         FileClose(fh);
+         Refuse("state file empty / short read");
+         return false;
+        }
+      FileClose(fh);
+      string s = CharArrayToString(bytes, 0, n, CP_UTF8);
+
+      // ---- torn-write marker protocol (== v1) --------------------------
+      string eof_mark = "\"eof\": true}";
+      int elen = StringLen(eof_mark);
+      if(StringLen(s) < elen
+         || StringSubstr(s, StringLen(s) - elen, elen) != eof_mark)
+        {
+         Refuse("TORN WRITE: eof marker missing (partial/failed save)");
+         return false;
+        }
+      string fnv_mark = ", \"fnv64\": \"";
+      int mp = -1, sp = 0;
+      while(true)
+        {
+         int q = StringFind(s, fnv_mark, sp);
+         if(q < 0)
+            break;
+         mp = q;
+         sp = q + 1;
+        }
+      if(mp < 0)
+        {
+         Refuse("TORN WRITE: fnv64 trailer missing");
+         return false;
+        }
+      int hex_at = mp + StringLen(fnv_mark);
+      string hex = StringSubstr(s, hex_at, 16);
+      ulong want = 0;
+      for(int i = 0; i < 16; i++)
+        {
+         ushort c = StringGetCharacter(hex, i);
+         int d;
+         if(c >= '0' && c <= '9')
+            d = (int)(c - '0');
+         else if(c >= 'a' && c <= 'f')
+            d = (int)(c - 'a') + 10;
+         else
+           {
+            Refuse("TORN WRITE: fnv64 trailer malformed");
+            return false;
+           }
+         want = (want << 4) | (ulong)d;
+        }
+      ulong got = BookStateFnv1a(bytes, mp, BOOKSTATE_FNV_OFFSET);
+      if(got != want)
+        {
+         Refuse(StringFormat("CHECKSUM MISMATCH: fnv64 %016I64x != stored %016I64x "
+                             "(torn/corrupted state file)", got, want));
+         return false;
+        }
+
+      // ---- schema envelope (version must be the CS version) ------------
+      CBookStateTok tk;
+      tk.Attach(s);
+      string schema;
+      long   version = 0;
+      if(!tk.Eat('{') || !tk.Key("schema") || !tk.StrVal(schema)
+         || !tk.CommaKey("version") || !tk.IntVal(version))
+        {
+         Refuse("schema envelope malformed: " + tk.Err());
+         return false;
+        }
+      if(schema != BOOKSTATE_SCHEMA)
+        {
+         Refuse("schema '" + schema + "' != '" + BOOKSTATE_SCHEMA + "'");
+         return false;
+        }
+      if(version != BOOKSTATE_VERSION_CS)
+        {
+         Refuse(StringFormat("state version %I64d != %d", version,
+                             BOOKSTATE_VERSION_CS));
+         return false;
+        }
+
+      // ---- restore the whole-book ledger -------------------------------
+      if(!tk.Eat(','))
+        {
+         Refuse("envelope: " + tk.Err());
+         return false;
+        }
+      if(!peer.BsSetState(tk))
+        {
+         Refuse("RESTORE FAILED: " + peer.LastError()
+                + (tk.Ok() ? "" : (" | tok: " + tk.Err())));
+         return false;
+        }
+
+      // ---- restore the folded CoreSignal block -------------------------
+      if(!tk.CommaKey("coresignal"))
+        {
+         Refuse("coresignal key: " + tk.Err());
+         return false;
+        }
+      if(!cs.BsSetCoreSignal(tk))
+        {
+         Refuse("CORESIGNAL RESTORE FAILED: " + cs.LastError()
+                + (tk.Ok() ? "" : (" | tok: " + tk.Err())));
+         return false;
+        }
+
+      // ---- saved continuity block (== v1) ------------------------------
+      SBookStateContinuity cs2;
+      bool okc = tk.CommaKey("continuity") && tk.Eat('{');
+      okc = okc && tk.Key("have") && tk.BoolVal(cs2.have);
+      okc = okc && tk.CommaKey("j_hour") && tk.IntVal(cs2.j_hour);
+      okc = okc && tk.CommaKey("a_h") && tk.NumVal(cs2.a_h);
+      okc = okc && tk.CommaKey("b_h") && tk.NumVal(cs2.b_h);
+      okc = okc && tk.CommaKey("w") && tk.NumVal(cs2.w);
+      okc = okc && tk.CommaKey("j") && tk.NumVal(cs2.j);
+      okc = okc && tk.CommaKey("a_first") && tk.NumVal(cs2.a_first);
+      okc = okc && tk.CommaKey("b_first") && tk.NumVal(cs2.b_first);
+      okc = okc && tk.Eat('}');
+      if(!okc)
+        {
+         Refuse("continuity block malformed: " + tk.Err());
+         return false;
+        }
+
+      // ---- CONTINUITY GUARD (== v1) ------------------------------------
+      SBookStateContinuity cr;
+      if(!peer.BsContinuity(cr))
+        {
+         Refuse("BsContinuity(restored): " + peer.LastError());
+         return false;
+        }
+      m_j_hour  = cs2.j_hour;
+      m_j_saved = cs2.j;
+      if(!(cr.a_first == cs2.a_first))
+        {
+         Refuse(StringFormat("A-ANCHOR MISMATCH: restored a_first %.17g != "
+                             "saved %.17g — state re-based/corrupted",
+                             cr.a_first, cs2.a_first));
+         return false;
+        }
+      if(!(cr.b_first == cs2.b_first))
+        {
+         Refuse(StringFormat("B-ANCHOR MISMATCH: restored b_first %.17g != "
+                             "saved %.17g — state re-based/corrupted",
+                             cr.b_first, cs2.b_first));
+         return false;
+        }
+      if(cr.have != cs2.have || cr.j_hour != cs2.j_hour)
+        {
+         Refuse(StringFormat("J-HOUR MISMATCH: restored %I64d != saved %I64d",
+                             cr.j_hour, cs2.j_hour));
+         return false;
+        }
+      if(!(cr.w == cs2.w))
+        {
+         Refuse(StringFormat("W MISMATCH: restored %.17g != saved %.17g",
+                             cr.w, cs2.w));
+         return false;
+        }
+      m_j_restored = cr.j;
+      double den = MathAbs(cs2.j);
+      if(den < 1e-300)
+         den = 1e-300;
+      m_rel_jump = MathAbs(cr.j - cs2.j) / den;
+      if(!(m_rel_jump <= BOOKSTATE_J_TOL))
+        {
+         Refuse(StringFormat("J-SPLICE DISCONTINUITY: j_restored %.17g vs "
+                             "j_saved %.17g (rel %.3g > %g) — REFUSE TO TRADE",
+                             cr.j, cs2.j, m_rel_jump, BOOKSTATE_J_TOL));
          return false;
         }
 

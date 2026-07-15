@@ -1,0 +1,808 @@
+//+------------------------------------------------------------------+
+//| FableBookNative.mq5 — the LIVE-COMPUTING native Fable book.       |
+//|                                                                    |
+//| Computes f_core / f_sat / a / b / book_frac[33] LIVE each bar from |
+//| the terminal's own synchronized multi-symbol M1 feed, replacing    |
+//| the frozen-CSV replay of FableBook.mq5.  One model, two dials:     |
+//| InpScale is the ONLY IC<->FTMO difference (IC 1.6 / FTMO 0.7 +     |
+//| breaker), exactly as the v3 model of record.                       |
+//|                                                                    |
+//| THE COMPUTE CHAIN (every component individually gate-proven):      |
+//|   feed   : CFeedAssembler (S0-proven data path; f32 six-field b    |
+//|            rows + raw H1 closes bit-exact vs the golden bundles)   |
+//|   signal : 8 Sat sleeves + Ensemble -> f_sat[31] (RECON-8b) and    |
+//|            CCoreSignal live targets (RECON-8g bit-zero) +          |
+//|            CCoreTrigger causal segment detector (31/31 measured)   |
+//|   equity : CBookOrchestrator M1 clock — b = SatEquityNative on the |
+//|            HELD prior-hour f_sat (RECON-8d bitwise); a = live      |
+//|            CCoreLiveDrive (CoreSim per-leg accounts, hold-at-      |
+//|            legcap live combine per FABLE REVISION v2 item 2)       |
+//|   blend  : BookBlend on asof a_h/b_h -> book_frac[33] (RECON-8c);  |
+//|            whole chain R1-proven at 5.06e-13 (RECON-8e)            |
+//|   exec   : g_fedTgt[33] -> FED_Reconcile — VERBATIM the RECON-4-   |
+//|            proven FableBook execution half (margin cap, rebalance  |
+//|            band, volume-limit clamp, split send, FTMO Guardian)    |
+//|                                                                    |
+//| SAFETY (mandatory defaults):                                       |
+//|   * InpAllowLiveTrading = false — on a LIVE chart the EA computes  |
+//|     and logs EVERYTHING but issues ZERO OrderSend.  The Strategy   |
+//|     Tester is auto-enabled via MQLInfoInteger(MQL_TESTER) so the   |
+//|     position-fidelity gate runs unmodified; a live chart trades    |
+//|     ONLY with the input explicitly set true.                       |
+//|   * REFUSE-TO-TRADE latch: any warm-blob validation failure        |
+//|     (torn write / checksum / anchor / j-splice), any feed or       |
+//|     compute drive-contract violation -> the EA stops sizing and    |
+//|     prints the reason every pass.  It never trades through a       |
+//|     doubted state (a re-based a/b passes every self-check while    |
+//|     silently mis-weighting every trade — the latch is the guard).  |
+//|   * catch-up gate: targets computed from pre-wall history are      |
+//|     warmup only; FED_Reconcile runs only once the compute clock    |
+//|     has caught up with the wall clock.                             |
+//|                                                                    |
+//| WARM START: version-2 CBookState blob (whole-book ledger +         |
+//| CCoreSignal/CCoreTrigger) + a CCoreLiveDrive sidecar (same fnv64/  |
+//| eof protocol).  Blob present + validates -> restore and continue   |
+//| the golden path; else cold start (tester / first run).             |
+//|                                                                    |
+//| Attach to a BTCUSD M1 chart (24/7 clock, FableBook L21 law).       |
+//| HEDGING account required when trading is enabled.                  |
+//+------------------------------------------------------------------+
+#property copyright "FableMultiAssets3"
+#property version   "1.00"
+#property strict
+
+#include <Trade/Trade.mqh>
+
+//====================================================================
+// INPUTS
+//====================================================================
+input group "=== 1. The dial (the ONLY knob that differs IC<->FTMO) ==="
+input double InpScale        = 1.60;      // s: global scale dial (IC 1.6 / FTMO 0.7)
+input double InpInitial      = 10000.0;   // Seed capital EUR (IC 10000 / FTMO 100000)
+input double InpDailyStopX   = 0.0;       // FTMO daily circuit breaker % (0=off)
+
+input group "=== 2. SAFETY (read the header) ==="
+input bool   InpAllowLiveTrading = false; // MASTER SWITCH: false = compute+log, ZERO orders on a live chart (tester auto-trades)
+
+input group "=== 3. Universe / magics / logs ==="
+input long   InpMagicBase    = 3900000;   // Order magic base (+idx+1 per symbol, 33 symbols)
+input string InpV34SymbolMap = "";        // canonical=broker remap (';'-sep)
+input bool   InpLog          = true;      // decisions CSV to Common\Files
+input string InpFedFracFile  = "FMA3_fed_frac_v3.csv"; // UNUSED live (native computes); kept for BookReplay compile unit
+
+input group "=== 4. Engine constants (match the record engine EXACTLY) ==="
+input double InpMarginCap    = 0.9;       // Margin utilisation cap
+input double InpRebalBand    = 0.25;      // Rebalance dead-band
+
+input group "=== 5. State + telemetry ==="
+input string InpStateFile     = "FMA3_native_state.json"; // v2 warm blob ("" = stateless)
+input bool   InpSaveState     = true;      // save blob at each completed hour (live)
+input bool   InpSaveInTester  = false;     // also save inside the tester (slow)
+input string InpTelemetryFile = "FMA3_native_hourly.csv"; // per-hour book_frac + a_h/b_h/j
+input int    InpMaxMinutesPerPass = 20000; // feed catch-up bound per pump pass
+
+input group "=== 6. EUR conversion crosses (eurq full map, always on) ==="
+input string InpEURUSD = "EURUSD";
+input string InpEURJPY = "EURJPY";
+input string InpEURGBP = "EURGBP";
+input string InpEURCHF = "EURCHF";
+input string InpEURNZD = "EURNZD";
+input string InpEURCAD = "EURCAD";
+input string InpEURNOK = "EURNOK";
+input string InpEURSEK = "EURSEK";
+
+//====================================================================
+// INCLUDES (order matters: Convert -> Replay(universe) -> Exec ->
+// Guardian, then the compute chain)
+//====================================================================
+#include <Book/BookConvert.mqh>      // FED_MidOf, FED_Eurq
+#include <Book/BookReplay.mqh>       // 33-universe table + g_fedTgt (loader unused)
+#include <Book/BookExec.mqh>         // `trade`, primitives, FED_Reconcile (RECON-4)
+#include <Book/Guardian.mqh>         // FED_GuardianPass (FTMO breaker)
+#include <Book/BookOrchestrator.mqh> // CBookOrchestrator (S1 R1-proven, + live hooks)
+#include <Book/FeedAssembler.mqh>    // CFeedAssembler (mirror-gated)
+#include <Core/CoreSignal.mqh>       // CCoreSignal + CCoreTrigger (RECON-8g)
+#include <Book/CoreSignalState.mqh>  // v2 warm-blob CoreSignal wrapper
+#include <Book/CoreLiveDrive.mqh>    // CCoreLiveDrive (live a_h + f_core)
+
+//====================================================================
+// WIRING CONSTANTS
+//====================================================================
+// FA symbol index -> CoreSignal instrument id (-1 = not a core leg)
+int FaInstOf(const int i)
+  {
+   switch(i)
+     {
+      case 32: return CS_I_XAUUSD;
+      case 20: return CS_I_USDJPY;
+      case 22: return CS_I_ETHUSD;
+      case  8: return CS_I_EURGBP;
+      case 30: return CS_I_USTEC;
+      case  3: return CS_I_AUDUSD;
+      case 18: return CS_I_NZDUSD;
+      case 21: return CS_I_BTCUSD;
+     }
+   return -1;
+  }
+#define EA_CROSS_FA0   6            // FA indices 6..13 = the 8 EUR crosses
+// trigger leg -> slot map (CheckCoreSignal SmokeTrigger / trigger_detector)
+const int EA_TRIG_SLOT[9] = {0, 1, 2, 3, 4, 5, 5, 5, 6};
+
+//====================================================================
+// STATE
+//====================================================================
+CBookOrchestrator g_orc;
+CFeedAssembler    g_fa;
+CCoreSignal       g_sig;
+CCoreTrigger      g_trig;
+CCoreSignalState  g_css;
+CCoreLiveDrive    g_drive;
+CBookState        g_bs;             // main v2 blob
+CBookState        g_bsDrive;        // core-drive sidecar
+
+class CEaBarBuf
+  {
+public:
+   MqlRates          r[];
+   int               pos;
+   int               n;
+                     CEaBarBuf() { pos = 0; n = 0; }
+  };
+CEaBarBuf g_buf[FA_NSYM];
+long      g_from[FA_NSYM];          // next CopyRates window start
+long      g_resolved[FA_NSYM];      // history resolved through (inclusive)
+string    g_broker[FA_NSYM];
+double    g_point[FA_NSYM];
+
+bool      g_refuse    = false;
+string    g_refuseWhy = "";
+long      g_refuseLastPrint = 0;
+bool      g_canTrade  = false;
+bool      g_warm      = false;
+long      g_backfillFrom = 0;
+long      g_lastCompletedHour = 0;
+long      g_unreadyRows = 0;
+bool      g_dirtyState = false;
+long      g_histWaits = 0;        // CopyRates lazy-download retries
+bool      g_inPump    = false;
+datetime  g_lastM1Bar = 0;
+int       g_teleh     = INVALID_HANDLE;
+long      g_hours     = 0;
+
+#define EA_CHUNK 16384              // CopyRates window (bars-equivalent minutes)
+
+//====================================================================
+// REFUSE-TO-TRADE latch (loud, never silent)
+//====================================================================
+void RefuseLatch(const string why)
+  {
+   if(g_refuse)
+      return;
+   g_refuse = true;
+   g_refuseWhy = why;
+   Print("FMA3 NATIVE *** REFUSE-TO-TRADE ***: ", why);
+   Print("FMA3 NATIVE: compute halted; no further sizing. Fix the state/feed and restart.");
+  }
+
+//====================================================================
+// TELEMETRY (per-hour book_frac + a_h/b_h/j + fills context)
+//====================================================================
+void TeleOpen()
+  {
+   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,trading";
+   if(g_fedLive)
+     {
+      g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      if(g_teleh != INVALID_HANDLE)
+        {
+         if(FileSize(g_teleh) == 0)
+            FileWriteString(g_teleh, hdr + "\n");
+         FileSeek(g_teleh, 0, SEEK_END);
+        }
+     }
+   else
+     {
+      g_teleh = FileOpen(InpTelemetryFile, FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      if(g_teleh != INVALID_HANDLE)
+         FileWriteString(g_teleh, hdr + "\n");
+     }
+  }
+
+void TelemetryHour(const long H)
+  {
+   if(g_teleh == INVALID_HANDLE)
+      return;
+   double a_h = g_orc.LastAH();
+   double b_h = g_orc.LastBH();
+   double j   = BOOKORC_W * a_h + (1.0 - BOOKORC_W) * b_h;
+   // per-symbol book_frac rows of the last emission (broker names, pre-s)
+   int n = g_orc.EmitCount();
+   for(int i = 0; i < n; i++)
+      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,\n",
+                      g_orc.EmitTs(i), g_orc.EmitSymbol(i), g_orc.EmitFrac(i)));
+   FileWriteString(g_teleh, StringFormat(
+      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%d\n",
+      H, n, a_h, b_h, j, g_drive.Seed(), g_drive.Segments(), g_drive.Fires(),
+      g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(), g_unreadyRows,
+      g_drive.SkippedBars(),
+      AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
+      (g_canTrade && !g_refuse) ? 1 : 0));
+   if(g_fedLive)
+      FileFlush(g_teleh);
+  }
+
+//====================================================================
+// STATE PERSISTENCE (v2 blob + core-drive sidecar, atomic + fnv64)
+//====================================================================
+void SaveStateFiles()
+  {
+   if(!InpSaveState || StringLen(InpStateFile) == 0 || g_refuse)
+      return;
+   if(MQLInfoInteger(MQL_TESTER) && !InpSaveInTester)
+      return;
+   if(!g_bs.SaveWithCoreSignal(g_orc, g_css, InpStateFile))
+      Print("FMA3 NATIVE WARN: state save failed (restart will cold-start): ",
+            g_bs.LastError());
+   else if(!g_bsDrive.Save(g_drive, InpStateFile + ".coredrive"))
+      Print("FMA3 NATIVE WARN: core-drive sidecar save failed: ",
+            g_bsDrive.LastError());
+  }
+
+//====================================================================
+// FEED SEEDING (warm restart / live start: carries from real history)
+//====================================================================
+void SeedFromHistory()
+  {
+   MqlRates r[];
+   for(int i = 0; i < FA_NSYM; i++)
+     {
+      int n = CopyRates(g_broker[i], PERIOD_M1,
+                        (datetime)(g_backfillFrom - 60 * 4320),
+                        (datetime)(g_backfillFrom - 60), r);
+      if(n <= 0)
+         continue;
+      MqlRates b = r[n - 1];
+      g_fa.SeedSymbol(i, b.open, b.high, b.low, b.close, (int)b.spread);
+      if(i >= EA_CROSS_FA0 && i < EA_CROSS_FA0 + FA_NCROSS)
+        {
+         double sp = (int)b.spread * g_point[i];
+         g_fa.SeedCrossValue(FA_SYMS[i], b.close, b.close + sp);
+         g_drive.SeedCross(i - EA_CROSS_FA0, b.close, b.close + sp);
+        }
+     }
+  }
+
+//====================================================================
+// FEED PUMP — minute-merged CopyRates poll into BOTH consumers
+//====================================================================
+bool HeadReady(const int i, const long last_closed)
+  {
+   while(true)
+     {
+      while(g_buf[i].pos < g_buf[i].n)
+        {
+         long t = (long)g_buf[i].r[g_buf[i].pos].time;
+         if((t % 60) != 0 || t > last_closed)
+           {
+            g_buf[i].pos++;
+            continue;
+           }
+         return true;
+        }
+      if(g_from[i] > last_closed)
+         return false;                        // resolved through last_closed
+      // clamp to the symbol's actual first available M1 bar (tester
+      // pre-cache floor; nothing exists before it, so it is resolved)
+      long fd = 0;
+      if(SeriesInfoInteger(g_broker[i], PERIOD_M1, SERIES_FIRSTDATE, fd)
+         && fd > 0)
+        {
+         long fda = (fd / 60) * 60;
+         if(fda > g_from[i])
+           {
+            g_from[i] = fda;
+            if(fda - 60 > g_resolved[i])
+               g_resolved[i] = fda - 60;
+            if(g_from[i] > last_closed)
+               return false;
+           }
+        }
+      long to = g_from[i] + 60 * (EA_CHUNK - 1);
+      if(to > last_closed)
+         to = last_closed;
+      int n = CopyRates(g_broker[i], PERIOD_M1, (datetime)g_from[i],
+                        (datetime)to, g_buf[i].r);
+      if(n < 0)
+        {
+         g_histWaits++;                       // lazy download: retry later
+         return false;
+        }
+      g_buf[i].n = n;
+      g_buf[i].pos = 0;
+      g_from[i] = to + 60;
+      g_resolved[i] = to;
+     }
+   return false;
+  }
+
+bool PushDrive(const int i, const long t, const MqlRates &rr)
+  {
+   int inst = FaInstOf(i);
+   if(inst >= 0)
+      if(!g_drive.PushBar(inst, t, rr.open, rr.high, rr.low, rr.close,
+                          (int)rr.spread, g_point[i]))
+        {
+         RefuseLatch("core drive: " + g_drive.LastError());
+         return false;
+        }
+   if(i >= EA_CROSS_FA0 && i < EA_CROSS_FA0 + FA_NCROSS)
+     {
+      double sp = (int)rr.spread * g_point[i];
+      if(!g_drive.PushCross(i - EA_CROSS_FA0, t, rr.close, rr.close + sp))
+        {
+         RefuseLatch("core drive cross: " + g_drive.LastError());
+         return false;
+        }
+     }
+   return true;
+  }
+
+bool PollBars(const long now)
+  {
+   long last_closed = (now / 60) * 60 - 60;
+   if(last_closed < g_backfillFrom)
+      return true;
+   int steps = 0;
+   while(steps < InpMaxMinutesPerPass)
+     {
+      // safe front: minute up to which EVERY symbol's history is resolved
+      long safe = last_closed;
+      for(int i = 0; i < FA_NSYM; i++)
+        {
+         HeadReady(i, last_closed);           // refills + updates g_resolved
+         if(g_resolved[i] < safe)
+            safe = g_resolved[i];
+        }
+      long best = -1;
+      for(int i = 0; i < FA_NSYM; i++)
+        {
+         if(g_buf[i].pos >= g_buf[i].n)
+            continue;
+         long t = (long)g_buf[i].r[g_buf[i].pos].time;
+         if(t > safe)
+            continue;
+         if(best < 0 || t < best)
+            best = t;
+        }
+      if(best < 0)
+        {
+         // drained to the safe front: advance both causal clocks
+         if(safe >= g_backfillFrom)
+           {
+            if(!g_fa.AdvanceTo(safe + 60))
+              {
+               RefuseLatch("feed AdvanceTo: " + g_fa.LastError());
+               return false;
+              }
+            if(!g_drive.AdvanceTo(safe + 60))
+              {
+               RefuseLatch("drive AdvanceTo: " + g_drive.LastError());
+               return false;
+              }
+           }
+         return true;
+        }
+      for(int i = 0; i < FA_NSYM; i++)
+        {
+         if(g_buf[i].pos >= g_buf[i].n)
+            continue;
+         if((long)g_buf[i].r[g_buf[i].pos].time != best)
+            continue;
+         MqlRates rr = g_buf[i].r[g_buf[i].pos];
+         if(!g_fa.PushBar(i, best, rr.open, rr.high, rr.low, rr.close,
+                          (int)rr.spread))
+           {
+            RefuseLatch("feed: " + g_fa.LastError());
+            return false;
+           }
+         if(!PushDrive(i, best, rr))
+            return false;
+         g_buf[i].pos++;
+        }
+      steps++;
+     }
+   return true;                                // bounded pass; continue next tick
+  }
+
+//====================================================================
+// HOUR CYCLE — the model law: fed[h] computed+applied at h+1h
+//====================================================================
+bool ApplyEmitted()
+  {
+   int n = g_orc.EmitCount();
+   if(n == 0)
+      return true;
+   long cur = -1;
+   for(int i = 0; i < n; i++)
+     {
+      long ts = g_orc.EmitTs(i);
+      if(ts != cur)
+        {
+         for(int k = 0; k < FED_NSYM; k++)
+            g_fedTgt[k] = 0.0;                 // present hour: flatten-by-omission
+         cur = ts;
+        }
+      string sym = g_orc.EmitSymbol(i);
+      if(sym == "__GRID__")
+         continue;                             // all-flat sentinel: no leg
+      int idx = FED_SymIndex(sym);
+      if(idx < 0)
+        {
+         RefuseLatch("emitted symbol not in the 33-universe: " + sym);
+         return false;
+        }
+      g_fedTgt[idx] = g_orc.EmitFrac(i);
+     }
+   g_fedTgtDirty = true;
+   return true;
+  }
+
+bool HourCycle()
+  {
+   while(g_fa.H1Ready())
+     {
+      long H = g_fa.PeekH1Ts();
+      SFaH1Row hr;
+      if(!g_fa.PopH1Row(hr))
+        {
+         RefuseLatch("PopH1Row: " + g_fa.LastError());
+         return false;
+        }
+      // 1. the hour's released M1 rows -> b engine (held-tgt lag law)
+      while(g_fa.M1Available() > 0)
+        {
+         SFaM1Row r;
+         if(!g_fa.PopM1Row(r))
+           {
+            RefuseLatch("PopM1Row: " + g_fa.LastError());
+            return false;
+           }
+         if(!r.ready)
+           {
+            g_unreadyRows++;                   // cold pre-seed gap: skip-loud
+            continue;
+           }
+         if(!g_orc.StepM1(r.ts, r.has, r.bo, r.ao, r.bc, r.ac, r.bl, r.ah,
+                          r.eurq, r.swl, r.sws))
+           {
+            RefuseLatch("StepM1: " + g_orc.LastError());
+            return false;
+           }
+        }
+      // 2. live core products -> orchestrator (a samples + f_core rows)
+      long ts;
+      double eqc;
+      double fc[];
+      while(g_drive.Samples() > 0)
+        {
+         if(!g_drive.PopSample(ts, eqc) || !g_orc.LiveCoreSample(ts, eqc))
+           {
+            RefuseLatch("live a-sample: " + g_orc.LastError());
+            return false;
+           }
+        }
+      while(g_drive.HourRows() > 0)
+        {
+         long fh;
+         if(!g_drive.PopHourRow(fh, fc) || !g_orc.LiveCoreAppend(fh, fc))
+           {
+            RefuseLatch("live f_core append: " + g_orc.LastError());
+            return false;
+           }
+        }
+      g_orc.LiveCoreAdvance(H + 3600);
+      // 3. H1 signal chain (raw closes; NaN = symbol printed no bar)
+      if(!g_orc.StepH1(H, hr.close))
+        {
+         RefuseLatch("StepH1: " + g_orc.LastError());
+         return false;
+        }
+      if(!ApplyEmitted())                      // catch-up edge emissions
+         return false;
+      // 4. EARLY-EMIT hour H now — the record book applies fed[H] at
+      // H+1h, which is exactly this wall instant (deferring to the
+      // next H1 bar would cost one extra hour of application lag)
+      long next_ts = g_fa.H1Ready() ? g_fa.PeekH1Ts() : H + 3600;
+      if(!g_orc.LiveEmitStaged(next_ts))
+        {
+         RefuseLatch("LiveEmitStaged: " + g_orc.LastError());
+         return false;
+        }
+      if(!ApplyEmitted())
+         return false;
+      TelemetryHour(H);
+      g_lastCompletedHour = H;
+      g_hours++;
+      g_dirtyState = true;
+     }
+   return true;
+  }
+
+//====================================================================
+// THE PUMP — guardian, feed, hour cycle, reconcile, persist
+//====================================================================
+void Pump()
+  {
+   if(g_inPump)
+      return;
+   g_inPump = true;
+
+   if(g_refuse)
+     {
+      long now0 = (long)TimeCurrent();
+      if(now0 - g_refuseLastPrint >= 3600)
+        {
+         Print("FMA3 NATIVE REFUSE-TO-TRADE (latched): ", g_refuseWhy);
+         g_refuseLastPrint = now0;
+        }
+      g_inPump = false;
+      return;
+     }
+
+   long now = (long)TimeCurrent();
+   // compute clock vs wall clock: trade only when caught up (warmup
+   // history must never be traded at today's prices)
+   bool synced = (g_lastCompletedHour >= (now / 3600) * 3600 - 3600);
+
+   // [SEAM G] FTMO daily breaker BEFORE anything (inert at x<=0)
+   if(g_canTrade && synced && !FED_GuardianPass())
+     {
+      g_inPump = false;
+      return;
+     }
+
+   if(!PollBars(now))
+     {
+      g_inPump = false;
+      return;
+     }
+   if(!HourCycle())
+     {
+      g_inPump = false;
+      return;
+     }
+
+   synced = (g_lastCompletedHour >= (now / 3600) * 3600 - 3600);
+   if(g_canTrade && synced && !g_refuse)
+      FED_Reconcile();                         // re-size every M1 (RECON-4 law)
+
+   if(g_dirtyState)
+     {
+      SaveStateFiles();
+      g_dirtyState = false;
+     }
+   g_inPump = false;
+  }
+
+//====================================================================
+// INIT
+//====================================================================
+int OnInit()
+  {
+   trade.SetExpertMagicNumber(InpMagicBase);
+   g_fedLive  = !MQLInfoInteger(MQL_TESTER);
+   g_canTrade = (!g_fedLive) || InpAllowLiveTrading;
+
+   if(_Period != PERIOD_M1)
+     {
+      Print("FMA3 NATIVE FATAL: attach to an M1 chart (24/7 clock law). Aborting.");
+      return(INIT_FAILED);
+     }
+   if(_Symbol != "BTCUSD")
+      Print("FMA3 NATIVE WARN: clock chart is '", _Symbol,
+            "' — BTCUSD M1 is the deployment law (24/7 clock).");
+
+   if(g_canTrade
+      && (ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE)
+         != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING)
+     {
+      Print("FMA3 NATIVE FATAL: trading enabled but the account is not HEDGING ",
+            "(one net position + one magic per symbol). Aborting.");
+      return(INIT_FAILED);
+     }
+   if(!g_canTrade)
+      Print("FMA3 NATIVE: InpAllowLiveTrading=false on a live chart — ",
+            "COMPUTE+LOG ONLY, zero OrderSend. Set the input true to trade.");
+
+   // 33-universe + broker map (BookReplay tables; the CSV loader is NOT used)
+   if(!FED_ParseSymbolMap())
+      return(INIT_FAILED);
+   FED_InitUniverse();
+   for(int i = 0; i < FED_NSYM; i++)
+      if(!SymbolSelect(g_fedTrade[i], true))
+         Print("FMA3 NATIVE WARN: symbol '", g_fedTrade[i],
+               "' not available - leg will not size/trade.");
+   string crosses[8] = {InpEURUSD, InpEURJPY, InpEURGBP, InpEURCHF,
+                        InpEURNZD, InpEURCAD, InpEURNOK, InpEURSEK};
+   for(int i = 0; i < 8; i++)
+      if(!SymbolSelect(crosses[i], true))
+         Print("FMA3 NATIVE WARN: EUR cross '", crosses[i], "' not available.");
+   SymbolSelect(_Symbol, true);
+   for(int i = 0; i < FED_NSYM; i++)
+      g_fedLegDefer[i] = false;
+
+   // --- compute chain --------------------------------------------------
+   if(!g_orc.Init(BOOKORC_W, 10000.0))
+     {
+      Print("FMA3 NATIVE FATAL: orchestrator Init: ", g_orc.LastError());
+      return(INIT_FAILED);
+     }
+   g_orc.EnableLiveCore();
+
+   if(!g_fa.Init(true))                        // digits gate REFUSES on drift
+     {
+      Print("FMA3 NATIVE FATAL: feed assembler Init: ", g_fa.LastError());
+      return(INIT_FAILED);
+     }
+
+   g_sig.Configure();
+   if(!g_trig.Configure(7, 9, EA_TRIG_SLOT, 0.25, (1.0 / 7.0) / 1.75, 2.5, 5))
+     {
+      Print("FMA3 NATIVE FATAL: trigger Configure: ", g_trig.LastError());
+      return(INIT_FAILED);
+     }
+   g_css.Attach(&g_sig, &g_trig);
+   if(!g_drive.Init(&g_sig, &g_trig))
+     {
+      Print("FMA3 NATIVE FATAL: core drive Init: ", g_drive.LastError());
+      return(INIT_FAILED);
+     }
+
+   // --- feed poll tables -------------------------------------------------
+   for(int i = 0; i < FA_NSYM; i++)
+     {
+      g_broker[i] = FaBrokerName(FA_SYMS[i]);
+      g_point[i]  = SymbolInfoDouble(g_broker[i], SYMBOL_POINT);
+      g_buf[i].pos = 0;
+      g_buf[i].n = 0;
+      g_resolved[i] = -1;
+     }
+
+   // --- warm start (blob + sidecar) or cold start --------------------------
+   g_warm = false;
+   if(StringLen(InpStateFile) > 0 && FileIsExist(InpStateFile, FILE_COMMON))
+     {
+      if(!g_bs.LoadWithCoreSignal(g_orc, g_css, InpStateFile))
+         RefuseLatch("STATE BLOB: " + g_bs.RefuseReason());
+      else
+        {
+         string side = InpStateFile + ".coredrive";
+         if(!FileIsExist(side, FILE_COMMON))
+            RefuseLatch("state blob present but core-drive sidecar missing: " + side);
+         else if(!g_bsDrive.Load(g_drive, side))
+            RefuseLatch("CORE-DRIVE SIDECAR: " + g_bsDrive.RefuseReason());
+         else
+           {
+            long oj = g_orc.LastEmitHour();
+            long dj = g_drive.LastFlushHour();
+            if(dj > oj || dj < oj - 86400)
+               RefuseLatch(StringFormat("state incoherence: core-drive hour %I64d "
+                                        "vs book hour %I64d", dj, oj));
+            else
+              {
+               g_warm = true;
+               g_lastCompletedHour = oj;
+               g_backfillFrom = oj + 3600;
+               PrintFormat("FMA3 NATIVE WARM START: blob validated (j=%.17g at hour %I64d, "
+                           "rel_jump=%.3g); resuming from %s",
+                           g_bs.JRestored(), g_bs.JHour(), g_bs.RelJump(),
+                           TimeToString((datetime)g_backfillFrom, TIME_DATE|TIME_MINUTES));
+              }
+           }
+        }
+     }
+   if(!g_warm && !g_refuse)
+     {
+      if(!g_drive.ColdStart(10000.0))
+        {
+         Print("FMA3 NATIVE FATAL: core drive ColdStart: ", g_drive.LastError());
+         return(INIT_FAILED);
+        }
+      if(!g_fedLive)
+         g_backfillFrom = (long)D'2020.01.01'; // tester: from the pre-cache floor
+      else
+         g_backfillFrom = ((long)TimeCurrent() / 3600) * 3600 + 3600; // next hour
+      PrintFormat("FMA3 NATIVE COLD START (%s): grid from %s — indicator warmup "
+                  "period, targets are computed but the catch-up gate holds sizing "
+                  "until the compute clock reaches the wall clock.",
+                  g_fedLive ? "live" : "tester",
+                  TimeToString((datetime)g_backfillFrom, TIME_DATE|TIME_MINUTES));
+     }
+   for(int i = 0; i < FA_NSYM; i++)
+     {
+      g_from[i] = g_backfillFrom;
+      g_resolved[i] = g_backfillFrom - 60;
+     }
+   if(!g_refuse)
+      SeedFromHistory();
+
+   // --- decisions log (verbatim FableBook block, native filename) ----------
+   if(InpLog)
+     {
+      string hdr[11] = {"time", "symbol", "event", "net_frac", "want", "held",
+                        "after", "balance", "equity", "margin_level", "reserved"};
+      if(g_fedLive)
+        {
+         g_fedLogh = FileOpen("fma3native_decisions.csv",
+                              FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
+         if(g_fedLogh != INVALID_HANDLE)
+           {
+            if(FileSize(g_fedLogh) == 0)
+               FileWrite(g_fedLogh, hdr[0], hdr[1], hdr[2], hdr[3], hdr[4],
+                         hdr[5], hdr[6], hdr[7], hdr[8], hdr[9]);
+            FileSeek(g_fedLogh, 0, SEEK_END);
+           }
+        }
+      else
+        {
+         g_fedLogh = FileOpen("fma3native_decisions.csv",
+                              FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
+         if(g_fedLogh != INVALID_HANDLE)
+            FileWrite(g_fedLogh, hdr[0], hdr[1], hdr[2], hdr[3], hdr[4],
+                      hdr[5], hdr[6], hdr[7], hdr[8], hdr[9]);
+        }
+     }
+   TeleOpen();
+
+   PrintFormat("FMA3 NATIVE init: s=%.2f initial=%.0f marginCap=%.2f band=%.2f "
+               "dailyStopX=%.2f magicBase=%d symbols=%d trade=%s warm=%s refuse=%s",
+               InpScale, InpInitial, InpMarginCap, InpRebalBand, InpDailyStopX,
+               (int)InpMagicBase, FED_NSYM,
+               g_canTrade ? "ON" : "OFF(compute-only)",
+               g_warm ? "yes" : "cold",
+               g_refuse ? ("YES: " + g_refuseWhy) : "no");
+
+   EventSetTimer(5);                            // live lazy-history poll cadence
+   return(INIT_SUCCEEDED);
+  }
+
+//====================================================================
+// DEINIT
+//====================================================================
+void OnDeinit(const int reason)
+  {
+   EventKillTimer();
+   if(g_dirtyState)
+      SaveStateFiles();
+   if(g_fedLogh != INVALID_HANDLE)
+      FileClose(g_fedLogh);
+   if(g_teleh != INVALID_HANDLE)
+      FileClose(g_teleh);
+   PrintFormat("FMA3 NATIVE deinit: hours=%I64d segs=%d fires=%I64d "
+               "lead_hold=%I64d sc_mm=%I64d unready=%I64d skipped=%I64d "
+               "split=%d rejects=%d stops=%d final_eq=%.2f refuse=%s",
+               g_hours, g_drive.Segments(), g_drive.Fires(),
+               g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(),
+               g_unreadyRows, g_drive.SkippedBars(),
+               (int)g_fedNSplit, (int)g_fedNReject, g_fedNStops,
+               AccountInfoDouble(ACCOUNT_EQUITY),
+               g_refuse ? g_refuseWhy : "no");
+  }
+
+//====================================================================
+// MAIN LOOP — pump on every new M1 clock bar + on the 5 s timer
+//====================================================================
+void OnTick()
+  {
+   datetime bt = iTime(_Symbol, PERIOD_M1, 0);
+   if(bt == g_lastM1Bar && !g_fedPendExec)
+      return;
+   g_lastM1Bar = bt;
+   Pump();
+  }
+
+void OnTimer()
+  {
+   Pump();
+  }
+//+------------------------------------------------------------------+

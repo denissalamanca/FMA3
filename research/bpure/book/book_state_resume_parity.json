@@ -40,7 +40,7 @@
  "trailing_hazard_minutes": 0,
  "tgt_diag_max_abs": 4.196643033083092e-14,
  "tgt_diag_n_probes_diff": 26412,
- "runtime_s": 193.6,
+ "runtime_s": 118.2,
  "rows_offset": 251354,
  "resumed": true,
  "actual_path": "/Users/dsalamanca/vs_env/FableMultiAssets3/research/bpure/book/out/FMA3_book_mirror_tail.csv",

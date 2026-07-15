@@ -374,6 +374,15 @@ private:
    bool              m_core_done;
    int               m_fc_cursor;             // next unconsumed f_core row
 
+   // ---- LIVE-CORE mode (FableBookNative.mq5; INERT in batch replay:
+   // every field below is dead until EnableLiveCore() is called, so
+   // the S1 R1 gate path is numerically and structurally unchanged) ----
+   bool              m_live_core;             // EnableLiveCore() latch
+   long              m_live_core_through;     // live core clock (exclusive)
+   long              m_live_sc_mismatch;      // early-emit SC row mismatches
+   bool              m_live_have_emit4;       // early-emitted row pending check
+   double            m_live_emit4[4];
+
    // ---- f_sat held-row ring (the b tgt source) ----
    long              m_held_ts[BOOKORC_HELD];
    double            m_held_row[BOOKORC_HELD][SATEQ_NSYM];
@@ -464,6 +473,12 @@ private:
    // that may still change — a drive-contract violation, not a fallback.
    bool              FCoreConsumable(const int k)
      {
+      // LIVE-CORE: rows are appended by LiveCoreAppend only AFTER their
+      // hour completed on the union clock (final by construction; the
+      // batch same-hour straddle heal cannot occur), so every row is
+      // immediately consumable.  INERT in batch mode.
+      if(m_live_core)
+         return true;
       if(k < m_core.FCoreRows() - 1)
          return true;
       if(m_core_done && !m_seg_open)
@@ -581,11 +596,18 @@ private:
          // static_blend: core_frac.reindex(hours).fillna(0.0). If the
          // core feed simply has not reached h yet (cursor exhausted,
          // feed not done), a zero here would silently corrupt — refuse.
+         // LIVE-CORE exception: when the live core clock has verifiably
+         // advanced past the whole hour (LiveCoreAdvance(h+1h)) and no
+         // core union bar printed in [h, h+1h), fillna(0.0) IS the
+         // exact static_blend semantics, not a corruption.
          if(m_fc_cursor >= m_core.FCoreRows() && !m_core_done)
            {
-            m_err = StringFormat("core feed behind the H1 clock at hour %I64d "
-                                 "(f_core rows exhausted, feed not done)", h);
-            return false;
+            if(!(m_live_core && m_live_core_through >= h + 3600))
+              {
+               m_err = StringFormat("core feed behind the H1 clock at hour %I64d "
+                                    "(f_core rows exhausted, feed not done)", h);
+               return false;
+              }
            }
          for(int s = 0; s < BOOKORC_NNET; s++)
             fc[s] = 0.0;
@@ -646,7 +668,12 @@ public:
                                            m_b_eqc(0.0), m_b_eqw(0.0),
                                            m_seg_open(false), m_n_segs(0),
                                            m_seed(0.0), m_core_done(false),
-                                           m_fc_cursor(0), m_held_n(0),
+                                           m_fc_cursor(0),
+                                           m_live_core(false),
+                                           m_live_core_through(0),
+                                           m_live_sc_mismatch(0),
+                                           m_live_have_emit4(false),
+                                           m_held_n(0),
                                            m_emit_n(0), m_last_emit_hour(0),
                                            m_total_rows(0), m_total_hours(0),
                                            m_total_sentinels(0),
@@ -810,6 +837,10 @@ public:
       m_seed = core_seed;
       m_core_done = false;
       m_fc_cursor = 0;
+      m_live_core = false;
+      m_live_core_through = 0;
+      m_live_sc_mismatch = 0;
+      m_live_have_emit4 = false;
       for(int i = 0; i < BOOKORC_HELD; i++)
          m_held_ts[i] = -1;
       m_held_n = 0;
@@ -1077,8 +1108,29 @@ public:
             m_err = StringFormat("SC emission misaligned at H1 bar %I64d", m_h1_bars);
             return false;
            }
-         if(!StageStepEmit(m_prev_ts, m_prev_mr, m_prev_cbk, m_prev_id,
-                           m_prev_cr, m_prev_tv, m_prev_mg, emit4))
+         // LIVE-CORE: hour m_prev_ts may have been EARLY-emitted by
+         // LiveEmitStaged at the h+1h boundary (the record book applies
+         // fed[h] at h+1 — deferring emission to this bar would cost a
+         // full extra hour live).  Skip the duplicate stage; verify the
+         // SC stepper's ACTUAL row matches the assumed-next-hour row
+         // (mismatch = a grid-gap hour; telemetry, not silent).
+         bool live_dup = (m_live_core && m_total_hours > 0
+                          && m_last_emit_hour >= m_prev_ts);
+         if(live_dup)
+           {
+            if(m_live_have_emit4)
+              {
+               for(int q4 = 0; q4 < 4; q4++)
+                  if(emit4[q4] != m_live_emit4[q4])
+                    {
+                     m_live_sc_mismatch++;
+                     break;
+                    }
+               m_live_have_emit4 = false;
+              }
+           }
+         else if(!StageStepEmit(m_prev_ts, m_prev_mr, m_prev_cbk, m_prev_id,
+                                m_prev_cr, m_prev_tv, m_prev_mg, emit4))
             return false;
         }
       else if(m_h1_bars > 0)
@@ -1194,6 +1246,89 @@ public:
       if(m_bS.Query(h, v))
          return v / m_bS.FirstV();
       return 1.0;
+     }
+
+   //================================================================//
+   // LIVE-CORE additive hooks (FableBookNative.mq5 / CoreLiveDrive). //
+   // INERT unless EnableLiveCore() — the S1 batch replay path (Begin//
+   // CoreSegment/StepCoreLegBar/EndCoreSegment + TestBook) is       //
+   // byte-for-byte the same behavior with the flag off (default).   //
+   //================================================================//
+   void              EnableLiveCore()        { m_live_core = true;        }
+   bool              LiveCoreOn()      const { return m_live_core;        }
+   long              LiveScMismatches() const { return m_live_sc_mismatch; }
+   long              LiveCoreThrough() const { return m_live_core_through; }
+
+   // one live combined-eqc 1m sample (the a-curve; strictly ascending)
+   bool              LiveCoreSample(const long ts, const double eqc)
+     {
+      if(!m_live_core)  { m_err = "live-core mode off"; return false; }
+      if(!m_aS.Add(ts, eqc))
+        {
+         m_err = "a-sampler: non-ascending live core stamp";
+         return false;
+        }
+      return true;
+     }
+
+   // one COMPLETED hour's live f_core row (values final by construction)
+   bool              LiveCoreAppend(const long hour, const double &fc[])
+     {
+      if(!m_live_core)  { m_err = "live-core mode off"; return false; }
+      if(!m_core.AppendFCoreRow(hour, fc))
+        {
+         m_err = "AppendFCoreRow: " + m_core.LastError();
+         return false;
+        }
+      return true;
+     }
+
+   // advance the live core clock (exclusive): asserts every core union
+   // bar with stamp < through has been sampled/appended
+   void              LiveCoreAdvance(const long through_exclusive)
+     {
+      if(through_exclusive > m_live_core_through)
+         m_live_core_through = through_exclusive;
+     }
+
+   // LiveEmitStaged — emit the JUST-CLOSED hour's blend row NOW.
+   // The record book applies fed[h] at h+1 (data through h+1h is
+   // exactly what exists at that wall instant); the batch chain defers
+   // emission to the NEXT H1 bar (SeasonalCrypto deferred emit), which
+   // live would cost one extra hour of application lag.  This method
+   // reproduces the deferred SC emission arithmetic (hold.shift(-1) *
+   // m_sea_w, prev crypto row) with the hold gate taken from the
+   // ASSUMED next grid hour; when the real next bar arrives StepH1
+   // verifies the assumption (mismatch -> m_live_sc_mismatch).
+   bool              LiveEmitStaged(const long assumed_next_ts)
+     {
+      if(!m_live_core)  { m_err = "live-core mode off"; return false; }
+      if(!m_have_prev)  { m_err = "nothing staged";     return false; }
+      if(!m_sc.m_have_prev
+         || m_sc.m_prev_ts != m_prev_ts * (long)1000000000)
+        {
+         m_err = "SC staged row misaligned with glue prev_ts";
+         return false;
+        }
+      if(m_total_hours > 0 && m_last_emit_hour >= m_prev_ts)
+        {
+         m_err = StringFormat("hour %I64d already emitted", m_prev_ts);
+         return false;
+        }
+      m_emit_n = 0;
+      // == the StepNs emission path: hold_next from the next bar's hour
+      int hh = (int)((assumed_next_ts % 86400) / 3600);
+      double hold_next = (hh == Sat_SC_SEA_ENTRY_HOUR
+                          || hh < Sat_SC_SEA_END_HOUR) ? 1.0 : 0.0;
+      double emit4[4];
+      emit4[0] = hold_next * m_sc.m_sea_w;
+      for(int k = 0; k < 3; k++)
+         emit4[1 + k] = m_sc.m_prev_cr_row[k];
+      for(int q = 0; q < 4; q++)
+         m_live_emit4[q] = emit4[q];
+      m_live_have_emit4 = true;
+      return StageStepEmit(m_prev_ts, m_prev_mr, m_prev_cbk, m_prev_id,
+                           m_prev_cr, m_prev_tv, m_prev_mg, emit4);
      }
 
    //================================================================//

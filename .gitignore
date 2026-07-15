@@ -22,3 +22,7 @@ research/baselines/
 research/bpure/mql5/out/harness_sim_actual.csv
 research/bpure/mql5/out/*_actual.csv
 research/bpure/book/out/
+research/bpure/book/out/FMA3_book_mirror_actual.csv
+research/bpure/book/out/FMA3_book_mirror_tail.csv
+research/bpure/ea/out/FMA3_ea_mirror_actual.csv
+research/bpure/mql5/out/harness_sim_actual.csv

@@ -1,79 +1,150 @@
-# FMA3 Morning Brief — 2026-07-14
+# MORNING BRIEF — 2026-07-15
 
-## TL;DR
-- All three overnight waves are **complete and pushed** to `github.com/denissalamanca/FMA3`: the whole v34 book (stages 3–5) has a bitwise/last-ulp scalar reference, the b_h account engine (stage 6 Python side) is **bitwise equal to the golden curve over all 2,948,650 bars**, and the MQL5 native port compiles clean (0/0) and is **ready to run** in-terminal.
-- We never launched `terminal64.exe` — deliberately. Compile is not correctness. The one remaining open numeric question (MathRound banker-ties + transcendental ULP inside the terminal) is what **your one action** measures.
-- One blocking defect (wrong CAD rate-epoch days in `CarryBreakout.mqh`) was found by our own adversarial audit, fixed, and the full 178-entry rate table re-verified 0 mismatches before commit.
+For the owner, waking up. Overnight run: **the live-computing EA got built, compiled, installed,
+and passed its software gate.** No marketing below; where a gate hasn't run, it says STAGED and
+leads with it.
 
-## Your one action this morning
-1. Open the usual wine MT5 terminal (`net.metaquotes.wine.metatrader5`).
-2. Navigator > Scripts: drag **`TestV34Native`** onto any chart — any symbol, any TF. It reads no market data (pure CSV replay, no trading calls; inputs already installed in Common Files).
-3. Watch the Experts log. Progress prints every 5,000 bars; a few minutes total. Wait for:
-   `DONE TestV34Native: bars=49379 rows=49379 out=FMA3_v34_native_actual.csv (Common Files)`
-4. Then tell Claude **"run the comparator"** (or it will detect the output file).
-5. **If any `ROW COUNT MISMATCH` / failed line appears — stop and report that log line.**
+---
 
-**What a PASS proves:** cross-language (MQL5-native vs frozen pin) book parity at the 1e-12 gate over the full 6 years, *including* the MathRound/banker-tie and transcendental-ULP residuals that Stage-0 explicitly deferred to an in-terminal run — i.e., the last open numeric question of the v34 native port's signal layer.
+## 1. TL;DR
 
-## Overnight scoreboard
+**FableBookNative.mq5 is real now.** It computes `f_core / f_sat / a / b / book_frac[33]` LIVE
+each bar from the terminal's own synchronized multi-symbol feed — no frozen CSV replay. It
+compiles **0 errors / 0 warnings**, the `.ex5` is installed, and the whole live-compute chain was
+mirror-tested against the golden book_frac curve.
 
-| Wave | Scope | Status | Headline measured result | Commit / ledger |
-|------|-------|--------|--------------------------|-----------------|
-| 1 | Scalar reference, whole v34 book (stages 3–5) | **PASS** | Assembled book vs golden: max\|Δ\| **4.197e-14**, 0 cells > 1e-12 gate; gate-engine CAGR/MaxDD/Sharpe deltas **exactly 0** | `526a426` / FMA3-RECON-7 |
-| 3a | b_h account engine, scalar reference (stage 6 Python side) | **PASS (stronger than target)** | **Bitwise equal** to golden curve over all **2,948,650** 1m bars — equity and worst-mark max diff **0** | `6113ad0` |
-| 2 | MQL5 native translation + harness | **READY-TO-RUN** (1 defect found + fixed overnight) | All 9 includes wine-compiled **0 errors / 0 warnings**; Python mirror of harness loop reproduces Wave-1 parity exactly | `e731398` / FMA3-RECON-8 |
+**The mirror gate PASSED.** The live chain reproduces the R1 curve at `max|diff| = 5.06e-13` —
+which is **not** a live error, it is the golden CSV's own 12-decimal-place rounding, the exact
+same residual the frozen replay carried at RECON-8e. The one genuinely-new numeric piece — the
+live Core target stream — measured **bit-exact 0.0**. So the live-compute path adds no error of
+its own; it lands back on the R1 gate to the digit.
 
-### Wave 1 — scalar reference of the whole v34 book (stages 3–5) — PASS
-All 8 sleeves ported as scalar-float64 one-bar steppers (`research/bpure/steppers/`), each adversarially verified (no-peek / no-hand-tune / re-run).
+**State of the EA:** software-complete, mirror-gated, **safe on a live chart today (zero orders
+by default)**, safe in the tester. **NOT cleared for live trading** — that's still your call, and
+it's gated on the terminal runs below. Zero blocking findings across all three code reviews; one
+non-blocking FTMO breaker-cadence note.
 
-- **Integer-state sequences: EXACT** — 0 mismatches over the full 2020–2025 grid, every sleeve.
-- **Positions vs frozen goldens** (max abs error):
+**Your move today:** run the terminal run-sheet in §3. It's ~6 runs; the last one (the Strategy
+Tester) is the position-fidelity + R2 gate.
 
-| Sleeve | max\|Δ\| pos | Note |
-|--------|-------------|------|
-| crisis | 0.0 | bit-exact |
-| trend_v2 | 0.0 | bit-exact |
-| carry_breakout | 1.665e-16 | both books incl. FX carry, top-5 average-tie rank, chandelier exits — the sleeve Gemini failed on |
-| meanrev | 1.887e-15 | |
-| seasonal | 1.5e-15 | |
-| crypto | 1.7e-16 | |
-| mag_xau | 5.3e-15 | |
-| intraday | 2.5e-14 | |
+---
 
-- **Assembled book vs golden `book.parquet`:** max\|Δ\| **4.197e-14**, 0 cells > the 1e-12 gate (132,454 / 1,530,749 cells differ at last-ulp only).
-- **Gate engine** (`account_engine_1m`, EUR 10k): CAGR / MaxDD / Sharpe deltas **exactly 0** vs the full-precision pin; final **EUR 449,707.7453**.
-- Doc: `model/v3/BPURE_WAVE1_RESULTS.md`.
+## 2. THE FULL HONEST SCOREBOARD
 
-### Wave 3a — b_h account-engine scalar reference (stage 6 Python side) — PASS, stronger than target
-`research/bpure/engine/`: `BH_ENGINE_SPEC.md` (the full per-bar spec the MQL5 `V34EquityNative` will be written from) + `bh_stepper.py` (pure-Python, no numba, warm-startable).
+| # | thing | status | the number |
+|---|-------|--------|-----------|
+| 1 | S2 live Core signal + trigger (G-S0..G-S4) | MEASURED bit-zero | max&#124;diff&#124; = 0.0; 20,950,676 tgt rows, 31/31 triggers, eqc 532229.8433634703 bit-equal |
+| 2 | Feed assembler / instruments | MEASURED | 37 symbols recon_ok; 24/24 quarters + H1 + 8 daily-mids all bit_exact; overall_pass |
+| 3 | **EA mirror gate (live chain vs golden)** | **MEASURED PASS** | **max&#124;diff&#124; = 5.06e-13 (= CSV 12dp floor); seam bit-exact 0.0; 0 cells > 1e-12; 805,585 rows** |
+| 4 | Warm-blob resume (v2 CBookState + CoreSignal) | MEASURED PASS | G1 tail 14 rows bitwise identical; 3 negative controls all diverge; anchors 0.0 |
+| 5 | Swap/eurq generator | python PASS / MQL5 deferred | tables match, 2618 DST days, positive controls PASS; `CheckSwapEurq.mq5` NOT compiled |
+| 6 | Code reviews (3 lenses) | **0 blocking** | SAFETY clean; SEAM clean (1 non-blocking FTMO note); FEED+WARM clean |
+| 7 | EA compile + install | MEASURED | 0 errors / 0 warnings; `.ex5` installed |
+| 8 | G-S5 in-terminal (compiled CoreSignal self-diff) | **STAGED** | `TestCoreSignal.mq5` 0/0 — NOT run |
+| 9 | Book-state / warm-blob in-terminal battery | **STAGED** | `CheckBookState` / `CheckCoreSignalState` built — NOT run |
+| 10 | Position-fidelity + R2 (Strategy Tester) | **STAGED** | not run |
 
-- **Bitwise equal to the golden curve over all 2,948,650 1m bars** — equity *and* worst-mark max diff **0**.
-- Metrics bit-equal to pin. Warm-start JSON roundtrip **bit-exact** (2022Q2 boundary, 1.83M-bar tail). Runtime ~2.4 min / 6y step loop.
-- **Caveat (pinned, do not soften):** the record feed is float32-quantized prices upcast to f64. A live double feed is pricing-faithful but **NOT** bit-identical — bit-parity validation must replay float32-rounded prices.
+**Read the mirror number right:** the argmax cell is USTEC on 2022-01-10 — `actual
+0.51429446766950604` vs `golden 0.514294467669`. The golden is stored truncated to 12 dp; that's
+the whole 5.06e-13. The live Core seam underneath it is 0.0 on all 9 legs (2.1M-2.9M bars each),
+and the live final equity matches the frozen pin bit-for-bit. This is the same residual RECON-8e
+booked. Nothing regressed.
 
-### Wave 2 — MQL5 native translation + harness — READY-TO-RUN
-`mt5/ea/Include/FMA3v34/`: `V34Math.mqh` (banker half-to-even round, ewm adjust=True incl. NaN-decay, Welford ewm-std, ddof=1 ring std, Donchian deque, NaN/npdiv helpers) + 8 sleeve/ensemble includes, all 1:1 from the Wave-1 steppers. All wine-compiled headless to **"Result: 0 errors, 0 warnings."**
+---
 
-- Harness: `TestV34Native.mq5` (a Script — **zero trading functions**) + `FMA3_v34_inputs.csv` (49,379 rows, `%.17g` bit-round-trip verified, installed in Common Files) + `validate_mql5_book.py` comparator.
-- A statement-for-statement Python mirror of the harness loop (`harness_sim.py`) reproduces the Wave-1 book parity **exactly** (4.197e-14, 0 cells > 1e-12). So residual in-terminal risk is confined to the MQL5 translations themselves + the known no-fma ewm residual (~1e-16 rel) + MathRound/tanh libm ULP effects — which is precisely what the terminal run measures.
-- **The defect (found by our own adversarial verifier, then fixed + reverified):** 4 wrong CAD policy-rate epoch days in `CarryBreakout.mqh` (19513/19548/20087/20129 instead of 19515/19550/20117/20159 — dates shifted, values right; measured output-neutral on this grid, but wrong constants). Fixed; re-verified the **full table (178/178 day-rate entries across 10 ccys** match the frozen `engine/costs.py` parse, 0 mismatches); reinstalled; recompiled 0/0 (fresh `TestV34Native.ex5`, 84,326 B).
-- Doc: `model/v3/BPURE_WAVE2_STATUS.md` (bottom line updated post-fix).
+## 3. THE CONSOLIDATED TERMINAL RUN-SHEET — run these in order
 
-## Context worth remembering
-- This continues **your** decision: B-pure ratified (no hybrid, cost accepted), freeze-now chosen. The Antigravity/Gemini port was assessed yesterday (**measured failing at 44% of cells**) — we salvaged its harness *pattern* and wine-compile recipe, nothing else. Our port hit state-exactness on the first verified pass because the acceptance rigor was front-loaded.
-- The freeze that makes all this meaningful: **`FMA3-v34-freeze-1`**, hermetic hash `5785937244cd48db…`, goldens + pin reproduced ≤1e-6.
+All scripts are Wine-compiled 0/0 and installed. Do NOT launch anything that sends orders — every
+run below is a check/test, and the EA sends zero orders unless you explicitly flip
+`InpAllowLiveTrading`. Each run -> a dated `FMA3-RECON-9` ledger entry.
 
-## What remains after a PASS — Wave 3, the road to the native federated EA
-1. `V34EquityNative.mqh` — port b_h from `BH_ENGINE_SPEC.md` (1m cross-margin account; the reference is now bitwise-proven).
-2. `V7Sim` / a_h — fork the already-G1-proven `V7Core.mqh` to the idealized standalone account (the v7 half needs no new alpha work).
-3. Blender — `static_fed(0.70)` in MQL5: `fed = f7·(w·a/j) + f34·((1−w)·b/j)`. **Standing subtlety:** the validated v3 EA *replays* a frozen fed stream; the native EA *computes the blend live* from native a_h/b_h — this architectural step needs its own gate-level validation + a fresh FMA3-RECON entry before any deploy.
-4. EA integration reusing the RECON-4-validated FedExec/Guardian execution layer from `FableFederation_V3` (netting, margin cap, volume-limit cap, breaker).
-5. Warm-start cert (≥2019 warm, COVID tail) + gate-level tolerance band ratification (proposed ΔCAGR ≤±1.0pp / ΔMaxDD ≤±0.5pp / ΔBreach ≤±0.5pp — **your ratification still pending**).
+**Batch A — Core signal (G-S5):**
+1. **`TestCoreSignal.mq5`** — replays the frozen 2020-2025 bars through the *compiled*
+   `CoreSignal.mqh`, self-diffs vs the frozen `tgt` column.
+   *Expected:* bit-zero (or ULP-band only, flip-invisible — targets are integer-lot-floored).
+   Any lot-decision flip is a real failure — lead with it if it happens.
+2. **`CheckCoreSignal.mq5`** — structural smoke: opex/policy tables + `CsDaysFromCivil` + a
+   240-day synthetic series vs the embedded python golden.
+   *Expected:* all tables equal, synthetic block matches golden, 0 mismatches.
 
-## Open items NOT from tonight (carry-forwards)
-- **FTMO dial confirm:** s≈0.5 @ 1:100 real-tick (`FED_V3_FTMO_S05.set` staged) — you deferred it.
-- **Task #19:** regenerate IC/FTMO dashboards to the final dials.
-- **v2.2 context:** FMA2 roadmap schedules an 11-year re-derivation. The freeze protects the port (any churn → hash mismatch → documented re-verify), but a v2.2 landing means re-porting changed sleeves — worth keeping in mind before deploying the native v34.
+**Batch B — warm-blob / state (T1-T7):**
+3. **`CheckBookState.mq5`** — the in-terminal split/continue + 5-latch refuse battery (torn-write
+   eof, fnv64 checksum, a-anchor re-base, j-splice discontinuity).
+   *Expected:* T1-T7 pass; tail bitwise identical after restore; all 5 latches fire on their
+   negative controls. (Python split gate already PASSED; this is the missing binary certification.)
+4. **`CheckCoreSignalState.mq5`** — the v2 warm-blob completeness for the folded live Core signal
+   + trigger cursor + XAU breach flags.
+   *Expected:* restore->resume tail bitwise identical; the 3 drop-controls diverge.
 
-## Honest risk paragraph
-The in-terminal run is genuinely untested execution — we never launched `terminal64.exe`, deliberately. Compile ≠ correctness; the terminal run is the measurement. If it **fails** the 1e-12 gate, the comparator reports the first divergent (hour, symbol) and we trace it. Likeliest suspects, in order: CSV parsing edge cases; the no-fma ewm residual accumulating past 1e-12 somewhere (bounded analysis says it shouldn't); MathTanh/libm last-ULP near a trend_v2 retrade band; or a crisis banker-tie (thin margins measured — nearest tie 7.1e-5, nearest threshold 1.1e-5, both >> the expected noise, so flips are unlikely but not impossible). None of these would invalidate the reference layer — they'd localize exactly where MQL5 arithmetic diverges, which is the point of the harness.
+**Batch C — feed + swap:**
+5. **`CheckFeedAssembler.mq5`** — assembler reconstruction in-terminal (union grid + has-bar +
+   six-field b rows vs the golden bundles).
+   *Expected:* bit_exact per quarter, matching the python gate (24/24 + H1 + daily-mids).
+6. **`CheckSwapEurq.mq5`** — **only if you decide to ratify the live swap/eurq generator.**
+   It is currently NOT compiled (deferred, S2_PREP §194). Skip unless you're moving swap/eurq
+   into deploy this pass.
+   *Expected (if run):* tables match + rollover-DST reproduced, matching `swap_eurq_gate.json`.
+
+**Batch D — the big one:**
+7. **`FableBookNative` Strategy-Tester run** — the **position-fidelity gate + R2**. Attach to a
+   BTCUSD M1 chart in the tester (it auto-detects the tester and auto-enables trading there).
+   - *Grade against the ratified R2 band, NOT R1 bit-zero:* **DeltaCAGR <= +/-1.0pp /
+     DeltaMaxDD_worst <= +/-0.5pp / DeltaBreach <= +/-0.5pp.**
+   - *This is a RECENT-WINDOW run* — the tester feed only reaches back as far as the broker's M1
+     history, so it does NOT cover the full 2020-2025 golden window. Position fidelity is the
+     primary read; R2 CAGR/DD is graded on the window you actually get.
+   - Live-feed bars != the frozen IC bars by construction, so exact match is not expected and not
+     the bar — the band is.
+
+---
+
+## 4. BLOCKING FINDINGS — and what they mean
+
+**None.** All three code-review lenses returned `blocking: []`.
+
+- **LENS 1 (SAFETY):** clean. Zero-order default, tester auto-detect, refuse latch, catch-up gate
+  all present and correct.
+- **LENS 2 (SEAM FIDELITY + position gate):** clean for the IC gate — the only numeric change is
+  the `g_fedTgt` source; everything downstream is byte-identical by construction (shared includes,
+  one shared `FED_Reconcile`, `InpScale` applied once at `BookExec.mqh:211`). **One NON-blocking
+  finding:** the FTMO daily-breaker (Guardian) cadence can differ under live minute pacing —
+  irrelevant to IC, carried to the FTMO-dial work.
+- **LENS 3 (feed assembler + warm-blob):** clean; both new pieces carry their own passing gate.
+
+---
+
+## 5. KNOWN RESIDUAL RISK (so nothing surprises you)
+
+1. **Staged != run.** The compiled-binary bit-zero rests on the software-fma *emulation*. The
+   terminal can add ULP-band noise the mirror lacks (seen at RECON-8b..8e). CoreSignal targets are
+   integer-lot-floored so that noise should be flip-invisible — but that's a prediction until
+   `TestCoreSignal` (G-S5) actually runs. **This is the single most important gap.**
+2. **Two trigger sub-mechanisms are not in-sample-binding:** the k=2.5 harvest arm came within 3%
+   of firing and never did (0/31); the 999-month probe collapsed to `act<hi` with no in-sample
+   constraint. Contained by live telemetry + the refuse latch, not proven forward.
+3. **fma-contraction (G-S5):** whether the compiled roll_var contracts exactly as the emulation
+   predicts is precisely what G-S5 settles.
+4. **R2 feed residual is irreducible:** the reference pipeline has lookahead (`ffill().bfill()`,
+   full-sample median commission) a forward stepper can't reproduce; the band bounds it, doesn't
+   close it.
+
+---
+
+## 6. WHAT REMAINS AFTER TOMORROW
+
+- **Terminal certification** — the §3 run-sheet (G-S5, state batteries, feed, and the tester
+  position/R2 run) -> recorded as `FMA3-RECON-9`.
+- **Crisis certification** — real-tick COVID/crisis window per the standing MT5-validation
+  protocol (the record engine is blind in COVID cold-start; trust real-tick here).
+- **FTMO dial** — resolve the breaker-cadence divergence and re-validate the FTMO scale/breaker
+  (MEMORY: shipped FTMO dial is unsafe cold; needs warm re-validation + a cut to ~s0.30-0.35).
+- **Swap/eurq ratification** — decide whether to compile/run `CheckSwapEurq.mq5` and fold the live
+  generator into deploy.
+- **RECON-9** — the full 6-gate reconciliation ledger entry.
+- **Deploy** — **owner decision only.** The EA will not send a live order until you flip
+  `InpAllowLiveTrading` on a live chart, and it should not be flipped until the above clears.
+
+---
+
+*Overnight work by Opus. Every number here is measured against a cited artifact or labelled
+STAGED. Detail: `model/v3/S3_STATUS.md`.*
