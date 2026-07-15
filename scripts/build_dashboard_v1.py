@@ -3,7 +3,7 @@ Template mirrors NSF5 docs/v7/DASHBOARD.html (built by NSF5/mt5/reconcile/v8/bui
 — regenerate per stable version by swapping the DATA/GATES/LEVERS blocks.
 All series and figures come from the engine-free writer data pack
 research/outputs/package_data.json (itself pinned to fma3_v1_pin.json /
-fma3_v1_pin_curve.parquet). Output: docs/v1.0/DASHBOARD.html
+fma3_v1_pin_curve.parquet). Output: archive/docs-v1.0/DASHBOARD.html
 """
 import json, pathlib
 
@@ -234,7 +234,7 @@ HTML = r"""<!doctype html>
   </section>
 
   <footer>
-    <span>Portfolio scorecard &middot; regenerated at each stable version &middot; gates from <span class="mono">docs/v1.0/PERFORMANCE.md</span> &middot; all numbers in-sample (IC 2020&ndash;25); the 2026H1 one-shot is consumed; MT5 real-tick + live demo are the remaining falsification tests</span>
+    <span>Portfolio scorecard &middot; regenerated at each stable version &middot; gates from <span class="mono">archive/docs-v1.0/PERFORMANCE.md</span> &middot; all numbers in-sample (IC 2020&ndash;25); the 2026H1 one-shot is consumed; MT5 real-tick + live demo are the remaining falsification tests</span>
     <span class="mono">FMA3 V1.0 &middot; strategy_fma3.py &middot; config 51a7541cc2aaa593</span>
   </footer>
 </main>
@@ -315,7 +315,7 @@ equityChart(); ddChart();
 """
 
 out = HTML.replace("__DATA__", json.dumps(DATA, separators=(",", ":")))
-p = ROOT / "docs/v1.0/DASHBOARD.html"
+p = ROOT / "archive/docs-v1.0/DASHBOARD.html"
 p.parent.mkdir(parents=True, exist_ok=True)
 p.write_text(out)
 print("wrote", p, len(out), "bytes")

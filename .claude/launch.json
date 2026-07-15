@@ -4,7 +4,7 @@
     {
       "name": "dashboard-static",
       "runtimeExecutable": "/opt/homebrew/Caskroom/miniforge/base/bin/python3",
-      "runtimeArgs": ["-m", "http.server", "8741", "--directory", "docs/v1.0"],
+      "runtimeArgs": ["-m", "http.server", "8741", "--directory", "archive/docs-v1.0"],
       "port": 8741
     }
   ]

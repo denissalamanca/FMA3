@@ -29,7 +29,7 @@ export WINEPREFIX="$HOME/Library/Application Support/net.metaquotes.wine.metatra
 export WINEDEBUG=-all
 WINE='/Applications/MetaTrader 5.app/Contents/SharedSupport/wine/bin/wine64'
 MQL5="$WINEPREFIX/drive_c/Program Files/MetaTrader 5/MQL5"
-cp mt5/ea/FableFederation_V1.mq5 "$MQL5/Experts/"        # Experts ROOT (flat), NOT a subfolder
+cp archive/ea-v1-v2/FableFederation_V1.mq5 "$MQL5/Experts/"        # Experts ROOT (flat), NOT a subfolder
 cp mt5/ea/Include/FMA3/*.mqh     "$MQL5/Include/FMA3/"
 "$WINE" 'C:\Program Files\MetaTrader 5\MetaEditor64.exe' \
     '/compile:C:\mql5link\Experts\FableFederation_V1.mq5' \

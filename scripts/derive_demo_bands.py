@@ -49,7 +49,7 @@ def main() -> None:
     report(v7, "v7 sub-book NATIVE (R8 anchor extraction, eqc)")
     report(v34, "v3.4 sub-book NATIVE (GLOBAL_SCALE 10 pin)")
 
-    # forward cross-checks (must reproduce FORWARD_ONESHOT.md / docs/v1.0/DEMO.md)
+    # forward cross-checks (must reproduce FORWARD_ONESHOT.md / archive/docs-v1.0/DEMO.md)
     for name, path in [
         ("federation forward", "research/outputs/forward_oneshot_curve.parquet"),
         ("v3.4 sub forward", "research/outputs/forward_oneshot_v34sub_curve.parquet"),

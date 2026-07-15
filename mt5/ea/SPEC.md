@@ -13,10 +13,10 @@ Ground rules (owner, non-negotiable):
 2. **The Satellite side is a NEW consumption layer only.** Signals STAY IN PYTHON. Tester mode reads a
    frozen-targets replay CSV (hash-gated); live mode reads a Python-brain targets file. The FMA2
    EA/replay stack **never worked correctly** per owner ground truth — it is a REFERENCE for file
-   formats only (`FMA3/docs/v1.0/FMA2_EA_AUDIT.md`), never a code base to build on.
+   formats only (`FMA3/archive/docs-v1.0/FMA2_EA_AUDIT.md`), never a code base to build on.
 3. **Blend bookkeeping = fresh-seed virtual sub-books at w = 0.70/0.30**, each sub-book's
    capital compounding on its own P&L (the FMA3 v1.0 construction —
-   `docs/v1.0/STRATEGY.md` §4, `strategy_fma3.py`, PROTOCOL §5.7 anti-coupling).
+   `archive/docs-v1.0/STRATEGY.md` §4, `strategy_fma3.py`, PROTOCOL §5.7 anti-coupling).
 4. **FTMO guardian module, config-gated** (`InpDailyStopX`, 0 = off). Gate **G4**: off ⇒
    bit-identical behavior.
 
@@ -274,7 +274,7 @@ equivalent ways to put the Core book on a 0.70 sub-account at global scale s
 2. **G1 is free.** Core-only parity mode and blend mode use the SAME seeds and dial — the
    Core book in the blend is behaviorally run 54 modulo shared margin.
 3. It is the deployment convention the FMA3 v1.0 package already locked
-   (`docs/v1.0/DEMO.md` deployment item 2; `mt5/README.md` §c: both stacks seeded €10k, "each
+   (`archive/docs-v1.0/DEMO.md` deployment item 2; `mt5/README.md` §c: both stacks seeded €10k, "each
    dial already carrying w·s", `E_fed = E_v7 + E_v34 − 10,000`).
 
 Scale-invariance (STRATEGY.md §4.4: Core band triggers are slot RATIOS; Satellite positions are

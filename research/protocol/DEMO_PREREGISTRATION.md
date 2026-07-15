@@ -6,7 +6,7 @@ preset). This adopts NSF5's H12 demo-as-experiment protocol
 (`NSF5 docs/v7/research/H12_DEMO_PROTOCOL.md`, incl. its Section-F skeptic
 calibration) and the H12 backlog instruction ("breach-probability convention …
 add to demo pre-registration", `NSF5 docs/v7/research/DISCOVERY_BACKLOG.md`)
-for the FMA3 blend. It **extends** [docs/v1.0/DEMO.md](../../docs/v1.0/DEMO.md)
+for the FMA3 blend. It **extends** [archive/docs-v1.0/DEMO.md](../../archive/docs-v1.0/DEMO.md)
 — deployment config, dial arithmetic, fingerprint table, weekly ritual and its
 qualitative decision rules all stay authoritative and are not repeated here.
 This document hardens them into pre-committed numeric evaluation bars,
@@ -111,7 +111,7 @@ with no new equity high and the threshold still exceeded.
   INVESTIGATE with a **one-quarter decision deadline** (H12-F5 pattern): either
   the shortfall is attributed to a documented benign class (feed divergence,
   spread regime, disclosed coupling — written up in
-  [RECONCILIATION.md](../../docs/v1.0/RECONCILIATION.md)) or it is treated as
+  [RECONCILIATION.md](../../archive/docs-v1.0/RECONCILIATION.md)) or it is treated as
   reconciliation divergence under §4 K3. Retention < **0.70** at any
   quarter-end → §4 K3 clock starts immediately.
 
@@ -175,7 +175,7 @@ front-loaded month is in-fingerprint.
 - **Trade-count fingerprint:** counting conventions differ across the three
   ledgers (25,869 record-engine fills ≈ 1,078/quarter blend-wide; Core
   ~468 round-trips/yr; Satellite ~2,286 model-trades/yr —
-  [TRADE_CHARACTERISTICS](../../docs/v1.0/TRADE_CHARACTERISTICS.md): "conventions,
+  [TRADE_CHARACTERISTICS](../../archive/docs-v1.0/TRADE_CHARACTERISTICS.md): "conventions,
   not forecasts"; no per-stack fill split is pinned). Pre-committed
   calibration: the **first full calendar month** of live magic-attributed
   counts per stack is the baseline (recorded in the track record, per DEMO.md
@@ -389,7 +389,7 @@ the FMA3-004/005 preset results existed. Sources of every number:
 [FORWARD_ONESHOT.md](../outputs/FORWARD_ONESHOT.md) + forward curve parquets ·
 [PRESETS.md](PRESETS.md) (FMA3-004/005) ·
 [COMPOSITE_BENCHMARK.md](../outputs/COMPOSITE_BENCHMARK.md) ·
-[docs/v1.0/DEMO.md](../../docs/v1.0/DEMO.md) · NSF5
+[archive/docs-v1.0/DEMO.md](../../archive/docs-v1.0/DEMO.md) · NSF5
 `docs/v7/research/H12_DEMO_PROTOCOL.md` + `DISCOVERY_BACKLOG.md` +
 `docs/v7/PERFORMANCE.md` (~96% retention) · FMA2 `docs/v2.0/F2_PREMORTEM.md`
 (v2.4-style guard pattern), `docs/v3.2/RESULT.md` + `docs/v3.4/DEMO.md` §5.2
