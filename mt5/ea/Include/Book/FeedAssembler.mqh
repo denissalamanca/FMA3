@@ -495,14 +495,23 @@ public:
                return false;
               }
             long dig = SymbolInfoInteger(m_broker[i], SYMBOL_DIGITS);
+            m_point[i] = SymbolInfoDouble(m_broker[i], SYMBOL_POINT);
             if((int)dig != FA_DIGITS[i])
               {
-               Fail(StringFormat("%s: SYMBOL_DIGITS %d != record-feed %d "
-                                 "— REFUSE (ask reconstruction invalid)",
-                                 m_broker[i], (int)dig, FA_DIGITS[i]));
-               return false;
+               // Live SYMBOL_DIGITS drift vs the record feed (e.g. DE40 1->2).
+               // SYMBOL-META-RECONCILE 2026-07-15: this is a PRECISION drift, not a
+               // scale/contract one. The ask is reconstructed with the LIVE point
+               // (set above), so it is self-consistent; the tiny price-granularity
+               // difference vs the record feed is R2, bounded by the ratified band.
+               // Contract/volume drifts are handled downstream by BookExec, which
+               // sizes off LIVE SymbolInfo (contract, lot step/min, VOLUME_LIMIT).
+               // So: log for R2 telemetry and CONTINUE — do NOT refuse. (SymbolSelect
+               // failure above still hard-fails; a genuine SCALE drift would show as
+               // a marks divergence caught by the position-fidelity / R2 gates.)
+               PrintFormat("FEED DIGITS DRIFT (R2, handled): %s live_digits=%d "
+                           "record=%d live_point=%.10g", m_broker[i], (int)dig,
+                           FA_DIGITS[i], m_point[i]);
               }
-            m_point[i] = SymbolInfoDouble(m_broker[i], SYMBOL_POINT);
            }
         }
       // b-order symbol slots for the swap/eurq generator (MODEL names)

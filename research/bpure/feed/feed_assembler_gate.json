@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-15T02:39:55",
+ "generated": "2026-07-15T10:24:31",
  "recon_assert": {
   "AUDCAD": {
    "bars": 2235293,
@@ -512,5 +512,5 @@
  },
  "findings": [],
  "overall_pass": true,
- "runtime_seconds": 129.6
+ "runtime_seconds": 135.4
 }

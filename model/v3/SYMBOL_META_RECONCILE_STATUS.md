@@ -180,3 +180,21 @@ The report prints: class counts, the CRITICAL list (must block/fix, with per-sym
 - Probe output (owner-produced, Step 1): `Common\Files\FMA3_symbol_meta.csv`
 
 **No `.mqh` compute path or S1/R1 gate script was modified. New file only.**
+
+---
+
+## RESULTS + RESOLUTION — MEASURED 2026-07-15 (owner ran the probe, 37/37 selected)
+
+**The audit paid off: it isolated the real vs the apparent, and confirmed no catastrophe.**
+
+| Finding | Class | Verdict |
+|---|---|---|
+| **XAGUSD** contract live 1000 vs baked 5000; **XBRUSD/XTIUSD** 100 vs 1000 | CONTRACT | **HANDLED** — `BookExec` sizes off LIVE `SYMBOL_TRADE_CONTRACT_SIZE` (verified BookExec.mqh:216,219), so `notional = lots·live_contract·px = frac·balance` is correct. Prices same magnitude ⇒ NOT a scale drift. Shadow engines (a/b) correctly keep the baked contract (dimensionless multiples matching the golden). |
+| **DE40** digits live 2 vs record 1 | PRECISION | **FIXED** — FeedAssembler live branch now logs the drift + uses live `SYMBOL_POINT`; ask reconstruction self-consistent; granularity diff = R2. Offline path (FA_DIGITS) untouched; mirror re-verified **0.0**. |
+| **JP225/SOLUSD/XRPUSD** lot step/min coarser live | VOLUME | **HANDLED** — `BookExec` respects live `VOLUME_STEP/MIN/LIMIT` (lines 83,155,220,255); sub-min positions dropped (expected RECON-4 retention). |
+| all 37 `SYMBOL_TRADE_MODE` | — | **FULL** — nothing disabled/close-only. |
+| US500/USTEC/XRPUSD base ccy label (SPX/NDX/XRP vs USD) | CCY-INFO | cosmetic; eurq uses profit ccy (USD), unaffected. |
+
+**Key result:** had we relaxed the digits guard blindly (Option A), the XAG/XBR/XTI contract drifts would have been invisible — but they were already covered by BookExec's live-SymbolInfo sizing. The one real code change is the DE40 digits guard. **No scale/contract corruption anywhere.**
+
+**Measurement note for the ST gate:** position fidelity is graded in **fraction/notional** terms (`held_lots·px·live_contract·eurq / (s·balance) == book_frac`), NOT raw lot counts — lot counts legitimately differ for the contract-drifted symbols.
