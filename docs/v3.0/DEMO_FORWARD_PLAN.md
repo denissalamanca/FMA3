@@ -66,12 +66,18 @@ A live **cold** start is a demo-killer: the EA computes from *now* and the catch
 sizing until indicators warm (~250 weekdays ≈ ~1 year of ~0 trading) — `FableBookNative.mq5`
 live cold path. The **only** way to trade from day 1 is the **warm-blob resume**: load the v2
 state blob + `.coredrive` sidecar → resume from its last hour and backfill forward.
-- **Produce + certify** a warm blob at the **end of the record window** (`certify_warmstart.py`
-  / `model/v3/WARMSTART_DESIGN.md` — infra exists).
-- **Verify live forward-resume** (untested live — only proven in-tester): seed the blob on the
-  demo, confirm the EA resumes and **backfills forward to the present**, then trades warm.
-- This is a forward (out-of-sample-boundary) warm-start — the sanctioned use, *not* the
-  design-forbidden in-sample pre-warming.
+**SCOPED (2026-07-16) → [`mt5/ea/RUNSHEET_WARMSTART.md`](../../mt5/ea/RUNSHEET_WARMSTART.md).** The
+EA needs **two coherent files**: the book-state blob + a `.coredrive` sidecar, cross-checked on
+resume (refuses on mismatch). Findings:
+- The **2025-12-31 book-state blob already exists and its save→load→resume roundtrip is bit-exact**
+  (`endBASE` == `endRESUME`: b-balance 434,133 / CoreSim seed 532,229.843 / a_h·b_h 53.098·44.916).
+  The hard, path-dependent half is proven.
+- The `.coredrive` sidecar is **EA-only** (no Python producer), and the pair must be coherent → the
+  complete blob is produced by **one owner EA run** (Step 1: a fast 1m-OHLC 2020→2025-12-31 pass with
+  `InpSaveInTester=true`), then the **live-resume test** (Step 2) certifies it in practice.
+- Forward-past-2025-12-31 has **no golden to certify against** (WARMSTART_DESIGN §7.4) — fine (the
+  demo *is* the forward test); the Step-2 live-resume is the practical validation. Sanctioned forward
+  (out-of-sample-boundary) warm-start, *not* the design-forbidden in-sample pre-warming.
 
 ### B. Live config, per account
 `InpAllowLiveTrading = true` (demo only) · `InpSaveState = true` (restart continuity) ·
