@@ -1,0 +1,47 @@
+; ============================================================================
+; FABLE_FTMO_REALTICK_P1  —  Phase-1 crisis real-tick, FTMO preset (Run 2)
+; EA: FableBookNative | Account: 11078280 | see mt5/ea/RUNSHEET_CRISIS_P1.md
+; ----------------------------------------------------------------------------
+; This file sets the INPUTS tab ONLY. A .set CANNOT set the Settings tab —
+; you MUST set these manually on the Strategy Tester "Settings" tab:
+;     Symbol      : BTCUSD
+;     Period      : M1
+;     Modelling   : Every tick based on real ticks   <-- the point of this run
+;     Date        : Custom, From 2020.07.01  To 2025.12.31
+;     Deposit     : 100000 EUR      (MUST match InpInitial below)
+;     Leverage    : 1:100
+;     Optimization: Disabled  |  Visual mode: off
+; ----------------------------------------------------------------------------
+; SAFETY: InpAllowLiveTrading=false — on a live chart the EA sends ZERO orders
+;         (the tester auto-trades regardless). Do not change it.
+; DIAL DIFFS vs IC: InpScale 1.6->0.7 | InpInitial 10k->100k | InpDailyStopX 0->3.0
+; ============================================================================
+; --- 1. dial (FTMO) ---
+InpScale=0.7
+InpInitial=100000.0
+InpDailyStopX=3.0
+; --- 2. safety ---
+InpAllowLiveTrading=false
+; --- 3. universe / magics / logs ---
+InpMagicBase=3900000
+InpV34SymbolMap=
+InpLog=true
+InpFedFracFile=FMA3_fed_frac_v3.csv
+; --- 4. engine constants (match the record engine) ---
+InpMarginCap=0.9
+InpRebalBand=0.25
+; --- 5. state + telemetry ---
+InpStateFile=FMA3_native_state.json
+InpSaveState=true
+InpSaveInTester=false
+InpTelemetryFile=FMA3_native_hourly.csv
+InpMaxMinutesPerPass=20000
+; --- 6. EUR conversion crosses ---
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK
