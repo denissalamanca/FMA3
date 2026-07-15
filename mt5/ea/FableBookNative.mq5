@@ -314,8 +314,22 @@ bool HeadReady(const int i, const long last_closed)
                         (datetime)to, g_buf[i].r);
       if(n < 0)
         {
-         g_histWaits++;                       // lazy download: retry later
-         return false;
+         if(g_fedLive)
+           {
+            g_histWaits++;                    // live: a lazy download — retry later
+            return false;
+           }
+         // TESTER: all symbol history is fully pre-synchronized in OnInit (the
+         // "history synchronized" journal lines), so n<0 here is NEVER a pending
+         // download — it means the range has no bars, e.g. a symbol not yet born
+         // (SOLUSD before 2022). The SERIES_FIRSTDATE clamp above cannot rescue
+         // it when the birth date is still in the future relative to modeled
+         // time. Treat as an empty range and advance the cursor so this leg
+         // never pins the min-front `safe` clock below backfillFrom — otherwise
+         // the whole book freezes for the entire run (the full-window 2020 start
+         // hit exactly this: hours=0). The leg emits not-ready rows until its
+         // real first bar, matching the record engine (no pre-birth data either).
+         n = 0;
         }
       g_buf[i].n = n;
       g_buf[i].pos = 0;
