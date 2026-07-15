@@ -91,7 +91,7 @@ shared event, not an EA artifact (no margin call, no feed spike, no single-symbo
 
 1. ~~Sat record-feed port cert~~ — **DONE** (24/24 quarters bit-exact, `sat_mql5_parity.json`; PR #3 merged).
 2. **Real-tick crisis certification** — COVID/2022 on real ticks (the gate 1m-OHLC can't satisfy).
-3. **FTMO dial** — deferred; breaker-cadence + warm-validated scale cut (~s0.30-0.35).
+3. ~~FTMO dial~~ — **DECIDED: s≈0.70** under a ≤1-breach/year policy (owner withdraws monthly; native-EA runs A/B; ~0.7 breaches/yr, the 10% max-loss rule binds; s≈0.65 for crisis margin). See [FTMO_DIAL_DECISION.md](FTMO_DIAL_DECISION.md) / RECON-10. Open: ±20% weight-probe pass + FTMO demo-forward.
 4. **RECON-9 adjudication** (Opus) → **deploy decision** (owner, demo-forward first).
 
 ## 7. Honest caveats
