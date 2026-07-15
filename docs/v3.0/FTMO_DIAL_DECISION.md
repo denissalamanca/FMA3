@@ -59,8 +59,23 @@ is ~s=0.35–0.50. But that is not the operative standard here.
    and still staying under 1/yr in normal years.
 2. **Daily dips are hourly-sampled** (slightly optimistic) → treat ~s=0.73 as the aggressive
    edge and **s ≈ 0.70 as the honest ≤1/yr dial**.
-3. **Not yet probe-robust.** The IC dial passed ±20% weight probes; FTMO has not. s≈0.70 is
-   the *nominal* ≤1/yr dial; a probe pass would harden it.
+3. **Probe status — mechanism parity, not assurance parity** (updated 2026-07-15,
+   [FTMO_WEIGHT_PROBE.md](FTMO_WEIGHT_PROBE.md)). The earlier "FTMO has not been probed" is
+   corrected: the ±20% **weight** probe DID run (FMA3-008/010, re-confirmed bit-exact by
+   FMA3-011 + the s=0.65 dial added) on the same record engine, `static_blend`, and gate as
+   IC's FMA3-004c — all six cells (s∈{0.70,0.65} × w∈{0.56,0.70,0.84}) clear every score_v3
+   ceiling. But it is **pass-by-construction** (at s=0.70, w=0.70 is a local drawdown *max*:
+   static DD 11.6/13.3/13.2% across w56/70/84 — both arms only reduce DD) and **frame-blind**
+   (every s=0.70 cell's *static* drawdown 11.6–13.3% exceeds the 10% Max-Loss rule, yet
+   score_v3's monthly reset still reports `P(breach12m)=0.0` — the same reset that reads 0.0
+   where the native-EA static frame reads ~0.73/yr). The **binding lever is the dial s, not
+   w**: on the breach table above, −20% of the dial (s=0.56)→≲0.15/yr but **+20% (s=0.84)→~2/yr,
+   decisively past ≤1/yr**; ±20% w never approaches that cliff. **Net:** the dial is robust to
+   ±20% *weight* drift, but s=0.70 sits at the *top* of its ≤1/yr band with no upside margin —
+   an independent, robustness-based reason to prefer **s≈0.65** (0.36/yr). The higher bar
+   **neither preset has cleared** is a native-EA-grade probe over w *and s*, scored on the raw
+   non-reset static frame against the absolute €90k floor, over a real-tick crisis window —
+   still the open arbiter (score_v3 gate fix tracked: task_03aba9d3).
 4. Compounding-CAGR is not the owner's realized return (monthly withdrawal keeps the base
    ~€100k); the dial's value is the **monthly income** it produces, which rises with s — hence
    the appetite to run near the breach-frequency ceiling rather than far below it.
