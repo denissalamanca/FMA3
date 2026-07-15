@@ -260,7 +260,11 @@ void SeedFromHistory()
                         (datetime)(g_backfillFrom - 60 * 4320),
                         (datetime)(g_backfillFrom - 60), r);
       if(n <= 0)
+        {
+         if(!g_fedLive)          // tester: no history in the warmup window =>
+            g_fa.MarkAbsent(i);  // not-yet-born; must not gate book readiness
          continue;
+        }
       MqlRates b = r[n - 1];
       g_fa.SeedSymbol(i, b.open, b.high, b.low, b.close, (int)b.spread);
       if(i >= EA_CROSS_FA0 && i < EA_CROSS_FA0 + FA_NCROSS)

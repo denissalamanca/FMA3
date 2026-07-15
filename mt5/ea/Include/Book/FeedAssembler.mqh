@@ -199,6 +199,11 @@ private:
 
    // ---- per-symbol carry state (f32-quantized six fields) ----
    bool              m_seeded[FA_NSYM];
+   bool              m_absent[FA_NSYM];   // tester: symbol not yet listed (no
+                                          // data before its birth) — excluded
+                                          // from the readiness gate so a
+                                          // not-yet-born leg (SOLUSD pre-2022)
+                                          // never freezes the Sat sleeve.
    double            m_bo[FA_NSYM], m_ao[FA_NSYM];
    double            m_bc[FA_NSYM], m_ac[FA_NSYM];
    double            m_bl[FA_NSYM], m_ah[FA_NSYM];
@@ -267,6 +272,7 @@ private:
       m_bl[i] = F32(l);
       m_ah[i] = F32(ah);
       m_seeded[i] = true;
+      m_absent[i] = false;          // real data arrived — no longer absent
       // H1: float64 raw mid of the last bar in the hour
       double mid = (c + ac) / 2.0;
       m_h_close[i] = mid;
@@ -364,7 +370,7 @@ private:
          for(int k = 0; k < FA_NBOOK; k++)
            {
             int gi = FA_BOOK_IX[k];
-            if(!m_seeded[gi])
+            if(!m_seeded[gi] && !m_absent[gi])
                all_seeded = false;
             m_m1[m_m1_n].has[k] = m_pend[gi];
             m_m1[m_m1_n].bo[k] = m_bo[gi];
@@ -470,6 +476,7 @@ public:
          m_broker[i] = FaBrokerName(FA_SYMS[i]);
          m_selected[i] = false;
          m_seeded[i] = false;
+         m_absent[i] = false;
          m_pend[i] = false;
          m_sym_last[i] = -1;
          m_bo[i] = 0.0; m_ao[i] = 0.0; m_bc[i] = 0.0;
@@ -570,6 +577,19 @@ public:
       m_seeded[i] = true;
       m_pre_seed_hits++;
       return true;
+     }
+
+   //---------------------------------------------------------------//
+   // MarkAbsent — TESTER-only: the EA found no history for this     |
+   // symbol at the run's start (not yet listed, e.g. SOLUSD before  |
+   // 2022). Exclude it from the all-seeded readiness gate until its |
+   // first real bar arrives (Apply re-seeds + clears this), so a    |
+   // not-yet-born leg does not freeze the whole Sat sleeve.         |
+   //---------------------------------------------------------------//
+   void              MarkAbsent(const int i)
+     {
+      if(i >= 0 && i < FA_NSYM)
+         m_absent[i] = true;
      }
 
    bool              SeedCrossValue(const string cross, const double bid_c,
