@@ -127,9 +127,16 @@ Done: ~~margin/ML telemetry~~ ✅ (PR #17) · ~~reconciliation harness~~ ✅ · 
 VPS runbook~~ ✅ (PR #19). In progress: warm blob (§6A, producing).
 
 **MUST-FIX before enable** (full detail in DEMO_GO_NOGO.md):
-1. **[CODE] OPEX calendar hardcoded to 2026-02** (`CoreSignal.mqh:630`) → the live Core S6
-   opex legs (USDJPY/AUDUSD/NZDUSD) go **permanently flat from 2026-02-21**, silently
-   contaminating the OOS demo. Extend/regenerate the calendar + recompile + re-cert. *#1.*
+1. ~~**[CODE] OPEX calendar hardcoded to 2026-02**~~ → **FIXED IN SOURCE** (PR #22): the
+   calendar now *computes* the 3rd-Friday week per query, so the horizon is gone rather than
+   re-dated; in-window behaviour is bit-identical (0 divergences, every day probed). The
+   root cause was inherited from the read-only parent's study window, which is why it passed
+   bit-exactness. **Still owed: recompile + `CheckCoreSignal.mq5` + bpure re-cert** — deferred
+   so as not to swap the binary under the in-flight warm-blob run (that run ends 2025-12-31,
+   before the horizon, so it stays valid). *Not closed until the re-cert passes.*
+1b. **[DATA] Policy-rate tables expired** (USD 2025-12-11 / JPY 2025-01-24) — these *hold the
+   last rate forward* rather than dying, so this is carry/swap **drift**, not signal death.
+   Needs the real rate path from the owner; not inventable. See DEMO_GO_NOGO §1b.
 2. **[MEASUREMENT]** position fidelity (`sc_mm` ≠ fidelity), breaker-fires (`fires` ≠ breaker,
    which is `g_fedNStops` in the deinit log), and the FTMO 5%/10% rule envelope are **not
    captured/computed** as-built — the harness was relabelled honestly; the underlying capture

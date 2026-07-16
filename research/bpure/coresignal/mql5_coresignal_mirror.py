@@ -364,22 +364,40 @@ def days_from_civil(y, m, d):
     return era * 146097 + doe - 719468
 
 
-def build_opex_cal():
-    """CCsOpexCal.Init mirror (ascending list)."""
-    days = []
-    y, m = 2019, 12
-    while y < 2026 or (y == 2026 and m <= 2):
+def civil_from_days(z):
+    """CsCivilFromDays mirror — Hinnant civil_from_days."""
+    z += 719468
+    era = (z if z >= 0 else z - 146096) // 146097
+    doe = z - era * 146097
+    yoe = (doe - doe // 1460 + doe // 36524 - doe // 146096) // 365
+    y = yoe + era * 400
+    doy = doe - (365 * yoe + yoe // 4 - yoe // 100)
+    mp = (5 * doy + 2) // 153
+    d = doy - (153 * mp + 2) // 5 + 1
+    m = mp + (3 if mp < 10 else -9)
+    return (y + (1 if m <= 2 else 0), m, d)
+
+
+class _OpexCal:
+    """CCsOpexCal mirror — horizon-free, computed per query (was a table
+    bounded at 2026-02; see CoreSignal.mqh and DEMO_GO_NOGO #1)."""
+
+    def __contains__(self, d):
+        d = int(d)
+        y, m, _ = civil_from_days(d)
+        if (y, m) < (2019, 12):          # golden's lower bound, preserved
+            return False
         e1 = days_from_civil(y, m, 1)
         wd = (e1 + 3) % 7
         first_fri = e1 + (((4 - wd) % 7) + 7) % 7
         fr3 = first_fri + 14
         mon = fr3 - 4
-        for k in range(5):
-            days.append(mon + k)
-        m += 1
-        if m == 13:
-            y, m = y + 1, 1
-    return days
+        return mon <= d <= mon + 4
+
+
+def build_opex_cal():
+    """Kept for callers; returns the membership twin, not a list."""
+    return _OpexCal()
 
 
 MQH_USD_D = [18201, 18324, 18336, 19068, 19117, 19159, 19201, 19257, 19299,
@@ -402,8 +420,7 @@ def rate_at(days, rates, eday):
     return rate
 
 
-_OPEX_LIST = build_opex_cal()
-_OPEX_SET = set(_OPEX_LIST)          # membership only (binary search twin)
+_OPEX_SET = _OpexCal()               # membership twin (horizon-free)
 
 SQRT252 = math.sqrt(252.0)
 
@@ -1074,13 +1091,22 @@ def gate_m2_seg_replay(arrays, segdir, n_seg):
 
 
 def gate_m3_tables():
+    # The opex calendar is horizon-free on both sides now, so there is no list
+    # to compare -- membership is probed day-by-day over a range that extends
+    # well past the old 2026-02 horizon. That is a strictly stronger gate: the
+    # set-equality it replaces could not have caught the horizon bug at all,
+    # because both sides carried the same bounded table.
     ref_opex = CS.opex_week_days()
+    lo, hi = days_from_civil(2015, 1, 1), days_from_civil(2045, 12, 31)
+    mismatch = [d for d in range(lo, hi + 1) if (d in _OPEX_SET) != (d in ref_opex)]
     ref_usd_d, ref_usd_r = CS._table_edays(CS._POLICY["USD"])
     ref_jpy_d, ref_jpy_r = CS._table_edays(CS._POLICY["JPY"])
     return dict(
-        opex_equal=bool(set(_OPEX_LIST) == ref_opex),
-        opex_n=len(_OPEX_LIST),
-        opex_ascending=bool(all(a < b for a, b in zip(_OPEX_LIST, _OPEX_LIST[1:]))),
+        opex_equal=bool(not mismatch),
+        opex_n_probed=hi - lo + 1,
+        opex_n_mismatch=len(mismatch),
+        # regression: the old table went dead here, flattening the live S6 legs
+        opex_alive_past_horizon=bool(days_from_civil(2026, 7, 17) in _OPEX_SET),
         usd_days_equal=bool(MQH_USD_D == ref_usd_d),
         usd_rates_equal=bool(MQH_USD_R == ref_usd_r),
         jpy_days_equal=bool(MQH_JPY_D == ref_jpy_d),

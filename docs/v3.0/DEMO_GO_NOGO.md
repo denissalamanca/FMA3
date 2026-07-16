@@ -16,6 +16,8 @@ the right place to observe several of these live — but do not flip
 ## MUST-FIX before trade-ENABLE
 
 ### 1. [CODE] The OPEX calendar is hardcoded to 2026-02 → silent signal death in-demo
+**→ FIXED IN SOURCE 2026-07-16 (PR #22). Recompile + re-cert still pending — see below.**
+
 `CoreSignal.mqh:630` (`CCsOpexCal`): `while(y < 2026 || (y == 2026 && m <= 2))` — the
 options-expiry-week calendar is populated **only through Feb 2026**. It feeds the **live**
 Core S6 opex legs (USDJPY long, AUDUSD short, NZDUSD short) via `m_cal.In(d)`
@@ -23,8 +25,65 @@ Core S6 opex legs (USDJPY long, AUDUSD short, NZDUSD short) via `m_cal.In(d)`
 so those three legs are **permanently flat for the entire 2026-07+ demo** — no error, no
 NaN, no refuse. It runs on the live compute path (`CoreEngine.mqh:145`'s unbounded variant
 is *not* used live). **This silently contaminates the OOS-generalization measurement the demo
-exists to produce.** Fix: extend/**dynamically generate** the calendar past the horizon,
-recompile, re-cert. *This is the #1 finding.*
+exists to produce.** *This is the #1 finding.*
+
+**Root cause — inherited, not introduced.** The bound is the **parent's study window**:
+`v5_sleeves._nth_friday_week` (NSF5, read-only) ranges `"2019-12-01".."2026-02-01"`. The
+MQL5 port reproduced it faithfully — which is exactly *why* it passed bit-exactness. The
+defect is not the date; it is that a **bounded table** answers a **set-membership** test, so
+past the last row it degrades to a confident `false` instead of an error.
+
+**The fix — the horizon is removed, not re-dated.** `CCsOpexCal.In()` now *computes* the
+3rd-Friday week from the queried date (the same rule `CoreEngine.mqh:145` already used), so
+there is no last row to fall off. Pushing the table to 2040 was rejected: it preserves the
+failure and merely re-dates it. The **2019-12 lower bound is kept exactly**, so in-window
+behaviour is bit-identical. Applied to all three FMA3 copies (EA, `core_signal_reference.py`,
+`mql5_coresignal_mirror.py`) so the mirror does not certify a stale model of the EA.
+
+**Evidence:**
+- **0 divergences** vs the shipped table over 2015-01-01..2026-02-28 (every day probed) —
+  the certified window provably cannot move.
+- Past the horizon: old table = **0** opex days through 2045; new rule = **1,190**.
+- **0 errors** vs the real 3rd-Friday weeks 2020–2045, no cross-month spill.
+- `2026-07-17` (**inside the demo window**): `old=false → new=true`. Those legs would have
+  been dead for the whole demo.
+- M-3 gate (mirror vs reference): 0 mismatches over 11,323 probed days.
+- MQL5 compiles 0 errors / 0 warnings (isolated sandbox — the live tree was not touched
+  because the warm-blob run was in flight).
+
+**Still pending (owner):** recompile `FableBookNative.ex5` + run `CheckCoreSignal.mq5` +
+re-run the bpure coresignal cert. **Deliberately deferred** — recompiling would have swapped
+the binary under the running 15h warm-blob run. That run is unaffected by the fix (it ends
+2025-12-31, before the horizon), so its output stays valid.
+
+**The test that pinned the bug is now the test that prevents it.** `CheckCoreSignal.mq5:186`
+asserted `cal.Last() == 20504` ("opex last 2026-02-20") — it *encoded the horizon as correct*.
+Replaced with membership assertions including `In(20651)` (2026-07-17, in-demo). Likewise the
+M-3 gate compared two *sets* that both carried the same bounded table, so it could not have
+caught this; it now probes membership day-by-day to 2045.
+
+### 1b. [DATA] The policy-rate tables are also expired — but they go *stale*, not *dead*
+Found while fixing #1; `FORWARD_GENERATOR_SPEC.md:234` had already flagged it and the
+go/no-go missed it. `CCsPolicy` (`CoreSignal.mqh:667`), `SwapEurq.mqh:336`,
+`CarryBreakout.mqh:109` and `CoreEngine.mqh:135` all embed `engine/costs.POLICY_RATES`,
+whose last rows are **USD 2025-12-11 (3.625)** and **JPY 2025-01-24 (0.50)**. Both are
+already in the past.
+
+**Severity is materially lower than #1, and the difference is the whole point.**
+`policy_rate` is *"last table rate with date <= ts"* — a step function **held forward**. Past
+the last row it returns the last known rate, so the model quietly assumes rates have not
+moved since Dec 2025. That is **input drift, not structural death**: #1 removed three legs
+outright; this biases the jpy_smart carry gate (`CoreEngine.mqh:313`:
+`PolicyRate(USD) - PolicyRate(JPY)`, frozen at 3.125) and modelled swap/carry by however far
+real policy has actually moved. The spec's phrase "swaps/carry freeze" is precise — *freeze*,
+not flatten. Do **not** conflate the two.
+
+**Not fixed here, deliberately: this needs real data, and inventing rates would be worse than
+leaving them stale.** Correct values require actual central-bank decisions after 2025-12-11
+(USD) / 2025-01-24 (JPY), which are not in this repo. **Owner input needed:** supply the
+actual rate path, or accept measured carry drift as a known demo caveat. Note live swaps are
+charged by the *broker*, so the demo's realised P&L is not affected — the exposure is the
+carry **signal** and the record-side swap model used for reconciliation.
 
 ### 2. [MEASUREMENT] Three of the §3/§5 criteria are NOT measurable as-built
 - **Position fidelity ≥99%/bar is un-measurable.** The telemetry `sc_mm`
