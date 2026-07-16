@@ -65,6 +65,30 @@ def position_fidelity(p: pd.DataFrame, band: float) -> dict:
     for c in ("want", "held", "defer"):
         q[c] = pd.to_numeric(q[c], errors="coerce")
     q["deferred"] = q["defer"].fillna(0).astype(int) > 0
+
+    # STALENESS GATE. TelemetryHour() can fire several times per Pump() while
+    # FED_Reconcile() runs once, so a multi-hour catch-up pass stamps the SAME
+    # want/held onto every hour in it. Those rows are a snapshot of some earlier
+    # instant, not of their own hour, and scoring them invents violations that
+    # never happened (run 44 read 96.75% "bar fidelity" this way — every single
+    # violation was want=0.03/held=0.02 frozen across hundreds of hours, on a
+    # book whose min-lot/step made that add perfectly legal and which therefore
+    # would have traded had the snapshot been live).
+    # A row is measured only if its snapshot was taken within its own hour.
+    stale_note = None
+    if "snap_ts" in q and pd.to_numeric(q["snap_ts"], errors="coerce").notna().any():
+        snap = pd.to_numeric(q["snap_ts"], errors="coerce")
+        age = pd.to_numeric(q["ts"], errors="coerce") - snap
+        fresh = (snap > 0) & (age >= 0) & (age < 3600)
+        n_stale = int((~fresh).sum())
+        q = q[fresh].copy()
+        stale_note = (f"{n_stale:,} leg-bars dropped as stale (snapshot older than "
+                      f"their own hour — catch-up pass, not a fidelity event)")
+    else:
+        stale_note = ("NO snap_ts column — cannot tell fresh from stale snapshots, so "
+                      "these numbers are NOT trustworthy (telemetry predates the fix)")
+    if not len(q):
+        return {"status": "no fresh P rows to score", "staleness": stale_note}
     act = q[~q["deferred"]].copy()
 
     aw, ah = act["want"].abs(), act["held"].abs()
@@ -83,6 +107,7 @@ def position_fidelity(p: pd.DataFrame, band: float) -> dict:
     stuck = q[q["deferred"]].groupby("sym").size().sort_values(ascending=False)
     return {
         "band": band,
+        "staleness": stale_note,
         "n_leg_bars": int(len(act)),
         "leg_fidelity": float(act["ok"].mean()) if len(act) else float("nan"),
         "bar_fidelity": float(per_bar.mean()) if len(per_bar) else float("nan"),
@@ -309,6 +334,8 @@ def _fmt(out: dict) -> str:
     if "status" in f:
         L.append(f"  FIDELITY: {f['status']}")
     else:
+        if f.get("staleness"):
+            L.append(f"    staleness: {f['staleness']}")
         L.append(f"  FIDELITY: bar {f['bar_fidelity']:.2%} · leg {f['leg_fidelity']:.3%} "
                  f"(invariant: within band {f['band']}, sign-correct; NOT held==want) "
                  f"· max drift {f['max_drift']:.2f} · sign-violations {f['n_sign_violations']}")

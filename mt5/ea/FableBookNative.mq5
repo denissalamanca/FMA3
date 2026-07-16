@@ -193,7 +193,7 @@ void TeleOpen()
   {
    // rec=F per-symbol book_frac | rec=H hourly book | rec=P per-symbol position
    // (DEMO_GO_NOGO #2/#3: warm, n_stops, worst_eq, day_anchor, want/held/defer)
-   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading,warm,n_stops,worst_eq,day_anchor,want,held,defer";
+   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading,warm,n_stops,worst_eq,day_anchor,want,held,defer,snap_ts";
    if(g_fedLive)
      {
       g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
@@ -222,17 +222,23 @@ void TelemetryHour(const long H)
    // per-symbol book_frac rows of the last emission (broker names, pre-s)
    int n = g_orc.EmitCount();
    for(int i = 0; i < n; i++)
-      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,,,,,,,,,\n",
+      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,,,,,,,,,,\n",
                       g_orc.EmitTs(i), g_orc.EmitSymbol(i), g_orc.EmitFrac(i)));
    // per-symbol POSITION rows: the last FED_Reconcile pass's want vs actually-held.
    // Raw inputs only — held is designed to sit within InpRebalBand of want, so the
    // fidelity VERDICT belongs downstream (reconcile_demo.py), not in the binary.
+   // snap_ts says WHEN the pair was taken: this function can run several times per
+   // Pump() while FED_Reconcile() runs once, so on a catch-up pass the same snapshot
+   // is stamped onto many hours. Only rows whose snap_ts falls inside their own hour
+   // are measured; the rest are stale and must NOT be scored (run 44: scoring them
+   // read 96.75% "fidelity" that was pure artifact).
    for(int k = 0; k < FED_NSYM; k++)
-      FileWriteString(g_teleh, StringFormat("%I64d,P,%s,,,,,,,,,,,,,,,,,,,,%.2f,%.2f,%d\n",
+      FileWriteString(g_teleh, StringFormat("%I64d,P,%s,,,,,,,,,,,,,,,,,,,,%.2f,%.2f,%d,%I64d\n",
                       H, g_fedTrade[k], g_fedWant[k], g_fedHeld[k],
-                      (g_fedLegDefer[k] ? 1 : 0) + (g_fedUnsized[k] ? 2 : 0)));
+                      (g_fedLegDefer[k] ? 1 : 0) + (g_fedUnsized[k] ? 2 : 0),
+                      g_fedSnapTs));
    FileWriteString(g_teleh, StringFormat(
-      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%.2f,,,\n",
+      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%.2f,,,,\n",
       H, n, a_h, b_h, j, g_drive.Seed(), g_drive.Segments(), g_drive.Fires(),
       g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(), g_unreadyRows,
       g_drive.SkippedBars(),
@@ -242,7 +248,7 @@ void TelemetryHour(const long H)
       g_warm ? 1 : 0,          // #3: cold-start alarm — `trading` alone lies
       g_fedNStops,             // #2: the REAL breaker count (was deinit-only)
       FED_WorstMarkEquity(),   // the 28% kill line is worst-mark, not hourly equity
-      g_fedAnchor));           // FTMO daily anchor -> the 5%/10% envelope
+      g_fedAnchor));           // FTMO daily anchor (0 when the breaker is disarmed)
    if(g_fedLive)
       FileFlush(g_teleh);
   }
