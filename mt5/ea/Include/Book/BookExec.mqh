@@ -29,6 +29,16 @@ long g_fedNSplit=0, g_fedNReject=0;
 bool g_fedPendExec=false;         // a leg deferred on a closed market -> retry next bar
 bool g_fedLegDefer[FED_NSYM];
 
+//--- position-fidelity snapshot (DEMO_GO_NOGO #2): the last FED_Reconcile pass's
+//--- want/held per leg, so the hourly telemetry can record held-vs-target.
+//--- NOTE these are RAW inputs, not a verdict: held is DESIGNED to differ from
+//--- want by up to InpRebalBand (the churn dead-band, line ~276), so "fidelity"
+//--- is only definable downstream, with the band in view. Logging the verdict
+//--- here would bake one definition into the binary.
+double g_fedWant[FED_NSYM];       // target lots this pass (signed, post-InpScale/round/cap)
+double g_fedHeld[FED_NSYM];       // net lots actually held at the same instant (signed)
+bool   g_fedUnsized[FED_NSYM];    // nonzero target but no price/eurq -> held, not flattened
+
 //====================================================================
 // LOGGING (decisions CSV) - live appends / tester overwrites in OnInit
 //====================================================================
@@ -257,6 +267,10 @@ void FED_Reconcile()
 
       double held=FED_HeldNet(sym,magic);
 
+      // fidelity snapshot: record want/held for EVERY leg (incl. flat + unsized)
+      // before any of the early-continues below, so the hourly row is complete.
+      g_fedWant[k]=want; g_fedHeld[k]=held; g_fedUnsized[k]=unsized[k];
+
       // [FIX] transient missing quote on a NONZERO-target leg: HOLD the position,
       // never let want=0 be read as a cross-to-zero close. Retry next bar.
       if(unsized[k])
@@ -300,6 +314,7 @@ void FED_Reconcile()
         }
 
       double after=FED_HeldNet(sym,magic);
+      g_fedHeld[k]=after;                                // post-fill: what we ACTUALLY hold
       if(MathAbs(after-held)<step*0.5) continue;         // rejected / no-op
       string ev = (MathAbs(after)<1e-9)              ? "CLOSE" :
                   (MathAbs(held)<1e-9)               ? "OPEN"  :
