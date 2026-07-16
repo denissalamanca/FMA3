@@ -18,8 +18,8 @@ trade-disabled by preset default).
 | | |
 |---|---|
 | VPS | Windows Server, always-on, no sleep |
-| IC demo | **€10,000**, leverage **1:30** ← provision the leverage at creation |
-| FTMO demo | **€100,000**, leverage **1:100** ← same |
+| IC demo | **`52963578`** — €10,000, leverage **1:30** ✅ created 2026-07-16 |
+| FTMO demo | €100,000, leverage **1:100** ← provision the leverage at creation |
 | Warm blob | `FMA3_native_state.json` + `.coredrive` from this laptop's `Common\Files` |
 
 **Leverage is not cosmetic.** Both dials (IC s=1.6, FTMO s=0.70) were decided *at* those
@@ -92,8 +92,18 @@ binary matches the VPS's MT5 build.
 see one folder. So each account needs its **own** state file, or the two EAs overwrite each
 other's warm state every hour for three months.
 
-Copy the blob **twice**, into
-`C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`:
+Copy the blob **twice**, into the shared folder — paste this literally into Explorer's
+address bar (`%APPDATA%` expands itself, so you needn't unhide `AppData`):
+
+```
+%APPDATA%\MetaQuotes\Terminal\Common\Files
+```
+
+which resolves to `C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`.
+Note `Common` is a **sibling** of the per-terminal hex-named folders, not inside one — that is
+exactly why both installs see it. If `Files` doesn't exist, create it. *(Portable installs
+(`/portable`) keep data under the install directory instead — this path does not apply.)*
+Can't find it? `File → Open Data Folder`, then go **up one level** to `…\Terminal\`.
 
 ```
 FMA3_native_state.json            ->  FMA3_native_state_IC.json
