@@ -106,8 +106,24 @@ def ftmo_envelope(h: pd.DataFrame, initial: float) -> dict:
     q["day_anchor"] = pd.to_numeric(q["day_anchor"], errors="coerce")
     eq = pd.to_numeric(q.get("worst_eq", q["equity"]), errors="coerce").fillna(q["equity"])
     anch = q["day_anchor"].replace(0.0, np.nan)
-    daily_loss = (anch - eq) / anch                     # fraction below the day's anchor
     max_loss = (initial - eq) / initial                 # fraction below the initial balance
+    # Guardian maintains g_fedAnchor ONLY when the breaker is armed (Guardian.mqh:80 —
+    # InpDailyStopX<=0 returns early, "OFF: no state"). So on an IC run (dailyStopX=0)
+    # day_anchor is 0 on every row and the daily-5% half is genuinely UN-MEASURABLE —
+    # not zero, not passing. The max-loss half needs only the initial balance, so it
+    # still stands. (Found by running against real run-44 telemetry; the synthetic
+    # fixture had a live anchor on every row and could not have caught this.)
+    if anch.isna().all():
+        return {
+            "initial": initial,
+            "status": "daily anchor never set — breaker DISARMED (InpDailyStopX=0). "
+                      "Daily-5% un-measurable here; it needs the FTMO preset.",
+            "worst_daily_loss": None,
+            "worst_total_loss": float(max_loss.max()),
+            "breaches_10pct_max_loss": int((max_loss > 0.10).sum()),
+            "PASS": None,
+        }
+    daily_loss = (anch - eq) / anch                     # fraction below the day's anchor
     return {
         "initial": initial,
         "worst_daily_loss": float(daily_loss.max()) if daily_loss.notna().any() else None,
@@ -308,8 +324,13 @@ def _fmt(out: dict) -> str:
         v = out["ftmo_envelope"]
         if "status" in v:
             L.append(f"  FTMO:     {v['status']}")
+            if v.get("worst_total_loss") is not None:
+                L.append(f"            (max-loss half still computable: worst total "
+                         f"{v['worst_total_loss']:.2%} · 10% breaches {v['breaches_10pct_max_loss']})")
         else:
-            L.append(f"  FTMO:     worst daily {v['worst_daily_loss']:.2%} (5% breach days: {v['n_days_breaching_5pct']}) · "
+            wd = v["worst_daily_loss"]
+            wd_s = f"{wd:.2%}" if wd is not None else "n/a"
+            L.append(f"  FTMO:     worst daily {wd_s} (5% breach days: {v['n_days_breaching_5pct']}) · "
                      f"worst total {v['worst_total_loss']:.2%} · 10% breaches {v['breaches_10pct_max_loss']} · "
                      f"{'PASS' if v['PASS'] else 'FAIL'}")
     if "friction" in out:
