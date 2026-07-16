@@ -197,12 +197,19 @@ void RefuseLatch(const string why)
 //====================================================================
 void TeleOpen()
   {
+   // FILE_SHARE_READ is REQUIRED, not cosmetic. Without it MQL5 takes an EXCLUSIVE
+   // lock and NOTHING can read the file while the EA runs — which is every hour of
+   // a 3-month unattended demo. demo_watch.py (the live kill-criteria alerter) and
+   // reconcile_demo.py (the weekly reconciliation) both read this file; the whole
+   // monitoring layer of DEMO_FORWARD_PLAN §6D/§6E is dead without it. Found
+   // 2026-07-16 on the VPS: even `Get-Content` was refused with "the process cannot
+   // access the file because it is being used by another process".
    // rec=F per-symbol book_frac | rec=H hourly book | rec=P per-symbol position
    // (DEMO_GO_NOGO #2/#3: warm, n_stops, worst_eq, day_anchor, want/held/defer)
    string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading,warm,n_stops,worst_eq,day_anchor,want,held,defer,snap_ts";
    if(g_fedLive)
      {
-      g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_SHARE_READ|FILE_TXT|FILE_ANSI|FILE_COMMON);
       if(g_teleh != INVALID_HANDLE)
         {
          if(FileSize(g_teleh) == 0)
@@ -212,7 +219,7 @@ void TeleOpen()
      }
    else
      {
-      g_teleh = FileOpen(InpTelemetryFile, FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      g_teleh = FileOpen(InpTelemetryFile, FILE_WRITE|FILE_SHARE_READ|FILE_TXT|FILE_ANSI|FILE_COMMON);
       if(g_teleh != INVALID_HANDLE)
          FileWriteString(g_teleh, hdr + "\n");
      }
@@ -830,7 +837,7 @@ int OnInit()
       if(g_fedLive)
         {
          g_fedLogh = FileOpen(InpDecisionsFile,
-                              FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
+                              FILE_READ|FILE_WRITE|FILE_SHARE_READ|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
          if(g_fedLogh != INVALID_HANDLE)
            {
             if(FileSize(g_fedLogh) == 0)
@@ -842,7 +849,7 @@ int OnInit()
       else
         {
          g_fedLogh = FileOpen(InpDecisionsFile,
-                              FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
+                              FILE_WRITE|FILE_SHARE_READ|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
          if(g_fedLogh != INVALID_HANDLE)
             FileWrite(g_fedLogh, hdr[0], hdr[1], hdr[2], hdr[3], hdr[4],
                       hdr[5], hdr[6], hdr[7], hdr[8], hdr[9]);
