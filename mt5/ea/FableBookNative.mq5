@@ -189,7 +189,7 @@ void RefuseLatch(const string why)
 //====================================================================
 void TeleOpen()
   {
-   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,trading";
+   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading";
    if(g_fedLive)
      {
       g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
@@ -218,14 +218,15 @@ void TelemetryHour(const long H)
    // per-symbol book_frac rows of the last emission (broker names, pre-s)
    int n = g_orc.EmitCount();
    for(int i = 0; i < n; i++)
-      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,\n",
+      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,,\n",
                       g_orc.EmitTs(i), g_orc.EmitSymbol(i), g_orc.EmitFrac(i)));
    FileWriteString(g_teleh, StringFormat(
-      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%d\n",
+      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%.2f,%d\n",
       H, n, a_h, b_h, j, g_drive.Seed(), g_drive.Segments(), g_drive.Fires(),
       g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(), g_unreadyRows,
       g_drive.SkippedBars(),
       AccountInfoDouble(ACCOUNT_BALANCE), AccountInfoDouble(ACCOUNT_EQUITY),
+      AccountInfoDouble(ACCOUNT_MARGIN_LEVEL),
       (g_canTrade && !g_refuse) ? 1 : 0));
    if(g_fedLive)
       FileFlush(g_teleh);
