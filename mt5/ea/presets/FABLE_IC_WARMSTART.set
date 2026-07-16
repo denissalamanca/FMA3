@@ -11,6 +11,11 @@
 ;     Period      : M1
 ;     Modelling   : 1 minute OHLC     <-- FAST; state is M1-deterministic, real ticks NOT needed
 ;     Date        : Custom, From 2020.01.01  To 2026.01.01   (full path from t0 required)
+;                   MT5's "To" is EXCLUSIVE *and* the book closes hour H only once the feed
+;                   passes H+1 -- so the blob lands ~2h before the To date, not at it.
+;                   Measured: To 2025.12.31 -> blob at 12-30 22:00; To 2026.01.01 -> 12-31 22:00.
+;                   22:00 is ACCEPTED (RECON-13): the EA resumes from last_emit_hour and
+;                   backfills, so the exact hour is cosmetic. Do not chase 23:00.
 ;                   NOTE the To date: MT5's "To" is EXCLUSIVE. "To 2025.12.31" stops at
 ;                   2025.12.30 23:59 and the blob lands on the WRONG hour (proven
 ;                   2026-07-16: last_emit_hour = 2025-12-30 22:00, a_h 54.302 vs the
@@ -41,10 +46,14 @@ InpRebalBand=0.25
 InpStateFile=FMA3_native_state.json
 InpSaveState=true
 InpSaveInTester=true
-; Tester saves ONLY from here on: the sidecar is legal only at a completed-hour
-; boundary, and saving every hour is O(n^2) (~300h vs ~55min for the window).
-; The last save inside this window IS the warm blob.
-InpSaveStateFrom=2025.12.30 00:00
+; Tester saves ONLY from here on. Two hard-won constraints:
+;  * The completed-hour boundary is the ONLY LEGAL save point -- the core-drive
+;    sidecar needs drained queues (CoreLiveDrive.mqh:712). A deinit-only save
+;    refuses with "save with undrained queues" and yields a blob with NO sidecar.
+;  * Each save serialises ~7.9 MB and costs ~66s, so a wide window is expensive:
+;    2025.12.30 00:00 cost 48 saves = 53 min of pure saving. 20:00 gives ~3.
+; The LAST save inside the window IS the warm blob.
+InpSaveStateFrom=2025.12.31 20:00
 InpTelemetryFile=FMA3_native_hourly.csv
 InpMaxMinutesPerPass=20000
 ; --- 6. EUR conversion crosses ---
