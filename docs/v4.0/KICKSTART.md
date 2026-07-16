@@ -49,15 +49,17 @@ single source; the RECON ledger tells you what has and hasn't been proven.
 - **Decide first, with the owner:** where v4 lives — here under `docs/v4.0/` + a working area,
   or spun out into its own repo (as the validation-engine spinoff was). Don't assume.
 - Never deploy / trade / move money; any EA ships trade-disabled.
-- Read `MEMORY.md` for the standing project constraints.
+- The standing project constraints live in the **persistent memory index** (loaded automatically
+  at session start — it is not a file in this repo). Read them before proposing anything.
 
 ---
 
 ## ▶ Paste this to open the v4 session
 
 > Kickstart **FMA v4**, the next program after FMA3. Start by reading
-> `docs/v4.0/KICKSTART.md` and `MEMORY.md`. FMA3 (the parent blended book) is validated and
-> in its own demo-launch prep — it's a separate program; do not work on FMA3 here.
+> `docs/v4.0/KICKSTART.md`, plus the standing constraints in your persistent memory. FMA3
+> (the parent blended book) is validated and in its own demo-launch prep — it's a separate
+> program; do not work on FMA3 here.
 >
 > There is deliberately **no backlog** — I want you to build your own from the evidence.
 > Your first task is **not to execute**: independently assess FMA3's evidence base (the
