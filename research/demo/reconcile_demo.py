@@ -97,9 +97,15 @@ def reconcile(telemetry: str, report: str | None, record: str | None,
         "return": float(eq.iloc[-1] / eq.iloc[0] - 1),
         "worst_mark_dd_hourly": worst_mark_dd(eq),
     }
-    # min-ML if the margin field was added (§6C.1)
+    # min-ML if the margin field was added (§6C.1); over rows with positions held
+    # (margin_level == 0 means no open positions — the cold/flat state, not a real ML)
     ml_col = next((c for c in h.columns if c.lower() in ("margin_level", "ml", "marginlevel")), None)
-    out["equity"]["min_ML"] = (float(h[ml_col].min()) if ml_col else "not logged (add margin/ML to telemetry — §6C.1)")
+    if ml_col:
+        active = pd.to_numeric(h[ml_col], errors="coerce")
+        active = active[active > 0]
+        out["equity"]["min_ML"] = (float(active.min()) if len(active) else "no positions held")
+    else:
+        out["equity"]["min_ML"] = "not logged (add margin/ML to telemetry — §6C.1)"
 
     # --- crisis / weekly windows ---
     out["windows"] = {}
