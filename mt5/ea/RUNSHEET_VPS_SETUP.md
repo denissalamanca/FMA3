@@ -27,8 +27,12 @@ leverages; a different one silently changes the margin path and the drawdown tha
 Set it when you create the account — changing it later resets things.
 
 **Two accounts = two MT5 installations.** MT5 allows one login per terminal, so install MT5
-twice on the VPS (separate directories, e.g. `C:\MT5-IC\` and `C:\MT5-FTMO\`) — one login
-each. Use *portable* installs or separate data folders.
+twice on the VPS (separate directories, e.g. `C:\MT5-IC\` and `C:\MT5-FTMO\`) — one login each.
+
+**Do NOT use `/portable`.** Two *normal* installs each get their own data folder under
+`%APPDATA%\MetaQuotes\Terminal\<hash>\` while **sharing** one `…\Terminal\Common\Files` — which
+is what Step 3's blob path and the `_IC`/`_FTMO` namespacing assume. Portable installs keep
+data under the install directory and break that assumption.
 
 ---
 
@@ -101,9 +105,9 @@ address bar (`%APPDATA%` expands itself, so you needn't unhide `AppData`):
 
 which resolves to `C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`.
 Note `Common` is a **sibling** of the per-terminal hex-named folders, not inside one — that is
-exactly why both installs see it. If `Files` doesn't exist, create it. *(Portable installs
-(`/portable`) keep data under the install directory instead — this path does not apply.)*
-Can't find it? `File → Open Data Folder`, then go **up one level** to `…\Terminal\`.
+exactly why both installs see it. If `Files` doesn't exist, create it.
+Can't find it? `File → Open Data Folder`, then go **up one level** to `…\Terminal\` — `Common`
+sits alongside the hex-named folder. (This assumes the non-portable install from Step 2.)
 
 ```
 FMA3_native_state.json            ->  FMA3_native_state_IC.json
