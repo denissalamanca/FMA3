@@ -178,18 +178,25 @@ void SmokeTables(void)
    Expect(CsDaysFromCivil(2019, 12, 1) == 18231, "days_from_civil 2019-12-01");
    Expect(CsDaysFromCivil(2026, 2, 1) == 20485,  "days_from_civil 2026-02-01");
 
-   //--- opex calendar (375 days, 2019-12 .. 2026-02)
+   //--- opex calendar — horizon-free (was a table bounded at 2026-02)
    CCsOpexCal cal;
    cal.Init();
-   Expect(cal.Count() == 375,   "opex count 375");
-   Expect(cal.First() == 18246, "opex first 2019-12-16");
-   Expect(cal.Last() == 20504,  "opex last 2026-02-20");
+   //    in-window membership: unchanged from the shipped table
+   Expect(cal.In(18246),  "opex 2019-12-16 in");     // first day of the calendar
    Expect(cal.In(19947),  "opex 2024-08-12 in");     // Mon of Aug-2024 week
    Expect(cal.In(19951),  "opex 2024-08-16 in");     // 3rd Friday
    Expect(!cal.In(19954), "opex 2024-08-19 out");
    Expect(cal.In(18337),  "opex 2020-03-16 in");
    Expect(cal.In(20500),  "opex 2026-02-16 in");
+   Expect(cal.In(20504),  "opex 2026-02-20 in");     // the old table's last day
+   //    lower bound preserved (the golden's calendar starts 2019-12)
    Expect(!cal.In(18245), "opex 2019-12-15 out");
+   Expect(!cal.In(18200), "opex 2019-10-31 out (before the 2019-12 lower bound)");
+   //    REGRESSION (DEMO_GO_NOGO #1): the old table answered false forever past
+   //    2026-02-20, silently flattening the live S6 legs. These MUST be true.
+   Expect(cal.In(20532),  "opex 2026-03-20 in  (3rd Fri, PAST the old horizon)");
+   Expect(cal.In(20651),  "opex 2026-07-17 in  (3rd Fri, inside the demo window)");
+   Expect(!cal.In(20525), "opex 2026-03-13 out (not the 3rd-Friday week)");
 
    //--- policy step tables
    CCsPolicy pol;

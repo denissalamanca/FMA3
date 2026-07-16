@@ -212,26 +212,41 @@ def policy_rate_eday(days, rates, eday):
     return rate
 
 
-def opex_week_days():
+class _OpexWeeks:
     """v5_sleeves._nth_friday_week(2): Mon..Fri epoch days of every month's
-    3rd-Friday week, months 2019-12 .. 2026-02 (deterministic calendar)."""
-    days = set()
-    y, m = 2019, 12
-    while (y, m) <= (2026, 2):
-        d1 = date(y, m, 1)
+    3rd-Friday week — computed per query, so there is NO upper horizon.
+
+    The parent precomputes this into a set bounded at 2026-02 (its study
+    window). Membership against a bounded set answers false forever past the
+    last row, which silently flattens the S6 opex legs rather than failing
+    (DEMO_GO_NOGO #1) — so the horizon is removed here, not merely re-dated.
+    The 2019-12 LOWER bound is kept exactly, so membership is bit-identical to
+    the parent's set everywhere the parent had authority.
+    """
+
+    LOWER = (2019, 12)
+
+    def __contains__(self, d):
+        dt = date(1970, 1, 1) + timedelta(days=int(d))
+        if (dt.year, dt.month) < self.LOWER:
+            return False
+        d1 = date(dt.year, dt.month, 1)
         first_fri = d1 + timedelta(days=(4 - d1.weekday()) % 7)
         fr3 = first_fri + timedelta(days=14)              # 3rd Friday
         mon = fr3 - timedelta(days=fr3.weekday())         # Monday of that week
         e0 = (mon - date(1970, 1, 1)).days
-        for k in range(5):
-            days.add(e0 + k)
-        m += 1
-        if m == 13:
-            y, m = y + 1, 1
-    return days
+        # the week never crosses a month boundary (3rd Fri is dom 15..21, so
+        # its Monday is dom 11..17) -> d's own month is sufficient
+        return e0 <= int(d) <= e0 + 4
 
 
-OPEX_WK = opex_week_days()
+def opex_week_days():
+    """Membership object (was: a set bounded at 2026-02). Kept as a callable so
+    existing callers -- `d in opex_week_days()` -- are unaffected."""
+    return _OpexWeeks()
+
+
+OPEX_WK = _OpexWeeks()
 
 
 # =============================================================================

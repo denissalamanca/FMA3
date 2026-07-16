@@ -601,8 +601,23 @@ bool CsDonParse(CSatDonchian &don, CCsTok &p)
 
 //==================================================================//
 // CCsOpexCal — v5_sleeves._nth_friday_week(2) deterministic        //
-// calendar: Mon..Fri epoch days of every month's 3rd-Friday week,  //
-// months 2019-12 .. 2026-02 (375 days, strictly ascending).        //
+// calendar: Mon..Fri epoch days of every month's 3rd-Friday week.  //
+//                                                                  //
+// HORIZON-FREE (2026-07-16). This was a PRECOMPUTED TABLE bounded  //
+// at 2026-02, inherited verbatim from the parent's study window    //
+// (v5_sleeves._nth_friday_week ranges "2019-12-01".."2026-02-01"). //
+// Because In() is a SET-MEMBERSHIP test, every date past the last  //
+// row answered false forever — so the live Core S6 opex legs       //
+// (USDJPY/AUDUSD/NZDUSD) would have gone permanently flat from     //
+// 2026-02-21 with no error, no NaN and no refuse, silently         //
+// contaminating the demo's OOS measurement (DEMO_GO_NOGO #1).      //
+//                                                                  //
+// The 3rd-Friday week is computable from any date, so the horizon  //
+// is now GONE rather than merely pushed out: a further-out table    //
+// would preserve the failure, just re-dated. The LOWER bound is    //
+// kept exactly, so in-window behaviour is bit-identical (verified  //
+// 0 divergences over 2015-01-01..2026-02-28; matches the real 3rd- //
+// Friday weeks with no cross-month spill through 2045).            //
 //==================================================================//
 long CsDaysFromCivil(const int y_in, const int m_in, const int d_in)
   {
@@ -616,51 +631,48 @@ long CsDaysFromCivil(const int y_in, const int m_in, const int d_in)
    return (long)era * 146097 + doe - 719468;
   }
 
+void CsCivilFromDays(const long z_in, int &y_out, int &m_out, int &d_out)
+  {
+   // Howard Hinnant civil_from_days — exact inverse of CsDaysFromCivil
+   long z = z_in + 719468;
+   long era = (z >= 0 ? z : z - 146096) / 146097;
+   long doe = z - era * 146097;                                  // [0, 146096]
+   long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+   long y   = yoe + era * 400;
+   long doy = doe - (365 * yoe + yoe / 4 - yoe / 100);            // [0, 365]
+   long mp  = (5 * doy + 2) / 153;                                // [0, 11]
+   long d   = doy - (153 * mp + 2) / 5 + 1;                       // [1, 31]
+   long m   = mp + (mp < 10 ? 3 : -9);                            // [1, 12]
+   y_out = (int)(y + (m <= 2 ? 1 : 0));
+   m_out = (int)m;
+   d_out = (int)d;
+  }
+
 class CCsOpexCal
   {
 public:
-   long              m_days[];
-   int               m_n;
+   void              Init(void) { }   // nothing to build — the rule is computed
 
-   void              Init(void)
-     {
-      ArrayResize(m_days, 76 * 5);
-      m_n = 0;
-      int y = 2019, m = 12;
-      while(y < 2026 || (y == 2026 && m <= 2))
-        {
-         long e1 = CsDaysFromCivil(y, m, 1);
-         int  wd = (int)((e1 + 3) % 7);                       // Mon = 0
-         long first_fri = e1 + (((4 - wd) % 7) + 7) % 7;      // python (4-wd)%7
-         long fr3 = first_fri + 14;                           // 3rd Friday
-         long mon = fr3 - 4;                                  // Friday.weekday()==4
-         for(int k = 0; k < 5; k++)
-           {
-            m_days[m_n] = mon + k;
-            m_n++;
-           }
-         m++;
-         if(m == 13) { y++; m = 1; }
-        }
-     }
-
-   // set membership (entries strictly ascending -> binary search)
+   // Is epoch-day `d` inside the Mon..Fri week containing its own month's 3rd
+   // Friday? The 3rd Friday is dom 15..21, so its Monday is dom 11..17 — the
+   // week never crosses a month boundary, so `d`'s own month is sufficient.
    bool              In(const long d) const
      {
-      int lo = 0, hi = m_n - 1;
-      while(lo <= hi)
-        {
-         int mid = (lo + hi) / 2;
-         if(m_days[mid] == d) return true;
-         if(m_days[mid] < d)  lo = mid + 1;
-         else                 hi = mid - 1;
-        }
-      return false;
+      int y, m, dom;
+      CsCivilFromDays(d, y, m, dom);
+      // The golden's calendar starts at 2019-12; preserved so that any date
+      // before it answers false exactly as the shipped table did.
+      if(y < 2019 || (y == 2019 && m < 12)) return false;
+      long e1 = CsDaysFromCivil(y, m, 1);
+      int  wd = (int)((e1 + 3) % 7);                       // Mon = 0
+      long first_fri = e1 + (((4 - wd) % 7) + 7) % 7;      // python (4-wd)%7
+      long fr3 = first_fri + 14;                           // 3rd Friday
+      long mon = fr3 - 4;                                  // Friday.weekday()==4
+      return (d >= mon && d <= mon + 4);
      }
 
-   int               Count(void) const { return m_n; }
-   long              First(void) const { return m_days[0]; }
-   long              Last(void)  const { return m_days[m_n - 1]; }
+   // Count()/First()/Last() are deliberately gone: they were properties of the
+   // precomputed table, and a horizon-free calendar has no last day.
   };
 
 //==================================================================//
