@@ -18,8 +18,8 @@ trade-disabled by preset default).
 | | |
 |---|---|
 | VPS | Windows Server, always-on, no sleep |
-| IC demo | **€10,000**, leverage **1:30** ← provision the leverage at creation |
-| FTMO demo | **€100,000**, leverage **1:100** ← same |
+| IC demo | **`52963578`** — €10,000, leverage **1:30** ✅ created 2026-07-16 |
+| FTMO demo | €100,000, leverage **1:100** ← provision the leverage at creation |
 | Warm blob | `FMA3_native_state.json` + `.coredrive` from this laptop's `Common\Files` |
 
 **Leverage is not cosmetic.** Both dials (IC s=1.6, FTMO s=0.70) were decided *at* those
@@ -27,8 +27,12 @@ leverages; a different one silently changes the margin path and the drawdown tha
 Set it when you create the account — changing it later resets things.
 
 **Two accounts = two MT5 installations.** MT5 allows one login per terminal, so install MT5
-twice on the VPS (separate directories, e.g. `C:\MT5-IC\` and `C:\MT5-FTMO\`) — one login
-each. Use *portable* installs or separate data folders.
+twice on the VPS (separate directories, e.g. `C:\MT5-IC\` and `C:\MT5-FTMO\`) — one login each.
+
+**Do NOT use `/portable`.** Two *normal* installs each get their own data folder under
+`%APPDATA%\MetaQuotes\Terminal\<hash>\` while **sharing** one `…\Terminal\Common\Files` — which
+is what Step 3's blob path and the `_IC`/`_FTMO` namespacing assume. Portable installs keep
+data under the install directory and break that assumption.
 
 ---
 
@@ -92,8 +96,18 @@ binary matches the VPS's MT5 build.
 see one folder. So each account needs its **own** state file, or the two EAs overwrite each
 other's warm state every hour for three months.
 
-Copy the blob **twice**, into
-`C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`:
+Copy the blob **twice**, into the shared folder — paste this literally into Explorer's
+address bar (`%APPDATA%` expands itself, so you needn't unhide `AppData`):
+
+```
+%APPDATA%\MetaQuotes\Terminal\Common\Files
+```
+
+which resolves to `C:\Users\<you>\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`.
+Note `Common` is a **sibling** of the per-terminal hex-named folders, not inside one — that is
+exactly why both installs see it. If `Files` doesn't exist, create it.
+Can't find it? `File → Open Data Folder`, then go **up one level** to `…\Terminal\` — `Common`
+sits alongside the hex-named folder. (This assumes the non-portable install from Step 2.)
 
 ```
 FMA3_native_state.json            ->  FMA3_native_state_IC.json
