@@ -36,7 +36,7 @@ project.** Everything from v1.0/v2 is frozen in [`archive/`](archive/) and is
 | `scripts/` | Research + build scripts (probes, dashboards, dial runs). *Note: still tangled with some v1-era libs — a deferred reorg.* |
 | `strategy_fma3.py` | The **config source** (hash `51a7541cc2aaa593`, w_v7 = 0.70). |
 | `NOMENCLATURE.md` | The naming conventions (single source of truth). |
-| [`docs/v4.0/`](docs/v4.0/OPPORTUNITIES.md) | **Parked** v4 hypotheses backlog — opened only in a *separate* session, not pursued here. |
+| [`docs/v4.0/`](docs/v4.0/KICKSTART.md) | **v4 kickstart brief** — context for opening v4 in a *separate* session. Deliberately carries **no backlog**: v4 builds its own from the evidence. Not pursued here. |
 | **[`archive/`](archive/)** | **Frozen v1/v2 historical record — NOT a current reference.** |
 
 ## Reproduce the model of record
