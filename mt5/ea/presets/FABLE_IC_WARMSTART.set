@@ -16,10 +16,6 @@
 ;                   Measured: To 2025.12.31 -> blob at 12-30 22:00; To 2026.01.01 -> 12-31 22:00.
 ;                   22:00 is ACCEPTED (RECON-13): the EA resumes from last_emit_hour and
 ;                   backfills, so the exact hour is cosmetic. Do not chase 23:00.
-;                   NOTE the To date: MT5's "To" is EXCLUSIVE. "To 2025.12.31" stops at
-;                   2025.12.30 23:59 and the blob lands on the WRONG hour (proven
-;                   2026-07-16: last_emit_hour = 2025-12-30 22:00, a_h 54.302 vs the
-;                   golden boundary's 53.098). 2026.01.01 is what reaches 2025-12-31 23:00.
 ;     Deposit     : 10000 EUR
 ;     Leverage    : 1:30
 ;     Optimization: Disabled  |  Visual mode: off
