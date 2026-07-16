@@ -1,0 +1,49 @@
+; ============================================================================
+; FABLE_IC_WARMSTART  —  produce the warm-start blob (RUNSHEET_WARMSTART.md Step 1)
+; EA: FableBookNative | Account: 11078280 | one-off run to SAVE the state blob.
+; ----------------------------------------------------------------------------
+; Purpose: run the full path from t0 and SAVE FMA3_native_state.json + .coredrive
+; at the 2025-12-31 boundary. Performance metrics are IRRELEVANT here — the only
+; deliverables are the two blob files in Common\Files.
+; ----------------------------------------------------------------------------
+; This file sets the INPUTS tab. On the SETTINGS tab set manually:
+;     Symbol      : BTCUSD
+;     Period      : M1
+;     Modelling   : 1 minute OHLC     <-- FAST; state is M1-deterministic, real ticks NOT needed
+;     Date        : Custom, From 2020.01.01  To 2025.12.31   (full path from t0 required)
+;     Deposit     : 10000 EUR
+;     Leverage    : 1:30
+;     Optimization: Disabled  |  Visual mode: off
+; ----------------------------------------------------------------------------
+; The ONE difference vs FABLE_IC_REALTICK_P1: InpSaveInTester=true (saves the blob).
+; SAFETY: InpAllowLiveTrading=false (tester auto-trades; zero live orders).
+; ============================================================================
+; --- 1. dial (IC) ---
+InpScale=1.6
+InpInitial=10000.0
+InpDailyStopX=0.0
+; --- 2. safety ---
+InpAllowLiveTrading=false
+; --- 3. universe / magics / logs ---
+InpMagicBase=3900000
+InpV34SymbolMap=
+InpLog=true
+InpFedFracFile=FMA3_fed_frac_v3.csv
+; --- 4. engine constants ---
+InpMarginCap=0.9
+InpRebalBand=0.25
+; --- 5. state + telemetry — THE blob save is here ---
+InpStateFile=FMA3_native_state.json
+InpSaveState=true
+InpSaveInTester=true
+InpTelemetryFile=FMA3_native_hourly.csv
+InpMaxMinutesPerPass=20000
+; --- 6. EUR conversion crosses ---
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK
