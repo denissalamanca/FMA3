@@ -78,6 +78,7 @@ input group "=== 5. State + telemetry ==="
 input string InpStateFile     = "FMA3_native_state.json"; // v2 warm blob ("" = stateless)
 input bool   InpSaveState     = true;      // save blob at each completed hour (live)
 input bool   InpSaveInTester  = false;     // also save inside the tester (slow)
+input string InpSaveStateFrom = "";        // TESTER: save only from this UTC time, e.g. "2025.12.30 00:00" ("" = no periodic save)
 input string InpTelemetryFile = "FMA3_native_hourly.csv"; // per-hour book_frac + a_h/b_h/j
 input int    InpMaxMinutesPerPass = 20000; // feed catch-up bound per pump pass
 
@@ -163,6 +164,7 @@ long      g_backfillFrom = 0;
 long      g_lastCompletedHour = 0;
 long      g_unreadyRows = 0;
 bool      g_dirtyState = false;
+datetime  g_saveFrom  = 0;        // parsed InpSaveStateFrom (tester periodic-save window)
 long      g_histWaits = 0;        // CopyRates lazy-download retries
 bool      g_inPump    = false;
 datetime  g_lastM1Bar = 0;
@@ -191,7 +193,7 @@ void TeleOpen()
   {
    // rec=F per-symbol book_frac | rec=H hourly book | rec=P per-symbol position
    // (DEMO_GO_NOGO #2/#3: warm, n_stops, worst_eq, day_anchor, want/held/defer)
-   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading,warm,n_stops,worst_eq,day_anchor,want,held,defer";
+   string hdr = "ts,rec,sym,val,a_h,b_h,j,core_seed,n_segs,fires,lead_hold,sc_mm,unready,skipped,balance,equity,margin_level,trading,warm,n_stops,worst_eq,day_anchor,want,held,defer,snap_ts";
    if(g_fedLive)
      {
       g_teleh = FileOpen(InpTelemetryFile, FILE_READ|FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
@@ -220,17 +222,23 @@ void TelemetryHour(const long H)
    // per-symbol book_frac rows of the last emission (broker names, pre-s)
    int n = g_orc.EmitCount();
    for(int i = 0; i < n; i++)
-      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,,,,,,,,,\n",
+      FileWriteString(g_teleh, StringFormat("%I64d,F,%s,%.17g,,,,,,,,,,,,,,,,,,,,,,\n",
                       g_orc.EmitTs(i), g_orc.EmitSymbol(i), g_orc.EmitFrac(i)));
    // per-symbol POSITION rows: the last FED_Reconcile pass's want vs actually-held.
    // Raw inputs only — held is designed to sit within InpRebalBand of want, so the
    // fidelity VERDICT belongs downstream (reconcile_demo.py), not in the binary.
+   // snap_ts says WHEN the pair was taken: this function can run several times per
+   // Pump() while FED_Reconcile() runs once, so on a catch-up pass the same snapshot
+   // is stamped onto many hours. Only rows whose snap_ts falls inside their own hour
+   // are measured; the rest are stale and must NOT be scored (run 44: scoring them
+   // read 96.75% "fidelity" that was pure artifact).
    for(int k = 0; k < FED_NSYM; k++)
-      FileWriteString(g_teleh, StringFormat("%I64d,P,%s,,,,,,,,,,,,,,,,,,,,%.2f,%.2f,%d\n",
+      FileWriteString(g_teleh, StringFormat("%I64d,P,%s,,,,,,,,,,,,,,,,,,,,%.2f,%.2f,%d,%I64d\n",
                       H, g_fedTrade[k], g_fedWant[k], g_fedHeld[k],
-                      (g_fedLegDefer[k] ? 1 : 0) + (g_fedUnsized[k] ? 2 : 0)));
+                      (g_fedLegDefer[k] ? 1 : 0) + (g_fedUnsized[k] ? 2 : 0),
+                      g_fedSnapTs));
    FileWriteString(g_teleh, StringFormat(
-      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%.2f,,,\n",
+      "%I64d,H,,%d,%.17g,%.17g,%.17g,%.17g,%d,%I64d,%I64d,%I64d,%I64d,%I64d,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%.2f,,,,\n",
       H, n, a_h, b_h, j, g_drive.Seed(), g_drive.Segments(), g_drive.Fires(),
       g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(), g_unreadyRows,
       g_drive.SkippedBars(),
@@ -240,7 +248,7 @@ void TelemetryHour(const long H)
       g_warm ? 1 : 0,          // #3: cold-start alarm — `trading` alone lies
       g_fedNStops,             // #2: the REAL breaker count (was deinit-only)
       FED_WorstMarkEquity(),   // the 28% kill line is worst-mark, not hourly equity
-      g_fedAnchor));           // FTMO daily anchor -> the 5%/10% envelope
+      g_fedAnchor));           // FTMO daily anchor (0 when the breaker is disarmed)
    if(g_fedLive)
       FileFlush(g_teleh);
   }
@@ -248,18 +256,48 @@ void TelemetryHour(const long H)
 //====================================================================
 // STATE PERSISTENCE (v2 blob + core-drive sidecar, atomic + fnv64)
 //====================================================================
+// Is this a legal AND wanted save point?
+//  * The core-drive sidecar may ONLY be written at the end of a completed hour
+//    cycle — minute machine idle, queues drained (CoreLiveDrive.mqh:712). The
+//    g_dirtyState boundary is exactly that. OnDeinit is NOT legal: it lands
+//    mid-minute, BsWriteState refuses "save with undrained queues", and the run
+//    ends with a blob and no sidecar (proven on the 2026-07-16 warm-blob run).
+//  * But saving EVERY simulated hour is O(n^2): the blob grows with history
+//    (7.9 MB by 2025-12-31) and the full window has ~49,354 hours -> ~300h of
+//    runtime instead of ~55min (measured: rate decayed as C/n).
+// So: live saves at every completed hour (there n grows one day per day, the
+// cost is trivial, and restart continuity depends on it). The tester saves only
+// from InpSaveStateFrom onward — a few clean, legal saves at the end of the
+// window, the last of which is the blob we actually want.
+bool SaveDue()
+  {
+   if(!MQLInfoInteger(MQL_TESTER))
+      return true;                                  // live: every completed hour
+   if(g_saveFrom == 0)
+      return false;                                 // tester: no window -> no periodic save
+   return ((datetime)g_lastCompletedHour >= g_saveFrom);
+  }
+
 void SaveStateFiles()
   {
    if(!InpSaveState || StringLen(InpStateFile) == 0 || g_refuse)
       return;
    if(MQLInfoInteger(MQL_TESTER) && !InpSaveInTester)
       return;
+   // Sidecar FIRST: it is the write that can legally refuse. Writing the blob
+   // first (as this did) meant an illegal save point left a NEW blob paired with
+   // a STALE sidecar — an incoherent pair on disk. The load-time coherence check
+   // catches it and refuses to trade, but that turns a skipped save into a
+   // dead EA. Ordering it this way makes an illegal save point a clean no-op.
+   if(!g_bsDrive.Save(g_drive, InpStateFile + ".coredrive"))
+     {
+      Print("FMA3 NATIVE WARN: core-drive sidecar save skipped (blob left intact): ",
+            g_bsDrive.LastError());
+      return;
+     }
    if(!g_bs.SaveWithCoreSignal(g_orc, g_css, InpStateFile))
       Print("FMA3 NATIVE WARN: state save failed (restart will cold-start): ",
             g_bs.LastError());
-   else if(!g_bsDrive.Save(g_drive, InpStateFile + ".coredrive"))
-      Print("FMA3 NATIVE WARN: core-drive sidecar save failed: ",
-            g_bsDrive.LastError());
   }
 
 //====================================================================
@@ -608,15 +646,10 @@ void Pump()
    if(g_canTrade && synced && !g_refuse)
       FED_Reconcile();                         // re-size every M1 (RECON-4 law)
 
-   // PERIODIC SAVE — LIVE ONLY. In the tester this is O(n^2): the state blob grows
-   // linearly with history (~2.8 KB per simulated day; ~900 KB by 2020-11, ~6 MB by
-   // 2025) and rewriting it EVERY simulated hour makes per-hour cost scale with n.
-   // Measured on the 2026-07-16 warm-blob run: rate decayed as C/n (n*rate ~ 130
-   // constant across a 4x range of n), i.e. ~300h for the full window instead of ~3h.
-   // The tester only needs the FINAL blob, and OnDeinit already writes it — so leave
-   // g_dirtyState set and let deinit do the one save that matters. Live keeps the
-   // per-hour save: there, n grows one day per day and restart continuity needs it.
-   if(g_dirtyState && !MQLInfoInteger(MQL_TESTER))
+   // Persist at the completed-hour boundary — the only legal save point for the
+   // core-drive sidecar. SaveDue() keeps this every-hour live but end-of-window
+   // only in the tester (see its comment: legality vs O(n^2)).
+   if(g_dirtyState && SaveDue())
      {
       SaveStateFiles();
       g_dirtyState = false;
@@ -706,6 +739,23 @@ int OnInit()
       g_buf[i].pos = 0;
       g_buf[i].n = 0;
       g_resolved[i] = -1;
+     }
+
+   // --- tester periodic-save window ----------------------------------------
+   g_saveFrom = 0;
+   if(StringLen(InpSaveStateFrom) > 0)
+     {
+      g_saveFrom = StringToTime(InpSaveStateFrom);
+      // A typo here would silently skip every save and waste the whole run, so
+      // refuse to start rather than discover it at deinit.
+      if(g_saveFrom == 0)
+        {
+         Print("FMA3 NATIVE FATAL: InpSaveStateFrom unparseable: '",
+               InpSaveStateFrom, "' (expected e.g. \"2025.12.30 00:00\")");
+         return(INIT_FAILED);
+        }
+      PrintFormat("FMA3 NATIVE: tester state-save window opens at %s",
+                  TimeToString(g_saveFrom, TIME_DATE | TIME_MINUTES));
      }
 
    // --- warm start (blob + sidecar) or cold start --------------------------

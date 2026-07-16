@@ -65,6 +65,30 @@ def position_fidelity(p: pd.DataFrame, band: float) -> dict:
     for c in ("want", "held", "defer"):
         q[c] = pd.to_numeric(q[c], errors="coerce")
     q["deferred"] = q["defer"].fillna(0).astype(int) > 0
+
+    # STALENESS GATE. TelemetryHour() can fire several times per Pump() while
+    # FED_Reconcile() runs once, so a multi-hour catch-up pass stamps the SAME
+    # want/held onto every hour in it. Those rows are a snapshot of some earlier
+    # instant, not of their own hour, and scoring them invents violations that
+    # never happened (run 44 read 96.75% "bar fidelity" this way — every single
+    # violation was want=0.03/held=0.02 frozen across hundreds of hours, on a
+    # book whose min-lot/step made that add perfectly legal and which therefore
+    # would have traded had the snapshot been live).
+    # A row is measured only if its snapshot was taken within its own hour.
+    stale_note = None
+    if "snap_ts" in q and pd.to_numeric(q["snap_ts"], errors="coerce").notna().any():
+        snap = pd.to_numeric(q["snap_ts"], errors="coerce")
+        age = pd.to_numeric(q["ts"], errors="coerce") - snap
+        fresh = (snap > 0) & (age >= 0) & (age < 3600)
+        n_stale = int((~fresh).sum())
+        q = q[fresh].copy()
+        stale_note = (f"{n_stale:,} leg-bars dropped as stale (snapshot older than "
+                      f"their own hour — catch-up pass, not a fidelity event)")
+    else:
+        stale_note = ("NO snap_ts column — cannot tell fresh from stale snapshots, so "
+                      "these numbers are NOT trustworthy (telemetry predates the fix)")
+    if not len(q):
+        return {"status": "no fresh P rows to score", "staleness": stale_note}
     act = q[~q["deferred"]].copy()
 
     aw, ah = act["want"].abs(), act["held"].abs()
@@ -83,6 +107,7 @@ def position_fidelity(p: pd.DataFrame, band: float) -> dict:
     stuck = q[q["deferred"]].groupby("sym").size().sort_values(ascending=False)
     return {
         "band": band,
+        "staleness": stale_note,
         "n_leg_bars": int(len(act)),
         "leg_fidelity": float(act["ok"].mean()) if len(act) else float("nan"),
         "bar_fidelity": float(per_bar.mean()) if len(per_bar) else float("nan"),
@@ -106,8 +131,24 @@ def ftmo_envelope(h: pd.DataFrame, initial: float) -> dict:
     q["day_anchor"] = pd.to_numeric(q["day_anchor"], errors="coerce")
     eq = pd.to_numeric(q.get("worst_eq", q["equity"]), errors="coerce").fillna(q["equity"])
     anch = q["day_anchor"].replace(0.0, np.nan)
-    daily_loss = (anch - eq) / anch                     # fraction below the day's anchor
     max_loss = (initial - eq) / initial                 # fraction below the initial balance
+    # Guardian maintains g_fedAnchor ONLY when the breaker is armed (Guardian.mqh:80 —
+    # InpDailyStopX<=0 returns early, "OFF: no state"). So on an IC run (dailyStopX=0)
+    # day_anchor is 0 on every row and the daily-5% half is genuinely UN-MEASURABLE —
+    # not zero, not passing. The max-loss half needs only the initial balance, so it
+    # still stands. (Found by running against real run-44 telemetry; the synthetic
+    # fixture had a live anchor on every row and could not have caught this.)
+    if anch.isna().all():
+        return {
+            "initial": initial,
+            "status": "daily anchor never set — breaker DISARMED (InpDailyStopX=0). "
+                      "Daily-5% un-measurable here; it needs the FTMO preset.",
+            "worst_daily_loss": None,
+            "worst_total_loss": float(max_loss.max()),
+            "breaches_10pct_max_loss": int((max_loss > 0.10).sum()),
+            "PASS": None,
+        }
+    daily_loss = (anch - eq) / anch                     # fraction below the day's anchor
     return {
         "initial": initial,
         "worst_daily_loss": float(daily_loss.max()) if daily_loss.notna().any() else None,
@@ -293,6 +334,8 @@ def _fmt(out: dict) -> str:
     if "status" in f:
         L.append(f"  FIDELITY: {f['status']}")
     else:
+        if f.get("staleness"):
+            L.append(f"    staleness: {f['staleness']}")
         L.append(f"  FIDELITY: bar {f['bar_fidelity']:.2%} · leg {f['leg_fidelity']:.3%} "
                  f"(invariant: within band {f['band']}, sign-correct; NOT held==want) "
                  f"· max drift {f['max_drift']:.2f} · sign-violations {f['n_sign_violations']}")
@@ -308,8 +351,13 @@ def _fmt(out: dict) -> str:
         v = out["ftmo_envelope"]
         if "status" in v:
             L.append(f"  FTMO:     {v['status']}")
+            if v.get("worst_total_loss") is not None:
+                L.append(f"            (max-loss half still computable: worst total "
+                         f"{v['worst_total_loss']:.2%} · 10% breaches {v['breaches_10pct_max_loss']})")
         else:
-            L.append(f"  FTMO:     worst daily {v['worst_daily_loss']:.2%} (5% breach days: {v['n_days_breaching_5pct']}) · "
+            wd = v["worst_daily_loss"]
+            wd_s = f"{wd:.2%}" if wd is not None else "n/a"
+            L.append(f"  FTMO:     worst daily {wd_s} (5% breach days: {v['n_days_breaching_5pct']}) · "
                      f"worst total {v['worst_total_loss']:.2%} · 10% breaches {v['breaches_10pct_max_loss']} · "
                      f"{'PASS' if v['PASS'] else 'FAIL'}")
     if "friction" in out:

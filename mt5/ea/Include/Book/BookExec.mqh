@@ -38,6 +38,12 @@ bool g_fedLegDefer[FED_NSYM];
 double g_fedWant[FED_NSYM];       // target lots this pass (signed, post-InpScale/round/cap)
 double g_fedHeld[FED_NSYM];       // net lots actually held at the same instant (signed)
 bool   g_fedUnsized[FED_NSYM];    // nonzero target but no price/eurq -> held, not flattened
+// WHEN the snapshot above was taken. Without this the telemetry silently lies:
+// TelemetryHour() can fire several times per Pump() while FED_Reconcile() runs
+// once at the end, so a multi-hour catch-up pass stamps the SAME stale want/held
+// onto every hour. Scored naively that reads as a fidelity failure (measured
+// 96.75% on run 44) when the book was in fact fine. Log the age; score only fresh.
+long   g_fedSnapTs = 0;
 
 //====================================================================
 // LOGGING (decisions CSV) - live appends / tester overwrites in OnInit
@@ -270,6 +276,7 @@ void FED_Reconcile()
       // fidelity snapshot: record want/held for EVERY leg (incl. flat + unsized)
       // before any of the early-continues below, so the hourly row is complete.
       g_fedWant[k]=want; g_fedHeld[k]=held; g_fedUnsized[k]=unsized[k];
+      g_fedSnapTs=(long)TimeCurrent();          // stamp: this pair is live as of NOW
 
       // [FIX] transient missing quote on a NONZERO-target leg: HOLD the position,
       // never let want=0 be read as a cross-to-zero close. Retry next bar.

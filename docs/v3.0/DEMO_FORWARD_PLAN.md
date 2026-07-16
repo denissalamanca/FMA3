@@ -61,7 +61,27 @@ Halt + investigate on any of: a refuse-latch on **non-corruption**; **min ML < 1
 
 ## 6. Production-readiness checklist
 
-### A. Warm-start — the one real prerequisite
+### A. Warm-start — ✅ THE BLOB EXISTS (2026-07-16, RECON-13)
+**Produced and accepted.** `FMA3_native_state.json` (7,876,336 B, sha256 `2f3a2c40…`) +
+`.coredrive` (8,334 B, sha256 `8574a2bf…`) in `Common\Files`, both at
+`last_emit_hour = last_flush_hour = 2025-12-31 22:00 UTC`, delta 0s → **coherent, passes the
+EA's load check**. Run 46: 55 min, `hours=49378`, `refuse=no`, 0 save warnings.
+
+**Accepted at 22:00, not the nominal 23:00** — the hour is cosmetic: the EA resumes from
+`last_emit_hour` and backfills, so it changes nothing functionally. Do **not** expect it to
+bit-match `endBASE` (a_h 53.235 vs 53.098; b_h 47.131 vs 44.916): endBASE holds the *golden's
+frozen-curve* values, the blob holds the EA's *own live 6-year computation on the broker
+feed* — the same divergence that gives €2.95M vs the golden's €3.87M. a_h to **0.26%** over
+6 years is the reassuring read; b_h's **4.9%** is the known R2 gap.
+
+**⚠ The pair lives in `Common\Files` and ANY future `InpSaveInTester=true` run overwrites it.
+Back it up.**
+
+**Remaining: the Step 2 live-resume test** — the real gate, and indifferent to the hour.
+
+*(original scoping retained below)*
+
+### A-orig. Warm-start — the one real prerequisite
 A live **cold** start is a demo-killer: the EA computes from *now* and the catch-up gate holds
 sizing until indicators warm (~250 weekdays ≈ ~1 year of ~0 trading) — `FableBookNative.mq5`
 live cold path. The **only** way to trade from day 1 is the **warm-blob resume**: load the v2
