@@ -608,7 +608,15 @@ void Pump()
    if(g_canTrade && synced && !g_refuse)
       FED_Reconcile();                         // re-size every M1 (RECON-4 law)
 
-   if(g_dirtyState)
+   // PERIODIC SAVE — LIVE ONLY. In the tester this is O(n^2): the state blob grows
+   // linearly with history (~2.8 KB per simulated day; ~900 KB by 2020-11, ~6 MB by
+   // 2025) and rewriting it EVERY simulated hour makes per-hour cost scale with n.
+   // Measured on the 2026-07-16 warm-blob run: rate decayed as C/n (n*rate ~ 130
+   // constant across a 4x range of n), i.e. ~300h for the full window instead of ~3h.
+   // The tester only needs the FINAL blob, and OnDeinit already writes it — so leave
+   // g_dirtyState set and let deinit do the one save that matters. Live keeps the
+   // per-hour save: there, n grows one day per day and restart continuity needs it.
+   if(g_dirtyState && !MQLInfoInteger(MQL_TESTER))
      {
       SaveStateFiles();
       g_dirtyState = false;
