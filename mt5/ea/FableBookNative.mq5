@@ -79,6 +79,12 @@ input string InpStateFile     = "FMA3_native_state.json"; // v2 warm blob ("" = 
 input bool   InpSaveState     = true;      // save blob at each completed hour (live)
 input bool   InpSaveInTester  = false;     // also save inside the tester (slow)
 input string InpSaveStateFrom = "";        // TESTER: save only from this UTC time, e.g. "2025.12.30 00:00" ("" = no periodic save)
+// Common\Files is SHARED by every MT5 install of a Windows user, and MT5 allows one
+// login per terminal — so the IC and FTMO demos run in two terminals that write to
+// the SAME folder. Every per-run output must therefore be namable per account, or
+// the two EAs silently clobber each other for 3 months. InpStateFile and
+// InpTelemetryFile already are; the decisions CSV was hardcoded until 2026-07-16.
+input string InpDecisionsFile = "fma3native_decisions.csv"; // per-account: ..._IC.csv / ..._FTMO.csv
 input string InpTelemetryFile = "FMA3_native_hourly.csv"; // per-hour book_frac + a_h/b_h/j
 input int    InpMaxMinutesPerPass = 20000; // feed catch-up bound per pump pass
 
@@ -823,7 +829,7 @@ int OnInit()
                         "after", "balance", "equity", "margin_level", "reserved"};
       if(g_fedLive)
         {
-         g_fedLogh = FileOpen("fma3native_decisions.csv",
+         g_fedLogh = FileOpen(InpDecisionsFile,
                               FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
          if(g_fedLogh != INVALID_HANDLE)
            {
@@ -835,7 +841,7 @@ int OnInit()
         }
       else
         {
-         g_fedLogh = FileOpen("fma3native_decisions.csv",
+         g_fedLogh = FileOpen(InpDecisionsFile,
                               FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
          if(g_fedLogh != INVALID_HANDLE)
             FileWrite(g_fedLogh, hdr[0], hdr[1], hdr[2], hdr[3], hdr[4],
