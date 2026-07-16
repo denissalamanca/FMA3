@@ -118,11 +118,30 @@ gap loses live data — so keep the terminal always-on and the logs archived (§
 
 ---
 
-## 7. Open technical items to clear before start
-1. **Warm blob produced + certified + live-resume verified** (§6A) — the gating item.
-2. **Margin/ML added to the telemetry row** (§6C.1) — one EA change + recompile + a mirror gate.
-3. **Reconciliation harness written** (§6D) — can be built during the 1-week shakedown.
-4. **Log-archival + deal-export cron on the VPS** (§6C.2–3).
+## 7. Open items to clear before start — and the GO/NO-GO verdict
+
+**Verdict (go/no-go review 2026-07-16 → [DEMO_GO_NOGO.md](DEMO_GO_NOGO.md)): trade-ENABLE is
+NO-GO until the must-fixes below clear.** The trade-disabled shakedown may start.
+
+Done: ~~margin/ML telemetry~~ ✅ (PR #17) · ~~reconciliation harness~~ ✅ · ~~live watcher +
+VPS runbook~~ ✅ (PR #19). In progress: warm blob (§6A, producing).
+
+**MUST-FIX before enable** (full detail in DEMO_GO_NOGO.md):
+1. **[CODE] OPEX calendar hardcoded to 2026-02** (`CoreSignal.mqh:630`) → the live Core S6
+   opex legs (USDJPY/AUDUSD/NZDUSD) go **permanently flat from 2026-02-21**, silently
+   contaminating the OOS demo. Extend/regenerate the calendar + recompile + re-cert. *#1.*
+2. **[MEASUREMENT]** position fidelity (`sc_mm` ≠ fidelity), breaker-fires (`fires` ≠ breaker,
+   which is `g_fedNStops` in the deinit log), and the FTMO 5%/10% rule envelope are **not
+   captured/computed** as-built — the harness was relabelled honestly; the underlying capture
+   still needs per-bar held-vs-target + the daily/initial FTMO anchors.
+3. **[MONITOR]** silent cold-start has no alarm (telemetry `trading` flag lies) → **merge #19**
+   + add a **warm/cold + synced flag** to the hourly telemetry.
+
+**MUST-MONITOR (Week-0 shakedown):** the live weekend/holiday **clock-stall** — the RECON-8j/8k
+fix was tester-only; prove this broker's `CopyRates` returns `n=0` (not `n<0`) for closed symbols.
+
+**SHOULD-FIX:** §6B must tell the owner to **provision account leverage** (IC 1:30 / FTMO 1:100);
+log `FED_WorstMarkEquity` hourly (the current DD is hourly-equity, understates the 28% line).
 
 *Graduation to live capital remains a separate, downstream owner decision after the demo clears
 the §3 criteria — made with the in-sample discount in full view, starting small and scaling

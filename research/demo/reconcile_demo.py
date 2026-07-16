@@ -82,12 +82,18 @@ def reconcile(telemetry: str, report: str | None, record: str | None,
                  "n_hours": int(len(h))}
 
     # --- plumbing health (self-contained) ---
+    # NOTE (go/no-go 2026-07-16): sc_mm is the SC-sleeve SIGNAL self-check, NOT
+    # position fidelity (held-vs-target — un-logged per-bar). 'fires' is the
+    # CoreTrigger SEGMENT count, NOT the FTMO breaker (that is g_fedNStops, in the
+    # deinit log). Labelled honestly here so the output is not misread.
     out["plumbing"] = {
-        "fidelity_sc_mm_max": int(h["sc_mm"].max()) if "sc_mm" in h else None,
-        "breaker_fires_max": int(h["fires"].max()) if "fires" in h else None,
+        "sc_selfcheck_max": int(h["sc_mm"].max()) if "sc_mm" in h else None,   # signal self-check, NOT fidelity
+        "core_segments_max": int(h["fires"].max()) if "fires" in h else None,  # CoreTrigger segments, NOT breaker
         "unready_max": int(h["unready"].max()) if "unready" in h else None,
         "trading_from": (str(h[h["trading"] == 1]["dt"].min())
                          if "trading" in h and (h["trading"] == 1).any() else "NEVER"),
+        "position_fidelity": "NOT captured per-bar (need held-vs-target logging — see DEMO_GO_NOGO §2)",
+        "breaker_fires": "in the deinit log (g_fedNStops), not telemetry — see DEMO_GO_NOGO §2",
     }
 
     # --- equity + drawdown (self-contained) ---
@@ -176,7 +182,8 @@ def _fmt(out: dict) -> str:
     L = []
     L.append(f"DEMO RECONCILIATION — span {out['span'][0]} → {out['span'][1]} ({out['n_hours']:,} hrs)")
     p = out["plumbing"]
-    L.append(f"  PLUMBING: fidelity sc_mm max={p['fidelity_sc_mm_max']} · breaker fires={p['breaker_fires_max']} · trading from {p['trading_from']}")
+    L.append(f"  PLUMBING: sc-selfcheck max={p['sc_selfcheck_max']} · core-segments={p['core_segments_max']} · trading from {p['trading_from']}")
+    L.append(f"    (position fidelity + breaker-fires are NOT in telemetry — see DEMO_GO_NOGO §2)")
     e = out["equity"]
     L.append(f"  EQUITY:   {e['start']:,.0f} → {e['end']:,.0f}  ret {e['return']:+.1%}  worst-mark DD {e['worst_mark_dd_hourly']:.2%}  min ML {e['min_ML']}")
     if "friction" in out:
