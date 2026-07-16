@@ -86,6 +86,34 @@ charged by the *broker*, so the demo's realised P&L is not affected — the expo
 carry **signal** and the record-side swap model used for reconciliation.
 
 ### 2. [MEASUREMENT] Three of the §3/§5 criteria are NOT measurable as-built
+**→ FIXED IN SOURCE 2026-07-16 (PR #23), together with #3. Recompile pending (batched with #1).**
+
+**The deeper finding: criterion #1 wasn't just unlogged — it was undefined.** "Live position
+matches the EA's own computed target ≥99% of bars" cannot be scored, because the executor
+has a **rebalance dead-band** (`InpRebalBand=0.25`, `BookExec.mqh:~276`): it *deliberately
+does not retrade* while `‖want|-|held‖/|held| ≤ 0.25`. Held ≠ target is **designed
+behaviour** (the band is in the certified model — it suppresses churn). Scored literally the
+EA reads **~0% by design**; the danger was that someone would then "fix" it by loosening the
+metric until it read 99%. §3 now specifies the executor's **invariant** instead — sign-correct
+and within-band, deferred legs excluded but counted — and is flagged for owner sign-off,
+because it changes a pre-committed criterion.
+
+**So the EA logs raw inputs, not a verdict.** New per-symbol `rec=P` telemetry rows carry
+`want` / `held` / `defer` per leg per hour (`g_fedWant/g_fedHeld/g_fedUnsized`, captured in
+`FED_Reconcile`, which runs every M1 so the hour-boundary snapshot is fresh). Baking a
+fidelity verdict into the binary would have frozen one definition; logging the inputs lets any
+definition be computed — and recomputed — downstream.
+
+**Also now in the hourly row:** `n_stops` (the REAL breaker count, `g_fedNStops` — was
+deinit-only), `worst_eq` (`FED_WorstMarkEquity` — the §5 28% kill line is a *worst-mark* DD,
+and hourly equity understates it), `day_anchor` (Guardian's own daily anchor, so the harness
+and the breaker agree on what a "day" is rather than the harness guessing), and `warm` (#3).
+
+`reconcile_demo.py` computes bar/leg fidelity, the FTMO 5%/10% envelope (`--initial`), and the
+warm/cold verdict. It stays **backward-compatible**: run against the in-flight run's 18-column
+telemetry it reports "predates the 2026-07 build" per section rather than crashing or faking.
+
+### 2-original. [MEASUREMENT] The as-built gaps (retained for the record)
 - **Position fidelity ≥99%/bar is un-measurable.** The telemetry `sc_mm`
   (`BookOrchestrator.mqh:1259`, `m_live_sc_mismatch`) is the **SC-sleeve signal self-check**,
   NOT held-position-vs-computed-target. `reconcile_demo.py`/`demo_watch.py` mislabelled it as
@@ -100,6 +128,10 @@ carry **signal** and the record-side swap model used for reconciliation.
 - *(min-ML is now logged — PR #17 `margin_level` — and read correctly.)*
 
 ### 3. [MONITOR] Silent cold-start has no automated alarm
+**→ FIXED IN SOURCE 2026-07-16 (PR #23).** The hourly row now carries `warm` (`g_warm`), so
+the cold-start is machine-detectable rather than inferable from two Experts-log lines.
+`reconcile_demo.py` reports it explicitly ("cold for the WHOLE span — silent cold start" /
+"cold until <ts>"). Recompile pending (batched with #1).
 Cold-start (blob absent) is surfaced by **two one-time Experts-log lines** only; the telemetry
 `trading` flag stays **1** even when nothing is sizing (misleading), and there is **no
 warm/cold column**. `demo_watch.py` (PR #19, **needs merge**) scans the Journal for

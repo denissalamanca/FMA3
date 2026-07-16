@@ -36,7 +36,7 @@ generalization** test, four things:
 | Metric | Pass line |
 |---|---|
 | Plumbing | 0 unexplained refuse-latches · 0 crashes · clean warm-resume after ≥1 restart |
-| Position fidelity | live position matches the EA's own computed target ≥ **99%** of bars |
+| Position fidelity | **⚠ REDEFINED 2026-07-16 — needs owner sign-off.** The original wording ("live position matches the EA's own computed target ≥99% of bars") is **not measurable, because it is not well-defined**: the executor has a rebalance dead-band (`InpRebalBand=0.25`, `BookExec.mqh:~276`) and *deliberately does not retrade* while `‖want\|-\|held‖/\|held\| ≤ 0.25`. Held ≠ target is **designed behaviour** — scored literally, the EA reads ~0%. Replaced with the executor's actual **invariant**, per leg per bar: (a) `want=0 → held flat`; (b) `sign(held) = sign(want)`; (c) drift within the band. Legs legitimately deferred (market closed / no quote) are excluded but **counted separately** — a leg stuck deferred *is* a failure. Pass line: **≥99% of bars with every active leg satisfying the invariant**, 0 sign violations. |
 | Drawdown | live worst-mark DD **within the ~22.9% modelled band** (flag if > 28%) |
 | Margin | min ML **≥ 110%** at all times |
 | Friction | measured swap / spread ≈ the modelled decomposition (within band) |
@@ -137,12 +137,17 @@ VPS runbook~~ ✅ (PR #19). In progress: warm blob (§6A, producing).
 1b. **[DATA] Policy-rate tables expired** (USD 2025-12-11 / JPY 2025-01-24) — these *hold the
    last rate forward* rather than dying, so this is carry/swap **drift**, not signal death.
    Needs the real rate path from the owner; not inventable. See DEMO_GO_NOGO §1b.
-2. **[MEASUREMENT]** position fidelity (`sc_mm` ≠ fidelity), breaker-fires (`fires` ≠ breaker,
-   which is `g_fedNStops` in the deinit log), and the FTMO 5%/10% rule envelope are **not
-   captured/computed** as-built — the harness was relabelled honestly; the underlying capture
-   still needs per-bar held-vs-target + the daily/initial FTMO anchors.
-3. **[MONITOR]** silent cold-start has no alarm (telemetry `trading` flag lies) → **merge #19**
-   + add a **warm/cold + synced flag** to the hourly telemetry.
+2. ~~**[MEASUREMENT]** position fidelity, breaker-fires, FTMO envelope not captured~~ →
+   **FIXED IN SOURCE** (PR #23). New per-symbol `rec=P` rows (`want`/`held`/`defer`) plus
+   `n_stops`, `worst_eq` and `day_anchor` in the hourly row; `reconcile_demo.py` computes
+   fidelity + the 5%/10% envelope. **⚠ The fidelity criterion itself was undefined** (the
+   0.25 rebalance band means held ≠ target *by design*) — §3 redefines it against the
+   executor's invariant and **needs owner sign-off**.
+3. ~~**[MONITOR]** silent cold-start has no alarm~~ → **FIXED IN SOURCE** (PR #23): `warm`
+   is now an hourly telemetry column, not just two Experts-log lines.
+
+**Recompile is owed once — and once only.** #1, #2 and #3 are all batched into the single
+post-warm-blob-run recompile + re-cert. None are closed until that re-cert passes.
 
 **MUST-MONITOR (Week-0 shakedown):** the live weekend/holiday **clock-stall** — the RECON-8j/8k
 fix was tester-only; prove this broker's `CopyRates` returns `n=0` (not `n<0`) for closed symbols.
