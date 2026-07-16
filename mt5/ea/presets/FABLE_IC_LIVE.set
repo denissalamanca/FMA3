@@ -1,0 +1,51 @@
+; ============================================================================
+; FABLE_IC_LIVE  —  the IC DEMO account, live chart on the VPS
+; EA: FableBookNative  |  RUNBOOK_VPS.md  |  DEMO_FORWARD_PLAN §6B/§6G
+; ----------------------------------------------------------------------------
+; SAFETY — READ THIS:
+;   InpAllowLiveTrading=false  -> Week-0 shakedown: computes + logs, ZERO orders.
+;   Week 1 = change THAT ONE INPUT to true, on the DEMO account only.
+;   NEVER attach this EA to account 11078280 (ICMarketsEU-MT5-5) — that is a
+;   REAL, LIVE-FUNDED account. The EA runs on the VPS against DEMO logins only.
+; ----------------------------------------------------------------------------
+; Account to attach to : IC DEMO — deposit 10000.0 EUR, leverage 1:30
+;   Provision the leverage on the account BEFORE attaching; the dial was decided
+;   at 1:30 and a different leverage silently changes the margin path.
+; Chart: any of the 33 symbols, M1 (BTCUSD M1 matches every prior RECON run).
+; ----------------------------------------------------------------------------
+; InpSaveStateFrom is TESTER-ONLY and MUST stay empty here: live saves the blob
+; at every completed hour (restart continuity depends on it).
+; ============================================================================
+; --- 1. dial (IC) ---
+InpScale=1.6
+InpInitial=10000.0
+InpDailyStopX=0.0
+; --- 2. safety — Week-0 = false. Flip to true ONLY at Week 1, demo only. ---
+InpAllowLiveTrading=false
+; --- 3. universe / magics / logs ---
+InpMagicBase=3900000
+InpV34SymbolMap=
+InpLog=true
+InpFedFracFile=FMA3_fed_frac_v3.csv
+; --- 4. engine constants (match the record engine EXACTLY — do not touch) ---
+InpMarginCap=0.9
+InpRebalBand=0.25
+; --- 5. state + telemetry — warm blob resume ---
+; Common\Files is SHARED across BOTH terminals (MT5 = one login each), so every
+; filename here MUST be account-unique or the two EAs clobber each other.
+InpStateFile=FMA3_native_state_IC.json
+InpSaveState=true
+InpSaveInTester=false
+InpSaveStateFrom=
+InpTelemetryFile=FMA3_native_hourly_IC.csv
+InpDecisionsFile=fma3native_decisions_IC.csv
+InpMaxMinutesPerPass=20000
+; --- 6. EUR conversion crosses ---
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK

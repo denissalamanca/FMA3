@@ -8,17 +8,23 @@ over 3 months of unattended running. Owner-executed on the VPS.*
 
 ## 0. One-time setup on the VPS
 
-1. **Install MT5**, log into **both** demo accounts (IC demo €10k, FTMO demo €100k).
-2. Copy from the working terminal into the VPS terminal's `MQL5\` tree:
-   - `Experts\FableBookNative.ex5` (the **margin-logging** build)
-   - `Include\` (all headers)
-   - `Presets\FABLE_IC_REALTICK_P1.set`, `FABLE_FTMO_REALTICK_P1.set`
-   - `Common\Files\FMA3_native_state.json` + `.coredrive` (the warm blob, once produced)
-3. Attach `FableBookNative` to a **BTCUSD M1** chart per account (one chart each),
-   load the matching preset, `InpAllowLiveTrading=false` for the shakedown.
-4. **Power/sleep:** set the VPS to never sleep and MT5 to auto-start on login. The
-   warm-blob auto-resume (`InpSaveState=true`) covers restarts, but a *gap* loses
-   live telemetry — keep it always-on.
+**→ [`RUNSHEET_VPS_SETUP.md`](RUNSHEET_VPS_SETUP.md)** — the full step-by-step (install,
+blob transfer, attach, the live-resume test, the Week-1 gate). Superseded the 4-step sketch
+that used to live here, which was wrong on three counts now worth remembering:
+
+- it named the **tester** presets (`FABLE_*_REALTICK_P1.set`); live needs
+  **`FABLE_IC_LIVE.set` / `FABLE_FTMO_LIVE.set`** (trade-disabled by default);
+- it said copy the `.ex5` — **compile on the VPS** instead, so the binary matches its build;
+- it copied the warm blob under **one** name. `Common\Files` is **shared by every MT5 install
+  of a Windows user**, and MT5 allows one login per terminal — so the two demos would have
+  overwritten each other's state every hour. The blob is copied under **two** names, and
+  state/telemetry/decisions are all account-namespaced.
+
+**Power/sleep:** VPS never sleeps; MT5 auto-starts on login. Warm-blob auto-resume
+(`InpSaveState=true`) covers restarts, but a *gap* loses live telemetry — keep it always-on.
+
+> **⚠ NEVER attach the EA to account 11078280 / ICMarketsEU-MT5-5 — it is REAL and
+> LIVE-FUNDED.** VPS + demo logins only.
 
 ## 1. Log + data archival (CRITICAL — logs rotate daily and are lost otherwise)
 
