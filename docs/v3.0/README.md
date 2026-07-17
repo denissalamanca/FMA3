@@ -84,7 +84,7 @@ constraint**, not a defect. Full record:
 | **[RECONCILIATION.md](RECONCILIATION.md)** | The FMA3-RECON-4 map — the 3 MT5 runs, position fidelity (median 1.000, all runs), 0 rejects on deployable dials, the 28-vs-26 breaker-fire delta, and each equity gap attributed to its named physical cause. Standing record per `research/protocol/RECONCILIATION.md`. |
 | **[TRADE_CHARACTERISTICS.md](TRADE_CHARACTERISTICS.md)** | The 33-symbol blended book — composition (8 Core + 31 Satellite, 6 netted), the Satellite revival, per-symbol trade profiles from RECON-4, the volume-capped symbols (XAUUSD/SOLUSD/ETHUSD), and monitoring flags. |
 | **[EA_AUDIT.md](EA_AUDIT.md)** | The executor's anatomy — the unified replay stream, per-symbol sizing/magic map, full-map eurq, the FTMO breaker mechanics, the 3-reviewer adversarial pass + fixes, and what v3 **discards** from the v1/v2 stack and why (frozen inside `frac7`). Mirrors `model/v3/EA_V3_DESIGN.md` at package depth. |
-| **[DEMO.md](DEMO.md)** | The honest deployable reality + forward-test plan — the three physical constraints (friction, `SYMBOL_VOLUME_LIMIT`, broker margin), the ~€2M/s capacity ceiling, the two scaling levers (higher-tier account · N parallel accounts at €C/N), the owner-leverage dials (IC 1:30 s=1.6 min ML 121%; FTMO 1:100 s≈0.5), and the **live-horizon gap** (v3 replays a frozen stream ending 2025-12-31; live trading needs a forward generator — not yet built). |
+| **[DEMO.md](DEMO.md)** | The honest deployable reality + forward-test plan — the three physical constraints (friction, `SYMBOL_VOLUME_LIMIT`, broker margin), the ~€2M/s capacity ceiling, the two scaling levers (higher-tier account · N parallel accounts at €C/N), the owner-leverage dials (IC 1:30 s=1.6 min ML 121%; FTMO 1:30 s≈0.5, leverage a proven non-event), and the **live-horizon gap** (v3 replays a frozen stream ending 2025-12-31; live trading needs a forward generator — not yet built). |
 | **[DASHBOARD_IC.html](DASHBOARD_IC.html)** · **[DASHBOARD_FTMO.html](DASHBOARD_FTMO.html)** · **[DASHBOARD.html](DASHBOARD.html)** | The visual scorecards — IC + FTMO per-preset (model record **plus** the v3 deployed reality, PROVISIONAL banner) and the combined overview. Self-contained; open in any browser. Ship per update. |
 
 ---
@@ -129,8 +129,9 @@ inputs) → asserts €3,872,872 and €1,332,404. Reproduce:
   for v3 — but a real-tick intra-bar min-ML confirmation (>110%) is still owed.
 - **FTMO = s≈0.5 is RECOMMENDED, not shipped.** The sweep favours s=0.5 (ret/DD
   4.78, worst-DD 7.8% vs s0.7's 13.3%), and the warm-COVID flag says the shipped
-  s=0.7 + 3% breaker BREACHES the −10% rule cold-start-blind; a 1:100 confirm
-  run is pending before the dial is cut.
+  s=0.7 + 3% breaker BREACHES the −10% rule cold-start-blind; leverage was proven a non-event (bit-identical final equity across the
+  model's and FTMO's real leverage tables), so no 1:100 confirm run is owed —
+  the deployed config is 80,000 EUR / 1:30.
 - **MT5 real-tick + live demo remain the falsification tests.** RECON-4 is
   1m-OHLC; every number here awaits real-tick and live-demo confirmation.
 

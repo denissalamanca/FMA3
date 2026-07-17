@@ -187,7 +187,7 @@ the full model. At the deployable FTMO scale volume never binds.
 - **The volume caps are this account's tier only.** XAUUSD 10 / ETHUSD 100 / SOLUSD 1000 lots are IC acct
   11078280's `SYMBOL_VOLUME_LIMIT`; a higher-tier or N-account deployment changes them. The `sweep_s_volcap`
   engine additionally clamps US30 (12) and EURCAD (10) from the Run-4 plateaus — the three above are the
-  headline binders (XAUUSD first). These caps do not bind at €10k or FTMO €100k scale.
+  headline binders (XAUUSD first). These caps do not bind at €10k or the FTMO scale (validated at a €100k seed; the *deployed* FTMO demo is 80,000 EUR / 1:30, acct 1514016754 — leverage proven a non-event, bit-identical equity, so no 1:100 confirm is owed and the caps do not bind at €80k either).
 - **v3 discards the entire v1/v2 sizing stack.** No `VBalance`, no quarterly reseed, no `e34` — those
   divergences are dissolved by replaying the netted stream, but that means v3's fidelity claim rests on the
   *stream* being correct (the exporter self-checks reproduce `static_fed` to `<1e-12` and the record engine

@@ -150,7 +150,7 @@ weekend + a holiday in Week 0; add a heartbeat print of `g_histWaits` + compute-
 
 ## SHOULD-FIX
 - **§6B doc:** tell the owner to **provision each demo account's leverage** (IC 1:30 / FTMO
-  1:100) and balance — leverage governs real broker margin/stop-out and is the load-bearing
+  1:30) and balance — leverage governs real broker margin/stop-out and is the load-bearing
   omission. (`InpInitial` is functionally inert — the book sizes off `ACCOUNT_BALANCE`; leverage is not.)
 - **worst-mark DD** logged is hourly-equity (understates the 28% flag line). `FED_WorstMarkEquity`
   (`Guardian.mqh:35`) already computes the true intra-bar worst-mark for the breaker — **log it

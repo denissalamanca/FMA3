@@ -172,7 +172,7 @@
     </div>
     <div class="book ft">
       <div class="bk-top"><span class="bk-name">FTMO <span>&middot; H-RISK-2b</span></span><span class="bk-dial">s = 0.7 + 3% breaker</span></div>
-      <div class="bk-seed">&euro;100,000 seed &middot; 2020&ndash;2025 &middot; owner leverage 1:100</div>
+      <div class="bk-seed">&euro;100,000 seed &middot; 2020&ndash;2025 &middot; owner leverage 1:30</div>
       <div class="bk-stats">
         <div><span class="l">Model record</span><span class="v mono">&euro;1,332,404</span><span class="s">+54.02% CAGR &middot; 26 breaker fires</span></div>
         <div><span class="l">MT5 achieved</span><span class="v mono good">&euro;1,265,541</span><span class="s">0.95&times; model &middot; 28 breaker fires</span></div>
@@ -215,10 +215,10 @@
   </section>
 
   <section class="sect">
-    <h2>Deployable dials &mdash; owner leverage IC 1:30, FTMO 1:100</h2>
+    <h2>Deployable dials &mdash; owner leverage IC 1:30, FTMO 1:30</h2>
     <div class="dials">
       <div class="dial ok"><div class="st"><span class="ic">&check;</span>IC &middot; OWNER-ACCEPTED 2026-07-12</div><div class="nm"><b>s = 1.6</b> &rarr; &euro;2.55M @ 1:30</div><div class="ds">Full backtest at <b>min ML 121%</b>, worst-DD 22.6%, 0 rejects. Volume-limit fix landed; margin self-cap holds the book above the owner&rsquo;s floor.</div><div class="prov">PROVISIONAL pending a real-tick intra-bar min-ML confirm (&gt; 110%).</div></div>
-      <div class="dial rec"><div class="st"><span class="ic">&#9678;</span>FTMO &middot; RECOMMENDED</div><div class="nm"><b>s &asymp; 0.5</b> over the shipped s0.7</div><div class="ds">Sweep ret/DD <b>4.78</b>, worst-DD <b>7.8%</b> vs s0.7&rsquo;s 13.3%. The warm-COVID flag says s0.7 breaches the &minus;10% rule; volume never binds at FTMO scale.</div><div class="prov">PROVISIONAL pending a 1:100 confirm run.</div></div>
+      <div class="dial rec"><div class="st"><span class="ic">&#9678;</span>FTMO &middot; RECOMMENDED</div><div class="nm"><b>s &asymp; 0.5</b> over the shipped s0.7</div><div class="ds">Sweep ret/DD <b>4.78</b>, worst-DD <b>7.8%</b> vs s0.7&rsquo;s 13.3%. The warm-COVID flag says s0.7 breaches the &minus;10% rule; volume never binds at FTMO scale.</div><div class="prov">PROVISIONAL pending a warm-COVID real-tick confirm at 80k / 1:30; a 1:100 confirm run is moot &mdash; leverage is a proven non-event (bit-identical equity, 1:30 vs 1:100).</div></div>
     </div>
     <div class="fwd-note"><b>v3.4 sleeve revival:</b> v1/v2 silently killed 7 v3.4 symbols (AUDJPY, CADJPY, GBPJPY, NZDJPY, JP225, EURNOK, EURSEK) via an EurPerQuote rounding bug. v3&rsquo;s full-map eurq revived all 33 &mdash; RECON-4 Run 1 confirmed &gt; 0 deals on each.</div>
     <div class="rej-list" style="margin-top:12px">

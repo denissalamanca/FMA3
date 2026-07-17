@@ -161,7 +161,7 @@ map (`USA500=US500; DAX=DE40`) is applied once. Stream sha `d00b614b…`.
 | **Compile** | **DONE** | `FableFederation_V3.ex5` sha `740da0ff…`, 0 errors / 0 warnings. |
 | **1m-OHLC reconciliation (RECON-4)** | **DONE** | 3 runs, IC Markets 11078280, 1:500, HEDGING, 2020–2025; position fidelity exact; friction ratios measured. |
 | **Joint 0.5·margin_used stop-out** | **DEFERRED (by design)** | Not implemented; RECON-4 asserts `eq_w` never approaches 0.5·margin_used in either preset (worst DD 22.58% / 13.33% vs the ~50% needed). See §4.3. |
-| **Real-tick runs** | **OPEN** | Per the staged protocol, real-tick follows the 1m-OHLC smokes; IC min-ML>110% confirm and FTMO 1:100 confirm are the remaining falsification tests. |
+| **Real-tick runs** | **OPEN** | Per the staged protocol, real-tick follows the 1m-OHLC smokes; IC min-ML>110% confirm is the remaining falsification test (the FTMO demo deploys at 80,000 EUR / 1:30; leverage was proven a non-event — bit-identical equity across the model vs FTMO real leverage tables — so no 1:100 confirm is owed). |
 | **Live-horizon extension** | **NOT BUILT** | The frozen stream ends 2025-12-31; live trading past it needs a forward Core-signal recompute + stream extension (documented, not built). |
 
 ---
@@ -220,7 +220,7 @@ Every finding was fixed; the binary is now `740da0ff…` after the additional po
 | # | Item | Effort | Where |
 |---|---|---|---|
 | T1 | **IC real-tick min-ML confirm.** Re-run `FABLE_IC` @ 1:30 on real ticks; assert intra-bar min ML stays **>110%** (1m-OHLC showed 121%, but real ticks traverse the bar interior). Gates the s=1.6 IC ship commit | M (wall-clock) | owner MT5 |
-| T2 | **FTMO 1:100 confirm.** Run `FABLE_FTMO_S04/05` @ 1:100 to fix the deployable FTMO dial; sweep says ret/DD peaks at **s≈0.5** (4.78, DD 7.82%) vs shipped s0.7 (4.05, DD 13.33%) | M | owner MT5 |
+| T2 | **FTMO dial confirm (leverage MOOT).** The FTMO demo deploys at 80,000 EUR / 1:30; leverage was proven a non-event (bit-identical final equity across the model vs FTMO real leverage tables), so no 1:100 confirm run is owed. Sweep says ret/DD peaks at **s≈0.5** (4.78, DD 7.82%) vs shipped s0.7 (4.05, DD 13.33%) | M | owner MT5 |
 | T3 | **FTMO rule-compliance scoring** of the v3 curve: worst-mark daily/monthly vs the −5%/−10% rules. The internal 3% breaker is tighter than the external 5% rule, but warm-COVID scoring is the open question (see §Honest caveats) | S–M | FMA3-side |
 | T4 | **Run-2 clean-record refresh.** RECON-4 Run 2's headline was captured pre-fix (spin); the clean re-run (sha `740da0ff`) confirmed €2,552,961.62 / 0 rejects — fold into the standing RECON row | S | FMA3-side |
 
@@ -241,7 +241,7 @@ exercises it, so its absence is untested against a real tail, not proven safe.
 1. **Ship the executor verdict now.** v3 provably holds the model's exact target position (`after/want`
    median 1.000, all runs); the equity gap is fully attributed to three named physical constraints.
    This is the release: *the model is v1.0's deliverable; v3.0 is the EA that faithfully executes it.*
-2. **Run T1 (IC real-tick min-ML) and T2 (FTMO 1:100)** — the two provisional dials
+2. **Run T1 (IC real-tick min-ML) and T2 (FTMO dial — deploys 80k/1:30; leverage proven a non-event, no 1:100 confirm owed)** — the two provisional dials
    (IC s=1.6 owner-accepted, FTMO s≈0.5 recommended) are both explicitly *pending* these confirms.
    Neither is a rebuild; v3 is dial-agnostic, so each is a preset edit.
 3. **Do not present any record number as a deployable promise.** Achievable equity is **0.66–0.95×**
@@ -269,7 +269,7 @@ exercises it, so its absence is untested against a real tail, not proven safe.
    across N accounts.
 3. **Both deployable dials are PROVISIONAL.** IC s=1.6 is owner-accepted (min ML 121% @ 1:30 on
    1m-OHLC) but pending a real-tick intra-bar min-ML>110% confirm — real ticks traverse the bar
-   interior the OHLC feed skips. FTMO s≈0.5 is *recommended from the sweep*, not yet run at 1:100.
+   interior the OHLC feed skips. FTMO s≈0.5 is *recommended from the sweep* (the FTMO demo deploys at 80,000 EUR / 1:30; leverage was proven a non-event, so no 1:100 run is owed).
 4. **The FTMO gates are cold-start in-sample.** Warm re-validation shows s0.7 + 3% breaker breaches
    COVID by 7.5–10.8pp of the −10% rule; the crisis-safe dial is ≈ s0.30–0.35, not 0.7. The €1.33M
    FTMO figure is also a fully-compounded never-withdraw upper number that is scored under a

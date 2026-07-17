@@ -13,9 +13,9 @@ at **0.66–0.95× the frictionless record depending on dial/scale.** Every euro
 **named physical constraint the record engine does not model** — transaction friction, broker
 `SYMBOL_VOLUME_LIMIT`, broker margin — not an EA defect. Hence `reconciled_with_notes`, not bare
 `reconciled`: the position layer is closed at delta 0.0-in-fraction, the equity gaps are
-*measured and attributed*, and the two reconciliations that **cannot** be done on a 1m-OHLC
-tester — MT5 real-tick, and the FTMO deployable dial at 1:100 — are explicitly not claimed here
-and are listed below as the owed arbiters.
+*measured and attributed*, and the reconciliation that **cannot** be done on a 1m-OHLC
+tester — MT5 real-tick — is explicitly not claimed here
+and is listed below as the owed arbiter. The deployed FTMO config is 80,000 EUR / 1:30, and leverage was proven a bit-identical non-event, so no separate 1:100 confirm run is owed.
 
 **All numbers are in-sample (IC 2020–25 record reads); the MT5 runs below are 1m-OHLC smokes on
 IC Markets 11078280 (1:500, HEDGING). Real-tick + live demo are the remaining falsification
@@ -42,7 +42,7 @@ replays the precomputed unified 33-symbol netted `fed_frac` stream and sizes eac
 | **Model of record** (frozen) | `static_fed(0.70) × s` through `record_engine` (IC) / `record_engine_ext` (FTMO); reproduced euro-exact by [`reproduce.py`](../../model/v3/reproduce.py) | IC (H-RISK-1) s=1.6: €10k → **€3,872,872 / +170.2% CAGR / 22.58% worst-mark DD / Sharpe 2.465**. FTMO (H-RISK-2b) s=0.7 + breaker x=3.0%: €100k → **€1,332,404 / +54.02% / 13.33% DD / 26 breaker fires** |
 | **The EA** (faithful executor) | `FableFederation_V3.ex5` sha `740da0ff…`; replays `FMA3_fed_frac_v3.csv` (fmt=3); ONE net position + ONE magic per symbol; full-map eurq; FTMO daily breaker *(RECON-4 map; superseded by RECON-8 native `FableBookNative` EA — see CURRENT_STATE.md for the RECON-8l result)* | Three MT5 runs below — position fidelity median 1.000, 0 rejects, 0.66–0.95× the record |
 | **MT5 real-tick** (deployable arbiter — **not yet run**) | tick-granularity on the owner's machine; the 1m-OHLC smoke cannot see intra-bar spread/ML | Owed. The IC min-ML>110% confirm and the crisis tail are unknown by construction until this runs |
-| **FTMO @ 1:100** (deployable-dial arbiter — **not yet run**) | the recommended FTMO dial re-run at owner leverage | Owed. Sweep favours s≈0.5 (ret/DD 4.78, DD 7.8%) but the 1:100 confirm is pending |
+| **FTMO @ 80k / 1:30** (deployed config, s=0.70) | the FTMO demo at the shipped 80,000 EUR / 1:30 dial | **Not a leverage arbiter** — leverage was proven a bit-identical non-event (identical final equity across the model's and FTMO's real ESMA tables), so no 1:100 confirm run is owed. Sweep favours s≈0.5 (ret/DD 4.78, DD 7.8%); dial authority is FTMO_DIAL_DECISION.md. |
 
 Every fidelity number below is computed the same way in every run — like-for-like, same tester,
 same stream.
@@ -137,7 +137,7 @@ IC Markets 11078280, 1m-OHLC, 1:500, HEDGING.
 2. **The FTMO deployable dial is not confirmed at owner leverage.** The shipped `FABLE_FTMO`
    preset is s=0.7 (0.95×, €1,265,541 @ 1:500). The recommended deployable dial is **s≈0.5**
    (sweep ret/DD 4.78, worst-DD 7.8% vs s0.7's 13.3%; the warm-COVID flag says s0.7 breaches the
-   −10% rule by 7.5–10.8pp), but the **1:100 confirm run (FABLE_FTMO_S04/05) is pending.**
+   −10% rule by 7.5–10.8pp), but no **1:100 confirm run is owed on leverage grounds** — leverage was proven a bit-identical non-event (identical final equity across the model's and FTMO's real ESMA tables), and the deployed FTMO config is 80,000 EUR / 1:30.
    Volume never binds at FTMO scale, so the −10%/−5% rules govern, not capacity.
 3. **The €3.87M IC record is a frictionless ceiling, not a reachable target on one account.**
    Reconciliation closes at the *position* layer (fidelity 1.000); the *equity* layer is
@@ -170,6 +170,6 @@ lands at **0.66–0.95× the frictionless record**, and every euro of that gap i
 physical constraints (transaction friction 0.66–0.95×, `SYMBOL_VOLUME_LIMIT` binding past ~€2M/s,
 broker margin self-limiting at 1:30 min ML 121%) — measured and disclosed, not open. Zero
 unexplained mismatches at the position layer; `reconciled_with_notes`. The MT5 real-tick run
-(IC min-ML confirm + crisis tail) and the FTMO 1:100 dial confirm are the two owed arbiters. All
+(IC min-ML confirm + crisis tail) is the one owed arbiter; the FTMO dial confirm is NOT a leverage arbiter — leverage was proven a bit-identical non-event and the demo deploys at 80k/1:30. All
 numbers are in-sample record reads; real-tick + live demo are the remaining falsification tests;
 achievable equity is 0.66–0.95× the record by dial and scale — never the record number itself.

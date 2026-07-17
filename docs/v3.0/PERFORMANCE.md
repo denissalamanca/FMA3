@@ -143,24 +143,24 @@ is the capacity ceiling made numeric: friction is not fixed, it grows with the b
 drawdown for a better risk-adjusted return. Volume never engages at FTMO scale; the −10%/−5% rules
 govern.
 
-**Deployment reframe (owner leverage: IC 1:30, FTMO 1:100):** at 1:30 the **margin** ceiling binds
+**Deployment reframe (owner leverage: IC 1:30, FTMO 1:30 — the FTMO demo is 80,000 EUR / 1:30; leverage was proven a non-event, so no higher-leverage variant is owed):** at 1:30 the **margin** ceiling binds
 first (~s0.7), keeping the IC book small enough that **volume never engages** — so *margin, not
 volume, sets the IC dial*. Volume is a large-account / high-leverage capacity concern only.
 
 ---
 
-## Deployable dials (owner leverage: IC 1:30, FTMO 1:100)
+## Deployable dials (owner leverage: IC 1:30, FTMO 1:30 — the FTMO demo is 80,000 EUR / 1:30; leverage proven a non-event)
 
 | Preset | Ship dial | Basis | Status |
 |---|---|---|---|
 | **IC** | **s = 1.6** | EUR 2.55M @ 1:30 *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)*, min ML **121%** (vs IC's 50% stop-out, owner's ML≥110% floor), worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12; PROVISIONAL** pending real-tick intra-bar min-ML confirm (>110%) |
-| **FTMO** | **s ≈ 0.5** RECOMMENDED | sweep ret/DD 4.78, worst-DD **7.8%** vs s0.7's 13.3%; warm-COVID flag says s0.7 breaches the −10% rule | **PROVISIONAL** pending a 1:100 confirm run (FABLE_FTMO_S04/05) |
+| **FTMO** | **s ≈ 0.5** RECOMMENDED | sweep ret/DD 4.78, worst-DD **7.8%** vs s0.7's 13.3%; warm-COVID flag says s0.7 breaches the −10% rule | **PROVISIONAL** pending a real-tick confirm run (FABLE_FTMO_S04/05); leverage was proven a non-event (bit-identical equity), so no 1:100 run is owed — the demo is 80,000 EUR / 1:30 |
 
 The IC decision reverses the pre-v3 "not deployable at 1:30" flag: v3's self-limiting margin cap
 makes s=1.6 liquidation-safe at retail 1:30 (min ML 121%, ~11pp over the owner's floor). The final
 commit awaits a real-tick run confirming the intra-bar min ML holds above 110%. The FTMO
 recommendation cuts the shipped s=0.7 dial toward s≈0.5 on both the ret/DD sweep and the warm-COVID
-crisis flag; margin is a non-issue at 1:100, so the FTMO −10%/−5% rules do the governing.
+crisis flag; margin is a non-issue at 1:30 (leverage was proven a non-event), so the FTMO −10%/−5% rules do the governing.
 
 ---
 
@@ -175,7 +175,7 @@ crisis flag; margin is a non-issue at 1:100, so the FTMO −10%/−5% rules do t
   ~€2M/s of book. Reaching the model requires a higher-tier account or N parallel accounts at €C/N;
   a single retail account tops out well below €3.87M.
 - **Both deployable dials are PROVISIONAL.** IC s=1.6 is owner-accepted but awaits a real-tick
-  intra-bar min-ML confirmation (>110%); FTMO s≈0.5 awaits a 1:100 confirm run. Both were adjudicated
+  intra-bar min-ML confirmation (>110%); FTMO s≈0.5 awaits a real-tick confirm run (leverage proven a non-event, so no 1:100 run is owed; the demo is 80,000 EUR / 1:30). Both were adjudicated
   on 1m-OHLC smoke tests per the staged validation protocol — real-tick is the next arbiter.
 - **The FTMO shipped dial (s=0.7) is unsafe on warm re-validation.** The RECON-4 s0.7 run reproduces
   the model at 0.95×, but the warm-COVID flag shows s0.7 + 3% breaker breaches the −10% rule by
