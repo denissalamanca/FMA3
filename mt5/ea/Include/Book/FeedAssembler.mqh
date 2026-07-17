@@ -584,6 +584,12 @@ public:
                   return false;
                  }
                MarkAbsent(i);
+               // This `continue` skips the SymbolInfo reads below, so give m_point
+               // the record-feed default rather than leaving it 0. Unreachable today
+               // (an absent symbol never yields a bar, and m_point is only ever a
+               // MULTIPLIER — spread_pts * m_point — never a divisor), but a silent
+               // 0 here would be a trap for the next person.
+               m_point[i] = MathPow(10.0, -FA_DIGITS[i]);
                PrintFormat("FEED: '%s' NOT LISTED on this broker -> marked ABSENT "
                            "(DECLARED via InpExpectAbsent; excluded from the readiness "
                            "gate; leg will not trade).", m_broker[i]);
