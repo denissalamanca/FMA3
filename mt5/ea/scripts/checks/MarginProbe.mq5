@@ -38,6 +38,7 @@ string CANON[] = {
 };
 
 input bool InpProbeMarketWatch = true;   // also probe every symbol in Market Watch
+input bool InpDumpAllSymbols   = true;   // dump EVERY symbol the broker offers (finds renames)
 
 string CalcModeName(const int m)   // int: MQL5 switch() narrows a long anyway
   {
@@ -159,5 +160,55 @@ void OnStart()
 
    FileClose(oh);
    PrintFormat("MarginProbe: %d canonical symbols found, %d NOT on this broker -> %s", n, miss, out);
+
+   //--- FULL ENUMERATION -------------------------------------------------
+   // A canonical name that SymbolSelect() rejects is either RENAMED or genuinely
+   // ABSENT, and the difference decides whether the book can be run here at all.
+   // Only a dump of EVERYTHING the broker offers can tell them apart. Uses
+   // SymbolsTotal(false)/SymbolName(i,false) = ALL AVAILABLE, not just Market
+   // Watch — the earlier run scanned only SELECTED symbols and so could not.
+   // Reads specs WITHOUT SymbolSelect: MT5 serves SymbolInfo for unselected
+   // symbols, and selecting ~hundreds would pollute Market Watch for nothing.
+   // margin_rate_initial is available without a quote (proven: it read 1/2/30
+   // on FTMO even where ask=0), so no tick is needed here.
+   if(InpDumpAllSymbols)
+     {
+      string aout = StringFormat("FMA3_symbols_all_%I64d.csv", login);
+      int ah = FileOpen(aout, FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      if(ah == INVALID_HANDLE)
+        { PrintFormat("MarginProbe WARN: cannot open %s err=%d", aout, GetLastError()); }
+      else
+        {
+         FileWriteString(ah, StringFormat(
+            "# login=%I64d server=%s currency=%s account_leverage=%I64d — ALL symbols offered\n",
+            login, server, ccy, acct_lev));
+         FileWriteString(ah,
+            "symbol,path,description,calc_mode,contract_size,ccy_profit,"
+            "margin_rate_initial,effective_leverage\n");
+         int tot = SymbolsTotal(false);
+         for(int i = 0; i < tot; i++)
+           {
+            string s = SymbolName(i, false);
+            string path = "", desc = "", cprof = "";
+            SymbolInfoString(s, SYMBOL_PATH,            path);
+            SymbolInfoString(s, SYMBOL_DESCRIPTION,     desc);
+            SymbolInfoString(s, SYMBOL_CURRENCY_PROFIT, cprof);
+            long   cmode    = SymbolInfoInteger(s, SYMBOL_TRADE_CALC_MODE);
+            double contract = SymbolInfoDouble(s, SYMBOL_TRADE_CONTRACT_SIZE);
+            double ri = 0.0, rm = 0.0;
+            bool rok = SymbolInfoMarginRate(s, ORDER_TYPE_BUY, ri, rm);
+            double eff = (rok && ri > 0.0) ? (double)acct_lev / ri : 0.0;
+            StringReplace(desc, ",", " ");   // keep the CSV parseable
+            StringReplace(path, ",", " ");
+            string x = StringFormat("%s,%s,%s,%s,", s, path, desc, CalcModeName((int)cmode));
+            string y = StringFormat("%.17g,%s,%.17g,%.17g\n",
+                                    contract, cprof, rok ? ri : -1.0, eff);
+            FileWriteString(ah, x + y);
+           }
+         FileClose(ah);
+         PrintFormat("MarginProbe: dumped ALL %d symbols offered -> %s", tot, aout);
+        }
+     }
+
    Print("MarginProbe: DONE. Zero orders placed.");
   }
