@@ -152,6 +152,62 @@ string FaBrokerName(const string model)
   }
 
 //==================================================================//
+// BROKER-NAME OVERRIDE (2026-07-17)                                //
+//                                                                   //
+// FaBrokerName is hardcoded to the IC universe (DAX->DE40,          //
+// USA500->US500, rest identity). A DIFFERENT broker renames things: //
+// FTMO calls DE40 "GER40.cash", US30 "US30.cash", XTIUSD            //
+// "USOIL.cash" and so on. InpV34SymbolMap already remaps the EXEC   //
+// side (BookReplay::FED_MapSymbol), but the FEED had no path to it, //
+// so Init() below hard-failed on the first unknown name and the EA  //
+// could not start on FTMO at all.                                   //
+//                                                                   //
+// This array is the hook. The EA fills it (from InpV34SymbolMap)    //
+// BEFORE calling Init(); "" = use the FaBrokerName default, so a    //
+// caller that never touches it — e.g. SymbolMetaProbe, which        //
+// includes THIS header standalone without BookReplay — is           //
+// unaffected. Done this way round precisely to avoid making         //
+// FeedAssembler depend on BookReplay, which would break those.      //
+//==================================================================//
+string g_faBrokerOverride[FA_NSYM];
+
+void FaSetBrokerOverride(const int i, const string broker)
+  {
+   if(i >= 0 && i < FA_NSYM)
+      g_faBrokerOverride[i] = broker;
+  }
+
+//==================================================================//
+// EXPECTED-ABSENT (2026-07-17)                                     //
+//                                                                   //
+// A symbol the broker does not list must NOT silently become a dark //
+// leg: that is exactly how a bad InpV34SymbolMap (e.g. the wrong    //
+// canonical key, DAX= instead of DE40=) would turn a CONFIG ERROR   //
+// into six quietly-dead index legs and a book that is not the book. //
+// So Init() still HARD-FAILS on an unlisted symbol — UNLESS the     //
+// owner has declared it expected here.                              //
+//                                                                   //
+// Declaring it is a deliberate, auditable act: on FTMO, EURSEK      //
+// genuinely does not exist (167-symbol enumeration, login           //
+// 1514016754 — only USDSEK), so it is declared and marked absent.   //
+// Anything else missing is still a refusal, loudly.                 //
+//==================================================================//
+bool g_faExpectAbsent[FA_NSYM];
+
+void FaSetExpectAbsent(const int i, const bool v)
+  {
+   if(i >= 0 && i < FA_NSYM)
+      g_faExpectAbsent[i] = v;
+  }
+
+string FaResolveBroker(const int i)
+  {
+   if(i >= 0 && i < FA_NSYM && StringLen(g_faBrokerOverride[i]) > 0)
+      return g_faBrokerOverride[i];
+   return FaBrokerName(FA_SYMS[i]);
+  }
+
+//==================================================================//
 // emitted row structures (simple types only -> ArrayResize-able)   //
 //==================================================================//
 struct SFaM1Row
@@ -473,7 +529,7 @@ public:
       m_err = "";
       for(int i = 0; i < FA_NSYM; i++)
         {
-         m_broker[i] = FaBrokerName(FA_SYMS[i]);
+         m_broker[i] = FaResolveBroker(i);   // honours the EA's broker override
          m_selected[i] = false;
          m_seeded[i] = false;
          m_absent[i] = false;
@@ -498,8 +554,40 @@ public:
             m_selected[i] = SymbolSelect(m_broker[i], true);
             if(!m_selected[i])
               {
-               Fail("SymbolSelect failed: " + m_broker[i]);
-               return false;
+               // NOT a hard fail any more (2026-07-17). SymbolSelect failing is
+               // DEFINITIVE — the broker does not LIST this symbol at all. It is
+               // NOT the "history still downloading" case, which shows up in
+               // CopyRates, not here. Different brokers carry different universes:
+               // EURSEK simply does not exist on FTMO (167-symbol enumeration,
+               // login 1514016754 — only USDSEK).
+               //
+               // Hard-failing meant the EA could not START on any broker missing
+               // one leg. Instead mark it ABSENT — the same mechanism RECON-8k
+               // added for not-yet-born symbols (SOLUSD pre-2022): absent legs are
+               // excluded from the all-seeded readiness gate (see the m_absent test
+               // in Ready()), so one missing leg cannot freeze the whole book, and
+               // Apply() clears the flag the instant real data arrives.
+               //
+               // WITHOUT this, an absent symbol is worse than a refusal: live,
+               // CopyRates n<0 is read as "lazy download, retry later", so the feed
+               // waits FOREVER for a symbol that will never exist, pinning the
+               // min-front — the book silently never advances.
+               //
+               // But it is only tolerated when DECLARED. An undeclared miss is far
+               // more likely a bad InpV34SymbolMap than a real broker gap, and
+               // degrading that to a dark leg would hide the config error. Refuse.
+               if(!g_faExpectAbsent[i])
+                 {
+                  Fail(StringFormat("'%s' is not listed on this broker and is NOT in "
+                                    "InpExpectAbsent. Fix InpV34SymbolMap, or declare it "
+                                    "if the broker genuinely lacks it.", m_broker[i]));
+                  return false;
+                 }
+               MarkAbsent(i);
+               PrintFormat("FEED: '%s' NOT LISTED on this broker -> marked ABSENT "
+                           "(DECLARED via InpExpectAbsent; excluded from the readiness "
+                           "gate; leg will not trade).", m_broker[i]);
+               continue;
               }
             long dig = SymbolInfoInteger(m_broker[i], SYMBOL_DIGITS);
             m_point[i] = SymbolInfoDouble(m_broker[i], SYMBOL_POINT);
@@ -580,11 +668,14 @@ public:
      }
 
    //---------------------------------------------------------------//
-   // MarkAbsent — TESTER-only: the EA found no history for this     |
-   // symbol at the run's start (not yet listed, e.g. SOLUSD before  |
-   // 2022). Exclude it from the all-seeded readiness gate until its |
-   // first real bar arrives (Apply re-seeds + clears this), so a    |
-   // not-yet-born leg does not freeze the whole Sat sleeve.         |
+   // MarkAbsent — the symbol has no data at the run's start, for    |
+   // one of TWO reasons, both handled the same way:                 |
+   //   (a) TESTER: not yet born (SOLUSD before 2022) — RECON-8k.    |
+   //   (b) EITHER: the broker does not LIST it at all (EURSEK on    |
+   //       FTMO) — added 2026-07-17, set from Init's SymbolSelect.  |
+   // Exclude it from the all-seeded readiness gate until its first  |
+   // real bar arrives (Apply re-seeds + clears this), so one leg    |
+   // cannot freeze the whole book.                                  |
    //---------------------------------------------------------------//
    void              MarkAbsent(const int i)
      {

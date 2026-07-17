@@ -1,46 +1,79 @@
 ; ============================================================================
-; FABLE_FTMO_LIVE  —  the FTMO DEMO account, live chart on the VPS
-; EA: FableBookNative  |  RUNBOOK_VPS.md  |  DEMO_FORWARD_PLAN §6B/§6G
+; FABLE_FTMO_LIVE  —  FTMO Swing DEMO, live chart on the VPS
+; EA: FableBookNative | acct 1514016754 (FTMO-Demo, EUR, Swing, 1:30, hedging)
 ; ----------------------------------------------------------------------------
-; SAFETY — READ THIS:
-;   InpAllowLiveTrading=false  -> Week-0 shakedown: computes + logs, ZERO orders.
+; SAFETY:
+;   InpAllowLiveTrading=false -> Week-0 shakedown: computes + logs, ZERO orders.
 ;   Week 1 = change THAT ONE INPUT to true, on the DEMO account only.
-;   NEVER attach this EA to account 11078280 (ICMarketsEU-MT5-5) — that is a
-;   REAL, LIVE-FUNDED account. The EA runs on the VPS against DEMO logins only.
+;   NEVER attach to 11078280 (ICMarketsEU-MT5-5) — that is REAL, LIVE-FUNDED.
 ; ----------------------------------------------------------------------------
-; Account to attach to : FTMO DEMO — deposit 100000.0 EUR, leverage 1:100
-;   Provision the leverage on the account BEFORE attaching; the dial was decided
-;   at 1:100 and a different leverage silently changes the margin path.
-; Chart: any of the 33 symbols, M1 (BTCUSD M1 matches every prior RECON run).
+; THE DIAL: s = 0.70. Criterion = the owner's <=1 BREACH PER YEAR policy
+; (docs/v3.0/FTMO_DIAL_DECISION.md): cash is withdrawn monthly so the account
+; stays near base; a breach is not a catastrophe, it means passing a new
+; challenge. s=0.70 -> 0.73 breaches/yr, inside the <=1 bar (ceiling ~0.73).
+;   *** DO NOT "fix" this to a lower s because maxDD 13.3% > 10%. That is the
+;   *** ZERO-BREACH standard, which the doc rejects IN BOLD. Exceeding 10% IS a
+;   *** breach; the policy ACCEPTS up to one a year. The metric is the RATE.
+;   *** This error has been made twice. Read FTMO_DIAL_DECISION.md first.
+; s=0.65 (0.36/yr) is the documented crisis-margin alternative — both native-EA
+; runs behind 0.73/yr EXCLUDE COVID by construction (doc caveat 1).
 ; ----------------------------------------------------------------------------
-; InpSaveStateFrom is TESTER-ONLY and MUST stay empty here: live saves the blob
-; at every completed hour (restart continuity depends on it).
+; LEVERAGE IS A NON-EVENT (measured 2026-07-17): FTMO's real table (crypto 1:1
+; vs the model's 1:2, indices/metals 1:15) re-prices margin 1.47x at the peak,
+; and changes final equity by EXACTLY ZERO — bit-identical across two processes.
+; Nothing binds at s=0.70 (0 of 2,948,651 minutes; peak util 0.527 vs the 0.9
+; cap; s* ~ 1.196). Do not re-open the dial on leverage grounds.
+; ----------------------------------------------------------------------------
+; THE UNIVERSE IS 31/33 ON FTMO — both gaps are EXPECTED, not faults:
+;   EURSEK  does NOT EXIST on FTMO (167-symbol enumeration; only USDSEK). The
+;           feed marks it ABSENT and excludes it from the readiness gate.
+;           Measured: dropping it is a +4.55% GAIN, not a haircut.
+;   XAGUSD  exists, but target lots are 0.001-0.007 at s=0.70 for EVERY
+;           purchasable balance -> below the 0.01 min lot -> FED_RoundLots
+;           drops the leg. Not a balance problem; unfixable at any account size.
+; Expect "FEED: 'EURSEK' NOT LISTED ... marked ABSENT" at init. That is correct.
+; ----------------------------------------------------------------------------
+; BALANCE EUR 80,000 (the largest the owner would realistically fund; the model
+; was run at 100k). Measured lot quantization at 80k: worst survivor ~23%
+; (US30). At 10k, BTCUSD and US30 round to ZERO -> never use 10k for this dial.
+; ----------------------------------------------------------------------------
+; SETTINGS tab (a .set CANNOT set these — do it manually):
+;     Symbol: BTCUSD | Period: M1 | Deposit: 80000 EUR | Leverage: 1:30
 ; ============================================================================
 ; --- 1. dial (FTMO) ---
 InpScale=0.7
-InpInitial=100000.0
+InpInitial=80000.0
 InpDailyStopX=3.0
 ; --- 2. safety — Week-0 = false. Flip to true ONLY at Week 1, demo only. ---
 InpAllowLiveTrading=false
 ; --- 3. universe / magics / logs ---
 InpMagicBase=3910000
-InpV34SymbolMap=
+; FTMO renames indices + energy. Keys are the EXEC canonical names (g_fedCanon,
+; BookReplay.mqh) = IC BROKER names -> DE40 / US500, NOT the model names
+; DAX / USA500. Since 2026-07-17 this map drives the FEED as well as EXEC.
+; EURSEK genuinely does not exist on FTMO -> DECLARE it. Anything else missing
+; still HARD-FAILS at init, so a bad map cannot become silent dark legs.
+InpExpectAbsent=EURSEK
+InpV34SymbolMap=DE40=GER40.cash;US500=US500.cash;US30=US30.cash;UK100=UK100.cash;USTEC=US100.cash;JP225=JP225.cash;XBRUSD=UKOIL.cash;XNGUSD=NATGAS.cash;XTIUSD=USOIL.cash
 InpLog=true
 InpFedFracFile=FMA3_fed_frac_v3.csv
 ; --- 4. engine constants (match the record engine EXACTLY — do not touch) ---
 InpMarginCap=0.9
 InpRebalBand=0.25
-; --- 5. state + telemetry — warm blob resume ---
-; Common\Files is SHARED across BOTH terminals (MT5 = one login each), so every
-; filename here MUST be account-unique or the two EAs clobber each other.
+; --- 5. state + telemetry ---
+; Common\Files is SHARED with the IC terminal — every name here MUST be
+; account-unique or the two EAs clobber each other.
 InpStateFile=FMA3_native_state_FTMO.json
 InpSaveState=true
 InpSaveInTester=false
 InpSaveStateFrom=
-InpTelemetryFile=FMA3_native_hourly_FTMO.csv
 InpDecisionsFile=fma3native_decisions_FTMO.csv
+InpTelemetryFile=FMA3_native_hourly_FTMO.csv
 InpMaxMinutesPerPass=20000
 ; --- 6. EUR conversion crosses ---
+; InpEURSEK stays EURSEK: it is absent on FTMO, so the feed marks it absent.
+; EURSEK is the only SEK-quoted leg, so with that leg dark no SEK conversion is
+; ever needed. Expect a "EUR cross 'EURSEK' not available" warning — benign.
 InpEURUSD=EURUSD
 InpEURJPY=EURJPY
 InpEURGBP=EURGBP

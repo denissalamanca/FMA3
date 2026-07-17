@@ -67,6 +67,7 @@ input bool   InpAllowLiveTrading = false; // MASTER SWITCH: false = compute+log,
 input group "=== 3. Universe / magics / logs ==="
 input long   InpMagicBase    = 3900000;   // Order magic base (+idx+1 per symbol, 33 symbols)
 input string InpV34SymbolMap = "";        // canonical=broker remap (';'-sep)
+input string InpExpectAbsent = "";        // broker symbols this broker genuinely lacks (';'-sep, e.g. "EURSEK" on FTMO)
 input bool   InpLog          = true;      // decisions CSV to Common\Files
 input string InpFedFracFile  = "FMA3_fed_frac_v3.csv"; // UNUSED live (native computes); kept for BookReplay compile unit
 
@@ -717,6 +718,62 @@ int OnInit()
    for(int i = 0; i < FED_NSYM; i++)
       g_fedLegDefer[i] = false;
 
+   // --- FEED broker names: apply InpV34SymbolMap to the FEED too -----------
+   // MUST run after FED_ParseSymbolMap() (above) and BEFORE g_fa.Init() (below),
+   // which snapshots the names. Until 2026-07-17 the map reached only the EXEC
+   // side (FED_MapSymbol -> g_fedTrade), while BOTH feed tables — this g_broker[]
+   // and FeedAssembler's own m_broker[] — were built straight from FaBrokerName,
+   // hardcoded to the IC universe. On a broker that renames (FTMO: DE40 ->
+   // GER40.cash, XTIUSD -> USOIL.cash, ...) the feed asked for names that do not
+   // exist, so FeedAssembler::Init hard-failed and the EA could not start at all.
+   // Compose the same way the exec side does — FaBrokerName first (model -> IC
+   // canonical: DAX->DE40, USA500->US500), then the map — so BOTH sides key off
+   // the SAME canonical names and one InpV34SymbolMap drives everything.
+   // Empty map => FED_MapSymbol is identity => IC is bit-for-bit unchanged.
+   for(int i = 0; i < FA_NSYM; i++)
+      FaSetBrokerOverride(i, FED_MapSymbol(FaBrokerName(FA_SYMS[i])));
+
+   // --- declare the symbols this broker genuinely lacks ---------------------
+   // Everything NOT declared still hard-fails in FeedAssembler::Init, so a bad
+   // map cannot degrade into silent dark legs. Validate the declaration itself:
+   // a name that does not match a resolved feed symbol is a typo, and a symbol
+   // that IS listed must never be declared absent — both would arm the wrong leg.
+   for(int i = 0; i < FA_NSYM; i++)
+      FaSetExpectAbsent(i, false);
+   if(StringLen(InpExpectAbsent) > 0)
+     {
+      string want[];
+      int nw = StringSplit(InpExpectAbsent, ';', want);
+      for(int k = 0; k < nw; k++)
+        {
+         string w = want[k];
+         StringTrimLeft(w); StringTrimRight(w);
+         if(StringLen(w) == 0)
+            continue;
+         bool hit = false;
+         for(int i = 0; i < FA_NSYM; i++)
+            if(FaResolveBroker(i) == w)
+              {
+               if(SymbolSelect(w, true))
+                 {
+                  PrintFormat("FMA3 NATIVE FATAL: InpExpectAbsent lists '%s' but this "
+                              "broker DOES list it. Remove it — declaring a live symbol "
+                              "absent would silently dark a real leg.", w);
+                  return(INIT_FAILED);
+                 }
+               FaSetExpectAbsent(i, true);
+               hit = true;
+               PrintFormat("FMA3 NATIVE: '%s' declared EXPECT-ABSENT on this broker.", w);
+              }
+         if(!hit)
+           {
+            PrintFormat("FMA3 NATIVE FATAL: InpExpectAbsent lists '%s', which is not a "
+                        "resolved feed symbol. Typo, or it needs an InpV34SymbolMap entry.", w);
+            return(INIT_FAILED);
+           }
+        }
+     }
+
    // --- compute chain --------------------------------------------------
    if(!g_orc.Init(BOOKORC_W, 10000.0))
      {
@@ -747,7 +804,7 @@ int OnInit()
    // --- feed poll tables -------------------------------------------------
    for(int i = 0; i < FA_NSYM; i++)
      {
-      g_broker[i] = FaBrokerName(FA_SYMS[i]);
+      g_broker[i] = FaResolveBroker(i);   // same map the FeedAssembler resolved
       g_point[i]  = SymbolInfoDouble(g_broker[i], SYMBOL_POINT);
       g_buf[i].pos = 0;
       g_buf[i].n = 0;
