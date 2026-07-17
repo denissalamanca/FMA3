@@ -2,7 +2,7 @@
 
 *Authored 2026-07-16. The forward-test charter + production-readiness checklist for running
 `FableBookNative` live on **two demo accounts** (IC and FTMO) on the owner's VPS. Decisions
-baked in: **3-month** window · **IC €10k / FTMO €100k** · **VPS Windows Server** hosting ·
+baked in: **3-month** window · **IC €10k / FTMO €80k** · **VPS Windows Server** hosting ·
 **1-week trade-disabled shakedown** before enabling.*
 
 ---
@@ -42,7 +42,7 @@ generalization** test, four things:
 | Friction | measured swap / spread ≈ the modelled decomposition (within band) |
 | Return | **no pre-committed level** — no valid OOS estimate exists. Success = **net-positive with risk inside the bands above**; the demo *establishes* the first valid OOS number. |
 
-**FTMO demo — s≈0.70, €100,000, 1:100, 3% daily breaker**
+**FTMO demo — s≈0.70, €80,000, 1:30, 3% daily breaker**
 | Metric | Pass line |
 |---|---|
 | Rule envelope | **0 max-loss (10%) breaches** · daily-5% breaches ≤ the ≤1/yr-implied rate |
@@ -102,7 +102,7 @@ resume (refuses on mismatch). Findings:
 ### B. Live config, per account
 `InpAllowLiveTrading = true` (demo only) · `InpSaveState = true` (restart continuity) ·
 `InpLog = true` · telemetry file on · dials per preset (IC 1.6 / €10k / breaker 0;
-FTMO 0.7 / €100k / breaker 3.0). Two chart instances (one per account), each on its demo login.
+FTMO 0.7 / €80k / breaker 3.0). Two chart instances (one per account), each on its demo login.
 
 ### C. Logging spec (audit result — 2026-07-16)
 **Already captured (keep on):** per-hour telemetry — `book_frac` per symbol, `a_h/b_h/j`,
@@ -172,7 +172,7 @@ post-warm-blob-run recompile + re-cert. None are closed until that re-cert passe
 **MUST-MONITOR (Week-0 shakedown):** the live weekend/holiday **clock-stall** — the RECON-8j/8k
 fix was tester-only; prove this broker's `CopyRates` returns `n=0` (not `n<0`) for closed symbols.
 
-**SHOULD-FIX:** §6B must tell the owner to **provision account leverage** (IC 1:30 / FTMO 1:100);
+**SHOULD-FIX:** §6B must tell the owner to **provision account leverage** (IC 1:30 / FTMO 1:30);
 log `FED_WorstMarkEquity` hourly (the current DD is hourly-equity, understates the 28% line).
 
 *Graduation to live capital remains a separate, downstream owner decision after the demo clears

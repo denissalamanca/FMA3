@@ -233,14 +233,13 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 
 ---
 
-## Deployable dials (owner leverage: IC 1:30, FTMO 1:100)
+## Deployable dials (owner leverage: IC 1:30, FTMO 1:30)
 
 - **IC = s=1.6** — OWNER-ACCEPTED 2026-07-12 (€2,552,962 @ 1:30, min ML 121%, worst-DD 22.6%)
   *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)*.
   **PROVISIONAL** pending a real-tick intra-bar min-ML confirmation (> 110%).
 - **FTMO = s≈0.5 RECOMMENDED** — sweep ret/DD 4.78, worst-DD 7.8% vs s0.7's 13.3%; the warm-COVID
-  honesty flag says s0.7 + 3% breaker breaches the −10% rule by 7.5–10.8pp. **PROVISIONAL** pending a
-  1:100 confirm run. Volume never binds at FTMO scale.
+  honesty flag says s0.7 + 3% breaker breaches the −10% rule by 7.5–10.8pp. **PROVISIONAL** on the dial only — the deployed FTMO demo is 80,000 EUR / 1:30, and leverage was proven a non-event (bit-identical final equity), so no 1:100 confirm run is owed. Volume never binds at FTMO scale.
 
 ---
 
@@ -262,7 +261,7 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
   (0.15→0.20); the original 0.15 gate ships none at s=1.6.
 - **The FTMO gates are cold-start in-sample.** Warm re-validation breaches COVID (s0.7 + 3% breaker
   over the −10% rule by 7.5–10.8pp); the crisis-safe dial is ≈ s0.30–0.35, and the recommended s≈0.5
-  is itself pending a 1:100 confirm run.
+  is a dial question only — the deployed FTMO demo is 80,000 EUR / 1:30, and leverage was proven a non-event, so no 1:100 confirm run is owed.
 - **The FTMO €1.33M is compounding never-withdraw** equity; the 5/5 FTMO rule-compliance gates are
   scored under a *contradictory* monthly withdraw-to-base frame. Both cannot hold at once — €1.33M is
   an "if-compounded" upper figure.
@@ -299,7 +298,7 @@ DD **7.82%**) vs shipped s=0.7 (4.05, DD **13.33%**) — supporting a cut to the
 **OPEN — before/at live-demo (MT5 real-tick only, cannot be closed on this Mac):**
 - [ ] **Real-tick intra-bar min-ML confirmation of IC s=1.6 @ 1:30** (> 110%) — the last gate before
   the IC ship dial is committed rather than provisional
-- [ ] **1:100 FTMO confirm run at s≈0.5** — fixes the FTMO ship dial; the warm-COVID flag governs
+- [ ] **FTMO ship dial at s≈0.5 (deployed config: 80,000 EUR / 1:30)** — the warm-COVID flag governs; no 1:100 confirm run is owed, leverage was proven a non-event (bit-identical final equity)
 - [ ] **Real-tick crisis reconciliation (COVID 2020-03, the 2022-05 leverage event)** — the 1m-OHLC
   smokes cannot see the tick tail; Gates 5/6 of the reconciliation protocol are mandatory and
   non-waivable, and record-engine tail numbers must never be quoted against MT5 numbers

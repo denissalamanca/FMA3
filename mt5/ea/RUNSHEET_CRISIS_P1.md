@@ -57,9 +57,9 @@ model**, so the warm-up is matched.
 | Period | **M1** |
 | **Modelling** | **Every tick based on real ticks** |
 | Date range | `2020.07.01 → 2025.12.31` (matches `_41`) |
-| Deposit | **100000 EUR** |
-| Leverage | **1:100** |
-| Inputs | `InpScale=0.70` · `InpInitial=100000.0` · `InpDailyStopX=3.0` · `InpAllowLiveTrading=false` · `InpSaveInTester=false` · `InpLog=true` |
+| Deposit | **80000 EUR** |
+| Leverage | **1:30** |
+| Inputs | `InpScale=0.70` · `InpInitial=80000.0` · `InpDailyStopX=3.0` · `InpAllowLiveTrading=false` · `InpSaveInTester=false` · `InpLog=true` |
 
 > **If the full 6-year real-tick run is too slow** (a 33-leg every-real-tick pass
 > can run for many hours): use the **faster windowed variant** — date range

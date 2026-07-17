@@ -99,10 +99,10 @@ capacity concern only; it never binds at FTMO scale (Run 3, 0 volume caps).
 
 1. **Open the demo account matching the reproduction.** IC path: an **IC Markets** MT5 demo,
    **Raw Spread (commission-based)**, **EUR**, **HEDGING** (the EA aborts on a netting account —
-   `OnInit` requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING`), seed **€10,000** (IC) or **€100,000**
+   `OnInit` requires `ACCOUNT_MARGIN_MODE_RETAIL_HEDGING`), seed **€10,000** (IC) or **€80,000**
    (FTMO). ⚠️ **Leverage is the reproduction-vs-deployment fork:** the RECON-4 reproduction ran at
    **1:500** so the model's per-symbol margin cap binds before the broker's; the **deployment**
-   account is the owner's real leverage — **IC 1:30, FTMO 1:100.** v3's margin cap is
+   account is the owner's real leverage — **IC 1:30, FTMO 1:30.** v3's margin cap is
    account-leverage-independent, so s=1.6 gives the **same €2,552,962** *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* at 1:30 as at 1:500 (only the
    min-ML headroom differs; see the dials).
 2. **Install the stream.** The unified fed_frac stream lives at
@@ -147,7 +147,7 @@ dial.** The two shipped presets and their deployment status:
 | Preset | Ship dial | Account / leverage | Reproduced equity | Margin fingerprint | Status |
 |---|---|---|---:|---|---|
 | **IC** | **s = 1.6** | €10k / **1:30** | **€2,552,962** (0.66× record) *(RECON-4/FableFederation_V3; superseded — native EA: €2.93M / 0.76×, see CURRENT_STATE.md)* | **min ML 121%** (IC stop-out 50%; ~11pp over the ML≥110% floor); worst-DD 22.6% | **OWNER-ACCEPTED 2026-07-12, PROVISIONAL** — pending a real-tick intra-bar **min-ML > 110%** confirm |
-| **FTMO** | **s ≈ 0.5 (recommended)** | €100k / **1:100** | (sweep) ret/DD **4.78**, worst-DD **7.8%** | margin a non-issue at 1:100; the −10%/−5% rules govern | **PROVISIONAL** — pending a 1:100 confirm run (`FABLE_FTMO_S04/05`) |
+| **FTMO** | **s ≈ 0.5 (recommended)** | €80k / **1:30** | (sweep) ret/DD **4.78**, worst-DD **7.8%** | margin a non-issue at 1:30 (leverage proven a non-event — bit-identical equity across leverage tables); the −10%/−5% rules govern | **PROVISIONAL** (on the dial, not leverage) — no 1:100 confirm run owed: leverage proven a non-event (bit-identical equity); config is €80k / 1:30 |
 
 Three honest notes on those dials:
 
@@ -160,7 +160,7 @@ Three honest notes on those dials:
   puts ret/DD at its peak **s=0.5** (4.78, worst-DD 7.82%) vs s=0.7's (4.05, 13.33%); the warm-COVID
   honesty flag says s=0.7 + the 3% breaker **breaches the −10% rule by 7.5–10.8pp** in a warm-start
   crisis (crisis-safe dial ≈ s0.30–0.35). So the demo runs **s≈0.5** — safer DD, same clean 0.95×
-  fidelity class, and volume never binds at €100k. `FABLE_FTMO.set` (s=0.7) stays the *dashboard-
+  fidelity class, and volume never binds at €80k. `FABLE_FTMO.set` (s=0.7) stays the *dashboard-
   reproduction* preset; `FABLE_FTMO_S05.set` is the deployment candidate.
 - **The stream is dial-agnostic — `s` is NOT baked into the file.** One `FMA3_fed_frac_v3.csv` serves
   both presets; changing the dial is a one-line preset edit, never a re-export or rebuild. The
@@ -179,7 +179,7 @@ FTMO → real-tick → RECON-4 verdict. **1m-OHLC smoke first; real-tick only af
 | 2. Compile | v3 headless 0/0, sha256 → RECON row | **PASS** (`740da0ff…`) |
 | 3. 1m-OHLC smoke, IC | per-bar held-fraction == `fed_frac·s` assert; final equity + friction ratio vs €3.87M | **PASS** (0.66×, fidelity 1.000, 0 rejects after volume-limit fix) |
 | 4. 1m-OHLC smoke, FTMO | same + breaker fires ~26× on prev-day-close anchor | **PASS** (0.95×, fidelity 1.000, 28 fires) |
-| 5. Real-tick | after smoke passes; then the RECON-4 dial verdict | **IN PROGRESS** — IC 1:30 real-tick run (~1h) for the intra-bar min-ML > 110% confirm; FTMO 1:100 sweep (`S04/05`) pending |
+| 5. Real-tick | after smoke passes; then the RECON-4 dial verdict | **IN PROGRESS** — IC 1:30 real-tick run (~1h) for the intra-bar min-ML > 110% confirm; FTMO 1:30 dial sweep (`S04/05`) pending — leverage proven a non-event, no 1:100 confirm owed |
 | 6. Live demo | this document — the first data v3 was never fitted on | **NOT STARTED** |
 
 The **1m-OHLC reconciliation is complete and the verdict is RECONCILED** (FMA3-RECON-4, deployable):
@@ -309,7 +309,7 @@ actually filling on the demo.
 ## Before real capital (deferred hardening — do NOT do during the demo)
 
 - **Complete the real-tick stage** (staged validation #5): the IC 1:30 intra-bar min-ML > 110% confirm
-  and the FTMO 1:100 sweep (`FABLE_FTMO_S04/05`) — each a fresh `FMA3-RECON-N` ledger entry.
+  and the FTMO 1:30 dial sweep (`FABLE_FTMO_S04/05`) (leverage proven a non-event — no 1:100 confirm owed) — each a fresh `FMA3-RECON-N` ledger entry.
 - **Fix the stale `FABLE_IC_S07/S06/S08` preset header comments** (they carry the s=1.6 IC header text
   while setting a lower `InpScale`) so a live operator is never misled by a preset banner.
 - **Decide the scaling lever** (higher tier vs N parallel accounts) *before* the book approaches

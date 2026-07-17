@@ -9,7 +9,7 @@ the owner does not hold.*
 
 ## The policy that sets the dial
 
-**Owner risk model:** cash is **withdrawn monthly**, so the FTMO account stays near its €100k
+**Owner risk model:** cash is **withdrawn monthly**, so the FTMO account stays near its €80k
 base rather than compounding. Under that model, an occasional rule breach is **not a
 catastrophe — it just means passing a new challenge** and resuming. The objective is therefore
 **maximize the dial subject to ≤ 1 breach per year**, not "never breach." A breach = a day
@@ -77,7 +77,7 @@ is ~s=0.35–0.50. But that is not the operative standard here.
    non-reset static frame against the absolute €90k floor, over a real-tick crisis window —
    still the open arbiter (score_v3 gate fix tracked: task_03aba9d3).
 4. Compounding-CAGR is not the owner's realized return (monthly withdrawal keeps the base
-   ~€100k); the dial's value is the **monthly income** it produces, which rises with s — hence
+   ~€80k); the dial's value is the **monthly income** it produces, which rises with s — hence
    the appetite to run near the breach-frequency ceiling rather than far below it.
 
 ## Bottom line

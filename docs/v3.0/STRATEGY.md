@@ -298,7 +298,7 @@ model, multiplying every volume limit by N — pure capacity, no diversification
 
 ---
 
-## 9. Deployable dials (owner leverage: IC 1:30, FTMO 1:100)
+## 9. Deployable dials (owner leverage: IC 1:30, FTMO 1:30)
 
 The model figures are frictionless record reads; the **deployable** dials are set at the owner's real
 leverages, and this is where the "s=1.6 not deployable at 1:30" flag was re-adjudicated:
@@ -310,7 +310,7 @@ leverages, and this is where the "s=1.6 not deployable at 1:30" flag was re-adju
   account's per-symbol grant) self-limits the book, so **margin, not volume, sets the IC dial** — at
   1:30 the book stays small enough that the volume ceiling never engages. The old "s=1.6 undeployable
   at 1:30" flag was a v1-over-leverage artifact and is **DISPROVEN for v3**.
-- **FTMO ≈ s=0.5 RECOMMENDED** (**PROVISIONAL** pending a 1:100 confirm run). The volume-cap s-sweep
+- **FTMO ≈ s=0.5 RECOMMENDED** (**PROVISIONAL** — the deployed FTMO demo is 80,000 EUR at 1:30, not 1:100, and leverage was proven a non-event: bit-identical final equity across leverage tables, so no 1:100 confirm run is owed). The volume-cap s-sweep
   shows FTMO ret/DD peaks at s=0.5 (4.78, worst-DD 7.82%) vs shipped s=0.7 (4.05, worst-DD 13.33%);
   volume never binds at FTMO scale, so the −10%/−5% rules govern. The warm-COVID re-validation flag
   (§10) is the reason to cut below 0.7.
@@ -348,8 +348,7 @@ run **only after** the 1m-OHLC smoke passes.
   can under-sample intra-bar margin stress; real-tick traverses the bar.
 - **The FTMO dashboard is a cold-start in-sample read.** Warm re-validation shows s=0.7 + 3% breaker
   **breaches COVID by 7.5–10.8pp of the FTMO −10% rule**; the crisis-safe dial is ≈ s0.30–0.35, not
-  0.70 — the recommended s≈0.5 (or lower) reflects this, and remains PROVISIONAL pending a 1:100
-  confirm run.
+  0.70 — the recommended s≈0.5 (or lower) reflects this, and remains PROVISIONAL — the deployed FTMO demo is 80,000 EUR at 1:30 (not 1:100), and leverage was proven a non-event (bit-identical final equity), so no 1:100 confirm run is owed; what remains is the warm-COVID crisis-margin re-validation.
 - **FTMO compound-vs-withdraw is contradictory.** The €1.33M is fully-compounded never-withdraw
   equity, but the 5/5 compliance gates are scored under a monthly withdraw-to-base frame. You cannot
   both compound to €1.33M and reset to base monthly — €1.33M is an "if-compounded" upper figure.

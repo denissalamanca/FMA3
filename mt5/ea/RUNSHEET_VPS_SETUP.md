@@ -19,7 +19,7 @@ trade-disabled by preset default).
 |---|---|
 | VPS | Windows Server, always-on, no sleep |
 | IC demo | **`52963578`** — €10,000, leverage **1:30** ✅ created 2026-07-16 |
-| FTMO demo | €100,000, leverage **1:100** ← provision the leverage at creation |
+| FTMO demo | €80,000, leverage **1:30** ← provision the leverage at creation |
 | Warm blob | `FMA3_native_state.json` + `.coredrive` from this laptop's `Common\Files` |
 
 **Leverage is not cosmetic.** Both dials (IC s=1.6, FTMO s=0.70) were decided *at* those
@@ -183,7 +183,7 @@ Identical, in the **FTMO** terminal, with `FABLE_FTMO_LIVE.set`. Confirm:
 
 ```
 InpScale             = 0.7
-InpInitial           = 100000.0
+InpInitial           = 80000.0
 InpDailyStopX        = 3.0          <-- the breaker is ARMED here (it is NOT on IC)
 InpAllowLiveTrading  = false
 InpStateFile         = FMA3_native_state_FTMO.json
