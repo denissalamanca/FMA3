@@ -204,6 +204,30 @@ public:
    long              NTrades() const  { return m_n_trades; }
 
    //---------------------------------------------------------------//
+   // ForceFlat — drop a restored position on a leg this broker does //
+   // not list.  Such a leg NEVER prints a bar, so its price slots   //
+   // keep the Init-time 0.0 seed forever; section 4 below marks it  //
+   // anyway because it gates on m_lots[k] only, never on has_bar[k].//
+   // FTMO/EURSEK (2026-07-18): a carried +2.23 lots @ 10.803970     //
+   // marked to zero = -2,409,285 EUR against a 455,280 balance on   //
+   // the FIRST stepped minute -> negative equity -> stop-out ->     //
+   // sizing is proportional to balance, so the sign inversion then  //
+   // compounds every minute until binary64 overflows to -inf.       //
+   // The leg is unpriceable, uncloseable and untradeable here, so   //
+   // the only coherent state is flat.  Carried P&L on it is forfeit //
+   // and the caller MUST log that.                                  //
+   //---------------------------------------------------------------//
+   bool              ForceFlat(const int k)
+     {
+      if(k < 0 || k >= SATEQ_NSYM)
+         return false;
+      bool had = (m_lots[k] != 0.0);
+      m_lots[k]  = 0.0;
+      m_entry[k] = 0.0;
+      return had;
+     }
+
+   //---------------------------------------------------------------//
    // One union-grid minute.  Every argument is a length-31 array   //
    // in SATEQ_SYMBOLS order; eurq = EUR value of 1 unit of the     //
    // symbol's quote ccy at this bar (ONE value per bar, used for   //

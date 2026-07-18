@@ -1,0 +1,77 @@
+; =====================================================================
+; FABLE_FTMO_BACKTEST.set — STRATEGY TESTER on the FTMO terminal
+; =====================================================================
+; PURPOSE: run the book in the Strategy Tester against FTMO's symbol
+; universe WITHOUT touching any live-demo state.
+;
+; *** THE THREE SAFETY LINES — do not change them ***
+;   InpStateFile=            <- EMPTY. Stateless COLD start. Never loads
+;                               the live blob (which is currently poisoned
+;                               with j=-inf and correctly refuses to load).
+;   InpSaveState=false       <- writes no state, ever.
+;   InpSaveInTester=false    <- Common\Files is SHARED across every MT5
+;                               install of this Windows user. With this
+;                               true, a tester run would OVERWRITE the
+;                               live FTMO demo blob. It must stay false.
+;
+; Telemetry/decisions filenames are _FTMOTEST-suffixed for the same
+; reason: so a tester run cannot clobber the live demo's CSVs.
+;
+; KNOWN LIMITATIONS ON THIS TERMINAL (read before trusting any result):
+;   1. FTMO history starts ~2025-09/10 for most symbols (CheckHistory,
+;      2026-07-17), so no window before ~2025-11-01 is usable. The
+;      2020-2025 golden window CANNOT be run here — use the IC terminal.
+;   2. EURSEK does not exist on FTMO. As of 2026-07-18 the absent-symbol
+;      path still produces b_h = -inf (satellite sleeve). Until that is
+;      fixed, ANY result from this preset is invalid for performance.
+;      It IS however a ~5-second reproduction of the bug, which is its
+;      main value right now.
+;
+; Tester settings (NOT part of this file — set them in the tester UI):
+;   Symbol BTCUSD, Period M1, Modelling "1 minute OHLC",
+;   Deposit 80000 EUR, Leverage 1:30.
+; =====================================================================
+
+; === 1. The dial (FTMO) ===
+InpScale=0.7
+InpInitial=80000.0
+InpDailyStopX=3.0
+
+; === 2. Safety ===
+; In the TESTER the EA trades regardless of this flag (the live-chart
+; carve-out is g_fedLive = !MQL_TESTER). Left false so that an accidental
+; drag onto a LIVE chart with this preset still cannot send an order.
+InpAllowLiveTrading=false
+
+; === 3. Universe / magics / logs ===
+InpMagicBase=3910000
+InpV34SymbolMap=DE40=GER40.cash;US500=US500.cash;US30=US30.cash;UK100=UK100.cash;USTEC=US100.cash;JP225=JP225.cash;XBRUSD=UKOIL.cash;XNGUSD=NATGAS.cash;XTIUSD=USOIL.cash
+InpExpectAbsent=EURSEK
+InpLog=true
+InpFedFracFile=FMA3_fed_frac_v3.csv
+
+; === 4. Engine constants (must match the record engine EXACTLY) ===
+InpMarginCap=0.9
+InpRebalBand=0.25
+
+; === 5. State + telemetry — the safety block ===
+InpStateFile=
+InpSaveState=false
+InpSaveInTester=false
+InpSaveStateFrom=
+InpDecisionsFile=fma3native_decisions_FTMOTEST.csv
+InpTelemetryFile=FMA3_native_hourly_FTMOTEST.csv
+InpMaxMinutesPerPass=20000
+
+; === 6. EUR conversion crosses ===
+; InpEURSEK is left pointing at EURSEK deliberately: the EA must still
+; DETECT it as missing and take the declared-absent path. Blanking it
+; here would hide the very defect this preset is used to reproduce.
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK
