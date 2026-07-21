@@ -89,6 +89,30 @@ actual rate path, or accept measured carry drift as a known demo caveat. Note li
 charged by the *broker*, so the demo's realised P&L is not affected — the exposure is the
 carry **signal** and the record-side swap model used for reconciliation.
 
+**→ RESOLVED 2026-07-21 — accept the forward-fill; measured LOW, BOUNDED (not "immaterial").**
+Materiality traced across every live `POLICY_RATES` consumer:
+- **jpy_smart carry gate** (core, ~70% of book; `CoreSignal.mqh:970` / `CoreEngine.mqh:313`):
+  `gate = clip((carry − 0.5) / 1.5, 0, 1)` saturates at `gate = 1.0` for `carry ≥ 2.0`. The
+  forward-filled `carry = 3.625 − 0.50 = 3.125` sits **1.125pp above saturation**, so the gate is
+  pinned fully open and rate-insensitive unless the USD/JPY differential compresses below 2.0 — a
+  crisis-scale >1.125pp move (Fed under 2.5% or BoJ over 1.625%) in six months. And it only ever
+  scales a half-signal in one price regime (above SMA100, below SMA20). **Immaterial.**
+- **carry_breakout satellite sleeve** (`CarryBreakout.mqh`): the ONE live-sizing consumer that is
+  *not* saturated — it drives 21-FX carry off all 10 currencies' rate differentials. But it is a
+  small slice: ensemble weight **0.046 / 0.826 = 5.6%** of the satellite (`Ensemble.mqh:90`),
+  carry ≈ 40% of that sleeve's raw signal (`carry*1.35 + breakout*2.05`), and the satellite is
+  ~30% of the book → **≈0.66% of total book positioning** rides on the stale rates. That is the
+  *ceiling*; the actual bias is a fraction of it. Bounded and small.
+- **SwapEurq swap model** (`SwapEurq.mqh:336`): used for **record-side reconciliation only**, not
+  live sizing — live swaps are broker-charged and unaffected. A known-friction item, not a
+  live-demo exposure.
+
+**Decision:** accept the forward-fill as a documented caveat; do NOT invent 2026 rates (worse
+than leaving them stale, per above). The live-demo exposure is a saturated gate (immaterial) plus
+a ~0.66%-of-book carry sleeve (bounded). If a later *crisis-scale* USD/JPY rate compression
+becomes known, revisit the **carry_breakout sleeve** specifically — the jpy_smart gate has 1.125pp
+of headroom and would still not move.
+
 ### 2. [MEASUREMENT] Three of the §3/§5 criteria are NOT measurable as-built
 **→ RESOLVED 2026-07-21 (PR #23, with #3). Recompile landed with the PR #34/#35 deploys — the live demos run the fixed binary.**
 
