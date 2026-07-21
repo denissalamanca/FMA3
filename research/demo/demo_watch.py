@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from reconcile_demo import load_telemetry, worst_mark_dd  # reuse the harness helpers
+from reconcile_demo import load_telemetry, position_fidelity, worst_mark_dd  # reuse the harness helpers
 
 # per-preset thresholds (§3 / §5)
 BANDS = {
@@ -37,25 +37,51 @@ BANDS = {
 
 
 def status(telemetry: str, journal: str | None, preset: str) -> dict:
-    h = load_telemetry(telemetry)
+    # load_telemetry returns (hourly H rows, per-symbol P rows) since the
+    # per-symbol telemetry landed (PR #23) — this watcher predated that and
+    # crashed on the tuple until 2026-07-21.
+    h, p = load_telemetry(telemetry)
     b = BANDS[preset]
     last = h.iloc[-1]
     alerts, flags = [], []
 
     # --- freshness (is the EA still writing?) ---
+    # NOTE: telemetry `dt` is BROKER SERVER time (≈EET), so vs UTC now this
+    # reads ~2-3h optimistic — fine as a coarse "still writing?" signal.
     age_h = (pd.Timestamp.now("UTC").tz_localize(None) - h["dt"].iloc[-1]).total_seconds() / 3600
-    st = {"last_row_utc": str(h["dt"].iloc[-1]), "hours_since": round(age_h, 1),
-          "n_hours": int(len(h)), "trading": int(last["trading"])}
+    st = {"last_row_server_time": str(h["dt"].iloc[-1]), "hours_since_approx": round(age_h, 1),
+          "n_hours": int(len(h)), "trading": int(last["trading"]) if "trading" in h else None}
 
     # --- plumbing (always checked) ---
+    # sc_mm is the SC-sleeve SIGNAL self-check, NOT position fidelity, and
+    # `fires` is the CoreTrigger SEGMENT count, NOT the breaker (go/no-go #2
+    # relabel — the real breaker count is n_stops).
     sc = int(h["sc_mm"].max()) if "sc_mm" in h else None
-    st["fidelity_sc_mm_max"] = sc
+    st["sc_selfcheck_max"] = sc
     # rough daily mismatch rate: sc_mm is cumulative; per-day proxy = sc / days
     days = max(1.0, (h["dt"].iloc[-1] - h["dt"].iloc[0]).total_seconds() / 86400)
     if sc is not None and sc / days > 0.05 * 24:   # >5% of a day's ~24 bars
-        alerts.append(f"FIDELITY: sc_mm={sc} over {days:.0f}d — check per-day mismatch rate vs 95%")
-    st["breaker_fires"] = int(h["fires"].max()) if "fires" in h else None
+        alerts.append(f"SC-SELFCHECK: sc_mm={sc} over {days:.0f}d — signal self-check mismatch rate high")
+    st["core_segments_max"] = int(h["fires"].max()) if "fires" in h else None
+    st["breaker_stops"] = (int(pd.to_numeric(h["n_stops"], errors="coerce").dropna().iloc[-1])
+                           if "n_stops" in h and pd.to_numeric(h["n_stops"], errors="coerce").notna().any()
+                           else None)
     st["unready_now"] = int(last["unready"]) if "unready" in h else None
+
+    # --- position fidelity (the ACTUAL §3/§5 criterion; needs P rows) ---
+    if p is not None and len(p):
+        fid = position_fidelity(p, 0.25)
+        if "status" in fid:
+            st["bar_fidelity"] = fid.get("status")
+        else:
+            st["bar_fidelity"] = round(fid["bar_fidelity"], 4)
+            if fid["n_sign_violations"] or fid["bar_fidelity"] < 0.95:
+                alerts.append(f"FIDELITY: bar {fid['bar_fidelity']:.2%}, "
+                              f"sign violations {fid['n_sign_violations']} (§5 kill line 95%)")
+            elif fid["bar_fidelity"] < 0.99:
+                flags.append(f"fidelity: bar {fid['bar_fidelity']:.2%} below the 99% §3 band")
+    else:
+        st["bar_fidelity"] = "no P rows — telemetry predates the 2026-07 build"
 
     # --- margin / drawdown (only meaningful with open positions) ---
     ml_col = next((c for c in h.columns if c.lower() in ("margin_level", "ml", "marginlevel")), None)
@@ -98,8 +124,11 @@ def status(telemetry: str, journal: str | None, preset: str) -> dict:
 
 
 def _fmt(s: dict) -> str:
-    L = [f"DEMO WATCH — {s['verdict']}  ({s['n_hours']:,} hrs, last row {s['last_row_utc']} UTC, {s['hours_since']}h ago, trading={s['trading']})"]
-    L.append(f"  min ML: {s['min_ML']}  ·  worst-mark DD: {s['worst_mark_dd']:.2%}  ·  fidelity sc_mm: {s['fidelity_sc_mm_max']}  ·  breaker fires: {s['breaker_fires']}")
+    L = [f"DEMO WATCH — {s['verdict']}  ({s['n_hours']:,} hrs, last row {s['last_row_server_time']} "
+         f"server time, ~{s['hours_since_approx']}h ago, trading={s['trading']})"]
+    L.append(f"  min ML: {s['min_ML']}  ·  worst-mark DD: {s['worst_mark_dd']:.2%}  ·  "
+             f"bar fidelity: {s['bar_fidelity']}  ·  sc-selfcheck: {s['sc_selfcheck_max']}  ·  "
+             f"breaker stops: {s['breaker_stops']}")
     if "journal_refuse_hits" in s:
         L.append(f"  journal: refuse={s['journal_refuse_hits']} · cold-start={s['journal_cold_start_hits']}")
     for a in s["alerts"]:
