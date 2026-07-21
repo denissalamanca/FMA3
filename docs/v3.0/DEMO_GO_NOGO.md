@@ -16,7 +16,10 @@ the right place to observe several of these live — but do not flip
 ## MUST-FIX before trade-ENABLE
 
 ### 1. [CODE] The OPEX calendar is hardcoded to 2026-02 → silent signal death in-demo
-**→ FIXED IN SOURCE 2026-07-16 (PR #22). Recompile + re-cert still pending — see below.**
+**→ RESOLVED 2026-07-21.** Fixed in source 2026-07-16 (PR #22); the fix is now in the
+deployed binary (`main` @ PR #34/#35, compiled on the VPS), and `CheckCoreSignal` certified it
+**bit-exact** on the VPS (RECON-15) with the OPEX `In()` regression green (`In(20651)` =
+2026-07-17, inside the demo window). See the closed note below.
 
 `CoreSignal.mqh:630` (`CCsOpexCal`): `while(y < 2026 || (y == 2026 && m <= 2))` — the
 options-expiry-week calendar is populated **only through Feb 2026**. It feeds the **live**
@@ -51,10 +54,11 @@ behaviour is bit-identical. Applied to all three FMA3 copies (EA, `core_signal_r
 - MQL5 compiles 0 errors / 0 warnings (isolated sandbox — the live tree was not touched
   because the warm-blob run was in flight).
 
-**Still pending (owner):** recompile `FableBookNative.ex5` + run `CheckCoreSignal.mq5` +
-re-run the bpure coresignal cert. **Deliberately deferred** — recompiling would have swapped
-the binary under the running 15h warm-blob run. That run is unaffected by the fix (it ends
-2025-12-31, before the horizon), so its output stays valid.
+**Closed 2026-07-21.** The recompile happened as part of the PR #34/#35 deploys to both live
+terminals, and `CheckCoreSignal` ran on the VPS binary (RECON-15) returning bit-exact on all 9
+golden legs — which exercises the OPEX calendar through the compiled `CCsOpexCal`. The earlier
+deferral (recompiling would have swapped the binary under the 15h warm-blob run) no longer
+applies: that run finished, and the demos now run the fixed binary.
 
 **The test that pinned the bug is now the test that prevents it.** `CheckCoreSignal.mq5:186`
 asserted `cal.Last() == 20504` ("opex last 2026-02-20") — it *encoded the horizon as correct*.
@@ -86,7 +90,7 @@ charged by the *broker*, so the demo's realised P&L is not affected — the expo
 carry **signal** and the record-side swap model used for reconciliation.
 
 ### 2. [MEASUREMENT] Three of the §3/§5 criteria are NOT measurable as-built
-**→ FIXED IN SOURCE 2026-07-16 (PR #23), together with #3. Recompile pending (batched with #1).**
+**→ RESOLVED 2026-07-21 (PR #23, with #3). Recompile landed with the PR #34/#35 deploys — the live demos run the fixed binary.**
 
 **The deeper finding: criterion #1 wasn't just unlogged — it was undefined.** "Live position
 matches the EA's own computed target ≥99% of bars" cannot be scored, because the executor
@@ -131,7 +135,7 @@ telemetry it reports "predates the 2026-07 build" per section rather than crashi
 **→ FIXED IN SOURCE 2026-07-16 (PR #23).** The hourly row now carries `warm` (`g_warm`), so
 the cold-start is machine-detectable rather than inferable from two Experts-log lines.
 `reconcile_demo.py` reports it explicitly ("cold for the WHOLE span — silent cold start" /
-"cold until <ts>"). Recompile pending (batched with #1).
+"cold until <ts>"). Recompile landed with the PR #34/#35 deploys (2026-07-21).
 Cold-start (blob absent) is surfaced by **two one-time Experts-log lines** only; the telemetry
 `trading` flag stays **1** even when nothing is sizing (misleading), and there is **no
 warm/cold column**. `demo_watch.py` (PR #19, **needs merge**) scans the Journal for
