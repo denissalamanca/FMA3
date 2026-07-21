@@ -1226,6 +1226,17 @@ public:
    double            BEqW()           const { return m_b_eqw;           }
    double            BBalance()       const { return m_beng.Balance();  }
    long              BTrades()        const { return m_beng.NTrades();  }
+
+   // Flatten a restored b-sleeve position on a symbol the broker does not
+   // list.  Model-name lookup; returns true only if a live lot was dropped
+   // (so the caller can log it loudly).  See CSatEquityNative::ForceFlat.
+   bool              BForceFlatSymbol(const string model)
+     {
+      for(int k = 0; k < SATEQ_NSYM; k++)
+         if(SATEQ_SYMBOLS[k] == model)
+            return m_beng.ForceFlat(k);
+      return false;
+     }
    double            AFirst()         const { return m_aS.Have() ? m_aS.FirstV() : 0.0; }
    double            BFirst()         const { return m_bS.Have() ? m_bS.FirstV() : 0.0; }
    int               NetCount()       const { return m_blend.NetCount(); }

@@ -200,6 +200,16 @@ void FaSetExpectAbsent(const int i, const bool v)
       g_faExpectAbsent[i] = v;
   }
 
+// A declared-absent symbol has NO data on this broker and never will. Any
+// consumer that waits on its history would wait forever — which is exactly
+// how the live bar pump froze the FTMO book at hours=0 (EURSEK pinned the
+// min-front `safe` clock at -1). Callers use this to distinguish "no data
+// yet" (retry) from "no data ever" (advance past it).
+bool FaIsExpectAbsent(const int i)
+  {
+   return (i >= 0 && i < FA_NSYM && g_faExpectAbsent[i]);
+  }
+
 string FaResolveBroker(const int i)
   {
    if(i >= 0 && i < FA_NSYM && StringLen(g_faBrokerOverride[i]) > 0)
@@ -609,13 +619,29 @@ public:
               }
            }
         }
-      // b-order symbol slots for the swap/eurq generator (MODEL names)
+      // b-order symbol slots for the swap/eurq generator (MODEL names).
+      // EVERY book symbol is registered, absent or not — the generator's
+      // eurq[]/swap_l[]/swap_s[] are slot-indexed and it is RECON-committed
+      // bit-equal, so the slot layout must never shift. Absence is then
+      // declared separately and only relaxes the readiness predicate.
       for(int k = 0; k < FA_NBOOK; k++)
-         if(!m_se.AddSymbol(FA_SYMS[FA_BOOK_IX[k]]))
+        {
+         int gi = FA_BOOK_IX[k];
+         if(!m_se.AddSymbol(FA_SYMS[gi]))
            {
-            Fail("SwapEurq AddSymbol failed: " + FA_SYMS[FA_BOOK_IX[k]]);
+            Fail("SwapEurq AddSymbol failed: " + FA_SYMS[gi]);
             return false;
            }
+         // A symbol this broker does not list can never seed its quote-ccy
+         // cross. Left demanded, CrossReady() fails every minute and the
+         // satellite engine never steps (FTMO/EURSEK, 2026-07-18: b frozen
+         // for the whole run). No-op when nothing is absent.
+         if(m_absent[gi] && !m_se.SetSlotAbsent(FA_SYMS[gi]))
+           {
+            Fail("SwapEurq SetSlotAbsent failed: " + FA_SYMS[gi]);
+            return false;
+           }
+        }
       m_se_started = false;
       m_cur_min = -1;
       m_hour_open = false;

@@ -450,6 +450,10 @@ class CSwapEurqBH
 private:
    int               m_k[SE_NSYM];        // slot -> symbol id
    int               m_n;                 // slots in use
+   // Slot is registered but its symbol does NOT exist on this broker
+   // (InpExpectAbsent). Its quote-ccy cross must therefore NOT be demanded
+   // by CrossReady() — nothing can ever seed it. See SetSlotAbsent().
+   bool              m_absent[SE_NSYM];
    CSECross          m_cross[SE_NCROSS];
    long              m_next_day;
    long              m_last_day;
@@ -459,7 +463,8 @@ public:
    int               rollovers_fired;
 
                      CSwapEurqBH() { m_n=0; m_started=false; m_next_day=0; m_last_day=0;
-                                     pre_first_bar_hits=0; rollovers_fired=0; }
+                                     pre_first_bar_hits=0; rollovers_fired=0;
+                                     ArrayInitialize(m_absent, false); }
 
    //--- symbol slots, in the caller's own (book) order
    bool              AddSymbol(const string s)
@@ -467,10 +472,32 @@ public:
       int id=SE_SymId(s);
       if(id<0 || m_n>=SE_NSYM)
          return false;
+      m_absent[m_n]=false;
       m_k[m_n++]=id;
       return true;
      }
    int               NSlots() const { return m_n; }
+
+   //--- Declare an ALREADY-REGISTERED slot absent on this broker.
+   // The slot is deliberately kept (eurq[]/swap_l[]/swap_s[] are slot-indexed
+   // and this generator is RECON-committed bit-equal — dropping a slot would
+   // silently re-lay the arrays). Only the READINESS PREDICATE changes.
+   // When no symbol is absent every m_absent[] is false and both CrossReady()
+   // and Step() are byte-for-byte the prior behaviour, so IC is unaffected
+   // by construction.
+   bool              SetSlotAbsent(const string s)
+     {
+      int id=SE_SymId(s);
+      if(id<0)
+         return false;
+      for(int i=0; i<m_n; i++)
+         if(m_k[i]==id)
+           {
+            m_absent[i]=true;
+            return true;
+           }
+      return false;
+     }
 
    void              Start(const long first_ts, const long last_ts)
      {
@@ -503,6 +530,15 @@ public:
      {
       for(int i=0; i<m_n; i++)
         {
+         // An absent symbol cannot seed its own quote-ccy cross, so demanding
+         // it here blocks EVERY minute forever: Step() returns false, the feed
+         // row is `unready`, StepM1 is skipped and the SATELLITE (b) never
+         // advances. That is exactly how the FTMO book ran 4,788 hours with
+         // b frozen at its warm-blob value (EURSEK, the sole SEK-quoted leg,
+         // 2026-07-18). A cross is only genuinely required by a symbol that
+         // is actually present.
+         if(m_absent[i])
+            continue;
          int x=SE_QUOT_CROSS[SE_SYM_QUOT[m_k[i]]];
          if(x>=0 && !m_cross[x].seeded)
             return false;
@@ -518,7 +554,10 @@ public:
       for(int i=0; i<m_n; i++)
         {
          int x=SE_QUOT_CROSS[SE_SYM_QUOT[m_k[i]]];
-         eurq[i]   = (x<0) ? 1.0 : m_cross[x].EurPerQuote();
+         // An absent slot's cross is unseeded by definition; EurPerQuote() on
+         // it would divide an unset quote and poison the row. The leg does not
+         // trade, so emit the same neutral 1.0 the no-cross case already uses.
+         eurq[i]   = (m_absent[i] || x<0) ? 1.0 : m_cross[x].EurPerQuote();
          swap_l[i] = 0.0;
          swap_s[i] = 0.0;
         }

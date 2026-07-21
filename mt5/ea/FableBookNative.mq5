@@ -384,11 +384,21 @@ bool HeadReady(const int i, const long last_closed)
                         (datetime)to, g_buf[i].r);
       if(n < 0)
         {
-         if(g_fedLive)
+         // LIVE, symbol genuinely listed: n<0 means "not downloaded yet".
+         // Retry on the next pump pass; the CopyRates call itself drives the
+         // fetch. A DECLARED-ABSENT symbol is the opposite case — it has no
+         // data on this broker and never will, so retrying pins g_resolved[i]
+         // at its -1 seed forever, which pins the min-front `safe` clock, and
+         // the whole book freezes at hours=0 with no error, no CPU and no log.
+         // That is precisely how the FTMO demo stalled (EURSEK, 2026-07-17/18):
+         // the tester branch below already had the cure, the live path did not.
+         if(g_fedLive && !FaIsExpectAbsent(i))
            {
             g_histWaits++;                    // live: a lazy download — retry later
             return false;
            }
+         // Falls through here for TESTER (any symbol) and for LIVE declared-
+         // absent symbols. Both mean the same thing: this range yields no bars.
          // TESTER: all symbol history is fully pre-synchronized in OnInit (the
          // "history synchronized" journal lines), so n<0 here is NEVER a pending
          // download — it means the range has no bars, e.g. a symbol not yet born
@@ -878,6 +888,23 @@ int OnInit()
                   g_fedLive ? "live" : "tester",
                   TimeToString((datetime)g_backfillFrom, TIME_DATE|TIME_MINUTES));
      }
+   // A declared-absent leg never prints a bar on this broker, so its feed
+   // price slots keep the 0.0 seed for the whole run. The satellite marks
+   // open lots on lots!=0 alone (SatEquityNative.mqh section 4) — never on
+   // has_bar — so any position the warm blob restored on such a leg is
+   // marked to ZERO on the first stepped minute. On FTMO that is a carried
+   // +2.23 EURSEK @ 10.803970 => -2,409,285 EUR against a 455,280 balance:
+   // instant negative equity, stop-out, and because sizing scales with
+   // balance the sign inversion compounds to -inf. Drop the position: the
+   // leg cannot be priced, closed or traded here, so flat is the only
+   // coherent state. MUST run after BOTH the warm and cold branches so no
+   // restore path can re-arm it.
+   if(!g_refuse)
+      for(int i = 0; i < FA_NSYM; i++)
+         if(FaIsExpectAbsent(i) && g_orc.BForceFlatSymbol(FA_SYMS[i]))
+            PrintFormat("FMA3 NATIVE: SAT '%s' declared absent -> restored b "
+                        "position DROPPED (leg is unpriceable/untradeable on "
+                        "this broker; its carried P&L is forfeit).", FA_SYMS[i]);
    for(int i = 0; i < FA_NSYM; i++)
      {
       g_from[i] = g_backfillFrom;
