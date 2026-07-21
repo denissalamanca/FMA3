@@ -88,6 +88,7 @@ input string InpSaveStateFrom = "";        // TESTER: save only from this UTC ti
 input string InpDecisionsFile = "fma3native_decisions.csv"; // per-account: ..._IC.csv / ..._FTMO.csv
 input string InpTelemetryFile = "FMA3_native_hourly.csv"; // per-hour book_frac + a_h/b_h/j
 input int    InpMaxMinutesPerPass = 20000; // feed catch-up bound per pump pass
+input int    InpHeartbeatSec = 900;       // live heartbeat cadence secs (0=off): logs compute-vs-wall lag + g_histWaits so a weekend/holiday HOLD is visibly distinct from a silent FREEZE (GO_NOGO #4)
 
 input group "=== 6. EUR conversion crosses (eurq full map, always on) ==="
 input string InpEURUSD = "EURUSD";
@@ -173,6 +174,10 @@ long      g_unreadyRows = 0;
 bool      g_dirtyState = false;
 datetime  g_saveFrom  = 0;        // parsed InpSaveStateFrom (tester periodic-save window)
 long      g_histWaits = 0;        // CopyRates lazy-download retries
+// heartbeat state (GO_NOGO #4 clock-stall visibility) — pure reporting
+ulong     g_hbLastTick     = 0;   // GetTickCount64() ms at last heartbeat (REAL elapsed, feed-independent)
+long      g_hbLastHours    = 0;   // g_hours at last heartbeat
+long      g_hbLastHistWait = 0;   // g_histWaits at last heartbeat
 bool      g_inPump    = false;
 datetime  g_lastM1Bar = 0;
 int       g_teleh     = INVALID_HANDLE;
@@ -647,6 +652,49 @@ void Pump()
    // compute clock vs wall clock: trade only when caught up (warmup
    // history must never be traded at today's prices)
    bool synced = (g_lastCompletedHour >= (now / 3600) * 3600 - 3600);
+
+   // HEARTBEAT (GO_NOGO #4): a weekend/holiday HOLD and a silent FREEZE both
+   // just stop moving on the telemetry `ts`. This surfaces them.
+   //
+   // CADENCE is gated on GetTickCount64() (REAL monotonic ms), NOT on
+   // TimeCurrent(): TimeCurrent is the last-quote time and FREEZES when the
+   // feed is quiet, so a TimeCurrent-gated beat would go silent during the
+   // very total-feed-death it must report. OnTimer (EventSetTimer(5)) fires
+   // every 5 real seconds with or without ticks, so a real-time gate always
+   // beats.
+   //
+   // The line prints REAL wall time (TimeGMT) AND feed time (TimeCurrent) side
+   // by side. Their divergence is the freeze signal that needs NO assumption
+   // about CopyRates' return convention:
+   //   real advancing, feed advancing, lag growing        -> weekend/holiday HOLD
+   //   real advancing, feed FROZEN                         -> feed dead / disconnected
+   //   real advancing, feed advancing, hours climbing, lag~0 -> caught up
+   // hours/histWaits deltas corroborate and let us READ this broker's
+   // convention (n==0 keeps histWaits flat through a hold; n<0 climbs it) —
+   // reported, never relied on alone. Live only (g_fedLive) — a tester
+   // identity run never reaches here and is byte-for-byte unchanged. Placed
+   // before PollBars so it still beats when a stall makes PollBars a no-op.
+   // Pure report: no compute, state, or sizing is touched.
+   if(InpHeartbeatSec > 0 && g_fedLive)
+     {
+      ulong hbTick = GetTickCount64();
+      if(hbTick - g_hbLastTick >= (ulong)InpHeartbeatSec * 1000)
+        {
+         double lag_h = (g_lastCompletedHour > 0)
+                        ? (now - g_lastCompletedHour) / 3600.0 : -1.0;
+         PrintFormat("FMA3 NATIVE HB: real=%s feed=%s compute=%s lag=%.1fh "
+                     "hours=%I64d(+%I64d) histWaits=%I64d(+%I64d) synced=%s",
+                     TimeToString(TimeGMT(), TIME_DATE|TIME_MINUTES),
+                     TimeToString((datetime)now, TIME_DATE|TIME_MINUTES),
+                     TimeToString((datetime)g_lastCompletedHour, TIME_DATE|TIME_MINUTES),
+                     lag_h, g_hours, g_hours - g_hbLastHours,
+                     g_histWaits, g_histWaits - g_hbLastHistWait,
+                     synced ? "yes" : "no");
+         g_hbLastTick     = hbTick;
+         g_hbLastHours    = g_hours;
+         g_hbLastHistWait = g_histWaits;
+        }
+     }
 
    // [SEAM G] FTMO daily breaker BEFORE anything (inert at x<=0)
    if(g_canTrade && synced && !FED_GuardianPass())
