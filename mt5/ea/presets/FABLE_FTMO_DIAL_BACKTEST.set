@@ -1,0 +1,45 @@
+; FABLE_FTMO_DIAL_BACKTEST.set — the FTMO DIAL on the LAPTOP tester (IC data).
+;
+; WHY a separate preset: FABLE_FTMO_BACKTEST.set maps to FTMO broker names
+; (GER40.cash, US500.cash, ...) and declares EURSEK absent. Those only exist on
+; FTMO's server; the laptop tester runs on IC Markets data (DE40/US500 present,
+; EURSEK present), so that preset INIT_FAILs here. This variant clears the map
+; and the absent list, so the 33 IC symbols resolve natively.
+;
+; WHAT IT TESTS: the FTMO dial (s=0.7, EUR 80k, 3% daily breaker) over the full
+; window. It exercises the FTMO daily breaker (FED_Guardian), which the IC run
+; (breaker=0) never touches. It does NOT reproduce the FTMO broker (map / absent
+; EURSEK) — that path is live-only and already cross-checked (j within +0.42% of
+; IC). Stateless + no tester save: it measures, it does not persist.
+;
+; RUN IT COLD, FULL WINDOW: BTCUSD M1, 1-minute OHLC, 2020.01.01 -> 2026.01.01,
+; deposit 80000 EUR, leverage 1:30. Clear any FMA3_native_state* blob first so
+; it cold-starts (this preset is stateless, so nothing is written back).
+;
+InpScale=0.7
+InpInitial=80000.0
+InpDailyStopX=3.0
+InpAllowLiveTrading=false
+InpMagicBase=3910000
+InpV34SymbolMap=
+InpExpectAbsent=
+InpLog=true
+InpFedFracFile=FMA3_fed_frac_v3.csv
+InpMarginCap=0.9
+InpRebalBand=0.25
+InpStateFile=
+InpSaveState=false
+InpSaveInTester=false
+InpSaveStateFrom=
+InpHeartbeatSec=900
+InpDecisionsFile=fma3native_decisions_FTMODIAL.csv
+InpTelemetryFile=FMA3_native_hourly_FTMODIAL.csv
+InpMaxMinutesPerPass=20000
+InpEURUSD=EURUSD
+InpEURJPY=EURJPY
+InpEURGBP=EURGBP
+InpEURCHF=EURCHF
+InpEURNZD=EURNZD
+InpEURCAD=EURCAD
+InpEURNOK=EURNOK
+InpEURSEK=EURSEK
