@@ -714,6 +714,25 @@ void Pump()
       return;
      }
 
+   // b-sleeve balance sanity — the guard CSatEquityNative lacks (the core has
+   // its own at CoreSim.mqh:237). A non-finite or non-positive satellite
+   // balance is "impossible in the anchor": the 0.5 stop-out floors equity
+   // above zero in every valid run, so this can only be a corrupt mark — as
+   // EURSEK's absent 0.0-price leg was, before it compounded to -inf and
+   // poisoned the blob. Refuse BEFORE the save below (g_refuse blocks
+   // SaveStateFiles), so the bad state never reaches disk. Runs in backfill
+   // too — that is when EURSEK struck. Never fires on a healthy book, so it is
+   // parity- and tester-neutral (a valid identity run is byte-for-byte
+   // unchanged); it only diverges on an already-invalid run.
+   double bBal = g_orc.BBalance();
+   if(!MathIsValidNumber(bBal) || bBal <= 0.0)
+     {
+      RefuseLatch(StringFormat("b-sleeve balance non-finite/non-positive (%.2f)"
+                               " — corrupt mark; refusing before save", bBal));
+      g_inPump = false;
+      return;
+     }
+
    synced = (g_lastCompletedHour >= (now / 3600) * 3600 - 3600);
    if(g_canTrade && synced && !g_refuse)
       FED_Reconcile();                         // re-size every M1 (RECON-4 law)
