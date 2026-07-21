@@ -78,7 +78,16 @@ def position_fidelity(p: pd.DataFrame, band: float) -> dict:
     stale_note = None
     if "snap_ts" in q and pd.to_numeric(q["snap_ts"], errors="coerce").notna().any():
         snap = pd.to_numeric(q["snap_ts"], errors="coerce")
-        age = pd.to_numeric(q["ts"], errors="coerce") - snap
+        # A row is measured only if its snapshot was taken within its OWN hour:
+        # snap_ts − ts ∈ [0, 3600). FED_Reconcile runs per M1 bar, so a live
+        # row's snapshot lands near the END of its hour — empirically (2.3M-row
+        # tester telemetry, 2026-07-21): median snap−ts = 3580 s and 99.6% of
+        # P rows pass this gate, while the previously-shipped inverted
+        # subtraction (ts − snap ∈ [0,3600)) passes 0.0% of them — it declared
+        # "no fresh P rows to score" on perfectly healthy telemetry. Catch-up
+        # rows carry a much LATER wall-clock stamp (snap − ts ≫ 3600) and are
+        # dropped, which is the run-44 artifact this gate exists to kill.
+        age = snap - pd.to_numeric(q["ts"], errors="coerce")
         fresh = (snap > 0) & (age >= 0) & (age < 3600)
         n_stale = int((~fresh).sum())
         q = q[fresh].copy()
