@@ -44,6 +44,18 @@
 InpScale=0.7
 InpInitial=80000.0
 InpDailyStopX=3.0
+; --- 1b. idea breaker (PR #48) — the FTMO 1%-per-trade-idea rule ------------
+; RULE (validated model research/ftmo1pct/kill_engine.py, frozen config):
+; the 33 legs group into 14 idea-units (clusters, the measured daily
+; |rho|>=0.7 set). Per cluster: IDEA_DD = worst-mark FLOAT of its open legs
+; + realized P&L of its DEAL_ENTRY_OUT deals in the trailing 60 min (swap
+; excluded from the meter, matching the validated model).
+; KILL the cluster at -0.8% of balance (pre-empts FTMO's -1% per-idea line),
+; flatten its legs, zero its targets for a 60-min cooldown. "IDEA_VIOLATION"
+; prints if -1% is ever reached (the cockpit greps for it).
+InpIdeaStopPct=0.8
+InpIdeaCooldownMin=60
+InpIdeaCheckSec=5
 ; --- 2. safety — Week-0 = false. Flip to true ONLY at Week 1, demo only. ---
 InpAllowLiveTrading=false
 ; --- 3. universe / magics / logs ---
