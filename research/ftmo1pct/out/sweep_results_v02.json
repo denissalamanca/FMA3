@@ -1,0 +1,438 @@
+{
+ "gate": {
+  "final_equity": 1332404.1921628967,
+  "target": 1332404.1921628967,
+  "bit_equal": true,
+  "delta": 0.0,
+  "maxdd_worst": 0.13326785098278104,
+  "n_daily_stops": 26,
+  "n_trades": 24726
+ },
+ "sweep": {
+  "ftmo1pct_a_net_80bp": {
+   "label": "ftmo1pct_a_net_80bp",
+   "kill_pct": 0.008,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 1004287.2671745049,
+   "cagr": 0.46923306460217606,
+   "maxdd_worst": 0.14141278436930305,
+   "maxdd_close": 0.14046654995952002,
+   "sharpe": 2.0513024897746854,
+   "n_daily_stops": 26,
+   "n_trades": 25077,
+   "n_kills_total": 399,
+   "kills_by_cluster": {
+    "IDX": 97,
+    "DBLOC": 7,
+    "JPYX": 25,
+    "CRYPTO": 94,
+    "EURCADX": 4,
+    "PMET": 107,
+    "EURGBP": 65
+   },
+   "violations_total": 14,
+   "violations_by_cluster": {
+    "IDX": 4,
+    "CRYPTO": 1,
+    "PMET": 6,
+    "EURGBP": 3
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1083218.7016832097,
+    "swap_total": -184214.5603773714,
+    "identity_residual": 1.618172973394394e-08
+   },
+   "yearly": {
+    "2020": 0.7342855720537638,
+    "2021": 0.3998374016810502,
+    "2022": 0.21201892212910955,
+    "2023": 0.42708150267791734,
+    "2024": 0.44205124165694487,
+    "2025": 0.5796368625105994
+   },
+   "retention_vs_nokill": 0.7537406990173467,
+   "cagr_delta_pp": -7.093358427860408,
+   "kills_per_year": 66.5,
+   "violations_per_year": 2.3333333333333335
+  },
+  "ftmo1pct_b_net_60bp": {
+   "label": "ftmo1pct_b_net_60bp",
+   "kill_pct": 0.006,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 941518.5235006455,
+   "cagr": 0.45350315616124526,
+   "maxdd_worst": 0.13344408076039255,
+   "maxdd_close": 0.1327346848828159,
+   "sharpe": 2.0290400951652674,
+   "n_daily_stops": 21,
+   "n_trades": 26504,
+   "n_kills_total": 667,
+   "kills_by_cluster": {
+    "IDX": 163,
+    "DBLOC": 16,
+    "JPYX": 39,
+    "CRYPTO": 149,
+    "EURCADX": 7,
+    "PMET": 182,
+    "EURGBP": 109,
+    "EURNOK": 1,
+    "EURSEK": 1
+   },
+   "violations_total": 5,
+   "violations_by_cluster": {
+    "IDX": 2,
+    "PMET": 2,
+    "EURGBP": 1
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1011691.9917377731,
+    "swap_total": -174911.22738686818,
+    "identity_residual": 2.4796463549137115e-08
+   },
+   "yearly": {
+    "2020": 0.6774013602786833,
+    "2021": 0.36726049031021346,
+    "2022": 0.2614622355700751,
+    "2023": 0.44515037548845915,
+    "2024": 0.35874572326025467,
+    "2025": 0.5893103171203582
+   },
+   "retention_vs_nokill": 0.7066313128092722,
+   "cagr_delta_pp": -8.66634927195349,
+   "kills_per_year": 111.16666666666667,
+   "violations_per_year": 0.8333333333333334
+  },
+  "ftmo1pct_c_loss_only_80bp": {
+   "label": "ftmo1pct_c_loss_only_80bp",
+   "kill_pct": 0.008,
+   "real_mode": "loss_only",
+   "violations_only": false,
+   "final_equity": 1003900.3948181017,
+   "cagr": 0.4691386549810679,
+   "maxdd_worst": 0.14141278436930305,
+   "maxdd_close": 0.14046654995952002,
+   "sharpe": 2.049997940311106,
+   "n_daily_stops": 26,
+   "n_trades": 25097,
+   "n_kills_total": 399,
+   "kills_by_cluster": {
+    "IDX": 97,
+    "DBLOC": 7,
+    "JPYX": 25,
+    "CRYPTO": 94,
+    "EURCADX": 4,
+    "PMET": 107,
+    "EURGBP": 65
+   },
+   "violations_total": 13,
+   "violations_by_cluster": {
+    "IDX": 3,
+    "CRYPTO": 1,
+    "PMET": 6,
+    "EURGBP": 3
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1082805.1978878418,
+    "swap_total": -184184.0303602478,
+    "identity_residual": 1.6530975699424744e-08
+   },
+   "yearly": {
+    "2020": 0.7342855720537638,
+    "2021": 0.3998374016810502,
+    "2022": 0.21201892212910955,
+    "2023": 0.42708150267791734,
+    "2024": 0.44205124165694487,
+    "2025": 0.5790283535159766
+   },
+   "retention_vs_nokill": 0.7534503424133381,
+   "cagr_delta_pp": -7.102799389971226,
+   "kills_per_year": 66.5,
+   "violations_per_year": 2.1666666666666665
+  },
+  "ftmo1pct_d_net_100bp": {
+   "label": "ftmo1pct_d_net_100bp",
+   "kill_pct": 0.01,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 1156984.533660855,
+   "cagr": 0.5043283610744387,
+   "maxdd_worst": 0.13195910584526305,
+   "maxdd_close": 0.13146938417518858,
+   "sharpe": 2.1923713560436178,
+   "n_daily_stops": 21,
+   "n_trades": 25482,
+   "n_kills_total": 243,
+   "kills_by_cluster": {
+    "IDX": 59,
+    "DBLOC": 2,
+    "JPYX": 16,
+    "CRYPTO": 57,
+    "EURCADX": 1,
+    "PMET": 58,
+    "EURGBP": 50
+   },
+   "violations_total": 246,
+   "violations_by_cluster": {
+    "IDX": 60,
+    "DBLOC": 2,
+    "JPYX": 16,
+    "CRYPTO": 59,
+    "EURCADX": 1,
+    "PMET": 58,
+    "EURGBP": 50
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1256398.2131110881,
+    "swap_total": -204489.94832210796,
+    "identity_residual": 1.1408701539039612e-08
+   },
+   "yearly": {
+    "2020": 0.7520684260782686,
+    "2021": 0.46167697890866344,
+    "2022": 0.24958859525082544,
+    "2023": 0.4694148505413913,
+    "2024": 0.42714163018641194,
+    "2025": 0.6522155865842589
+   },
+   "retention_vs_nokill": 0.8683435105249238,
+   "cagr_delta_pp": -3.5838287806341462,
+   "kills_per_year": 40.5,
+   "violations_per_year": 41.0
+  },
+  "ftmo1pct_e_viol_census": {
+   "label": "ftmo1pct_e_viol_census",
+   "kill_pct": null,
+   "real_mode": "net",
+   "violations_only": true,
+   "final_equity": 1332404.1921628967,
+   "cagr": 0.5401666488807801,
+   "maxdd_worst": 0.13326785098278104,
+   "maxdd_close": 0.13282517085737314,
+   "sharpe": 2.277158360470985,
+   "n_daily_stops": 26,
+   "n_trades": 24726,
+   "n_kills_total": 0,
+   "kills_by_cluster": {},
+   "violations_total": 2851,
+   "violations_by_cluster": {
+    "IDX": 247,
+    "DBLOC": 38,
+    "JPYX": 126,
+    "CRYPTO": 660,
+    "EURCADX": 99,
+    "PMET": 354,
+    "EURGBP": 1327
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1462646.6780637195,
+    "swap_total": -231611.51504804203,
+    "identity_residual": 1.6996636986732483e-08
+   },
+   "yearly": {
+    "2020": 0.8058081169577211,
+    "2021": 0.5592937259903821,
+    "2022": 0.25330122285906764,
+    "2023": 0.49575305538606607,
+    "2024": 0.46152307547952987,
+    "2025": 0.6619923135963055
+   },
+   "retention_vs_nokill": 1.0,
+   "cagr_delta_pp": 0.0,
+   "kills_per_year": 0.0,
+   "violations_per_year": 475.1666666666667
+  },
+  "ftmo1pct_f_knee_70bp_net_70bp": {
+   "label": "ftmo1pct_f_knee_70bp_net_70bp",
+   "kill_pct": 0.007,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 1001132.3948461849,
+   "cagr": 0.46846228584980865,
+   "maxdd_worst": 0.13298074440407706,
+   "maxdd_close": 0.13270504296516275,
+   "sharpe": 2.0687813605770398,
+   "n_daily_stops": 23,
+   "n_trades": 25123,
+   "n_kills_total": 508,
+   "kills_by_cluster": {
+    "IDX": 119,
+    "DBLOC": 12,
+    "JPYX": 30,
+    "CRYPTO": 111,
+    "EURCADX": 6,
+    "PMET": 144,
+    "EURGBP": 85,
+    "EURNOK": 1
+   },
+   "violations_total": 8,
+   "violations_by_cluster": {
+    "IDX": 2,
+    "PMET": 5,
+    "EURGBP": 1
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1082875.8054717411,
+    "swap_total": -186806.398918196,
+    "identity_residual": 1.3387762010097504e-08
+   },
+   "yearly": {
+    "2020": 0.6864377843042626,
+    "2021": 0.4373916769963595,
+    "2022": 0.21732636942227246,
+    "2023": 0.4686043048176005,
+    "2024": 0.4230635470327426,
+    "2025": 0.5440245892262427
+   },
+   "retention_vs_nokill": 0.7513728947527873,
+   "cagr_delta_pp": -7.17043630309715,
+   "kills_per_year": 84.66666666666667,
+   "violations_per_year": 1.3333333333333333
+  },
+  "ftmo1pct_g_90bp_ds30_net_90bp": {
+   "label": "ftmo1pct_g_90bp_ds30_net_90bp",
+   "kill_pct": 0.009,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 1085202.988173934,
+   "cagr": 0.4883441764542733,
+   "maxdd_worst": 0.13850278261121543,
+   "maxdd_close": 0.1375456600559309,
+   "sharpe": 2.1245052619362146,
+   "n_daily_stops": 25,
+   "n_trades": 25450,
+   "n_kills_total": 310,
+   "kills_by_cluster": {
+    "IDX": 76,
+    "DBLOC": 5,
+    "JPYX": 18,
+    "CRYPTO": 71,
+    "EURCADX": 2,
+    "PMET": 82,
+    "EURGBP": 56
+   },
+   "violations_total": 37,
+   "violations_by_cluster": {
+    "IDX": 6,
+    "JPYX": 2,
+    "CRYPTO": 12,
+    "PMET": 12,
+    "EURGBP": 5
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1176801.4938841427,
+    "swap_total": -197253.02544398035,
+    "identity_residual": 1.280568540096283e-08
+   },
+   "yearly": {
+    "2020": 0.7508312708304432,
+    "2021": 0.4166385365345686,
+    "2022": 0.24696232765001724,
+    "2023": 0.4670735274136928,
+    "2024": 0.4275436262045855,
+    "2025": 0.5978799115928655
+   },
+   "retention_vs_nokill": 0.8144698092043074,
+   "cagr_delta_pp": -5.182247242650684,
+   "kills_per_year": 51.666666666666664,
+   "violations_per_year": 6.166666666666667
+  },
+  "ftmo1pct_h_80bp_ds40_net_80bp": {
+   "label": "ftmo1pct_h_80bp_ds40_net_80bp",
+   "kill_pct": 0.008,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 996566.3326230576,
+   "cagr": 0.46734314191194004,
+   "maxdd_worst": 0.1381825937250378,
+   "maxdd_close": 0.1372280526171768,
+   "sharpe": 2.0206037799086523,
+   "n_daily_stops": 11,
+   "n_trades": 24791,
+   "n_kills_total": 409,
+   "kills_by_cluster": {
+    "IDX": 101,
+    "DBLOC": 7,
+    "JPYX": 18,
+    "CRYPTO": 96,
+    "EURCADX": 4,
+    "PMET": 116,
+    "EURGBP": 66,
+    "EURNOK": 1
+   },
+   "violations_total": 12,
+   "violations_by_cluster": {
+    "IDX": 3,
+    "CRYPTO": 1,
+    "PMET": 6,
+    "EURGBP": 2
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1077587.7646407792,
+    "swap_total": -186241.69820009114,
+    "identity_residual": 1.1874362826347351e-08
+   },
+   "yearly": {
+    "2020": 0.7158344044446507,
+    "2021": 0.3536827277936754,
+    "2022": 0.26292463665907717,
+    "2023": 0.43816374035533356,
+    "2024": 0.44733334612668374,
+    "2025": 0.5544054641722798
+   },
+   "retention_vs_nokill": 0.7479459600058206,
+   "cagr_delta_pp": -7.28235069688401,
+   "kills_per_year": 68.16666666666667,
+   "violations_per_year": 2.0
+  },
+  "ftmo1pct_i_90bp_ds40_net_90bp": {
+   "label": "ftmo1pct_i_90bp_ds40_net_90bp",
+   "kill_pct": 0.009,
+   "real_mode": "net",
+   "violations_only": false,
+   "final_equity": 1086116.9172079863,
+   "cagr": 0.48855315353202644,
+   "maxdd_worst": 0.14229045907850393,
+   "maxdd_close": 0.14134226441248324,
+   "sharpe": 2.1048263330079746,
+   "n_daily_stops": 11,
+   "n_trades": 24804,
+   "n_kills_total": 324,
+   "kills_by_cluster": {
+    "IDX": 81,
+    "DBLOC": 5,
+    "JPYX": 15,
+    "CRYPTO": 74,
+    "EURCADX": 2,
+    "PMET": 90,
+    "EURGBP": 57
+   },
+   "violations_total": 37,
+   "violations_by_cluster": {
+    "IDX": 5,
+    "JPYX": 1,
+    "CRYPTO": 13,
+    "PMET": 13,
+    "EURGBP": 5
+   },
+   "pend_check": {
+    "sum_real1h_flushed": 1176580.3587972058,
+    "swap_total": -196113.59395099312,
+    "identity_residual": 1.5133991837501526e-08
+   },
+   "yearly": {
+    "2020": 0.7320733687779002,
+    "2021": 0.36314697879468505,
+    "2022": 0.2732719604046099,
+    "2023": 0.47226279920000525,
+    "2024": 0.46175636453082936,
+    "2025": 0.6015381376682662
+   },
+   "retention_vs_nokill": 0.8151557339705519,
+   "cagr_delta_pp": -5.16134953487537,
+   "kills_per_year": 54.0,
+   "violations_per_year": 6.166666666666667
+  }
+ }
+}

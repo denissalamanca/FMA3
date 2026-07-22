@@ -1,0 +1,14 @@
+{
+ "forked_from": "engine/record_engine_ext.py",
+ "fork_date": "2026-07-22",
+ "rule_version": "v0.2 trailing-window (owner-clarified 2026-07-22; supersedes v0.1 inception-idea)",
+ "kernel_copied": "_run_chunk_stop (lines 444-600) -> _run_chunk_kill",
+ "driver_copied": "simulate_account_1m_ext (607-776) -> simulate_account_1m_kill",
+ "wrapper_copied": "run_record_ext (779-842) -> run_record_kill",
+ "sha256": {
+  "engine/record_engine_ext.py": "1097d81b660b4b8742dba3a49269469674f7ee97537fb7a51c8aaa808d050832",
+  "research/ftmo1pct/kill_engine.py": "d0ac05d6e7c544fb089e65db0f666ddacb9691c9790eda7167ac8eacd8660c2f",
+  "research/ftmo1pct/run_sweep.py": "0889ad0758a7a8bdebd477903edd805fda2f90e426dfbbd5cbf18c152aac4465",
+  "research/ftmo1pct/selftest_kill.py": "2be47b0cab36776510b4814664ed3c32d6edb6cadff283b66c25c6bc1a5dca6e"
+ }
+}
