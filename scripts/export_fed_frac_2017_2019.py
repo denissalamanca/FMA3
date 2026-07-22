@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """STANDALONE 2017-2019 fed_frac (t0=2017-01-01). RESILIENCE-GRADE OOS.
 
-Does NOT touch / prepend the 2020-2025 golden. Blends the v7 core (ext Duka feed,
-warm from 2015) + v34 satellite (research_cache_ext, warm from 2015) with the SAME
+Does NOT touch / prepend the 2020-2025 golden. Blends the Core (ext Duka feed,
+warm from 2015) + Satellite (research_cache_ext, warm from 2015) with the SAME
 static_fed(0.70) math as model/v3/reproduce.py:66-74, then serializes fmt=3 via the
 verbatim export_book_frac_v3.build_rows.
 
-PROVENANCE (label loudly): model feed = Dukascopy ext (v7) + research_cache_ext (v34),
+PROVENANCE (label loudly): model feed = Dukascopy ext (Core) + research_cache_ext (Satellite),
 SYNTHETIC/assigned spread, ~30/33 symbols (SOL/XRP/XPT absent; AUD/NZD ~inert via S6;
 crypto fades in late-2018). Signal-causality GATE = GO (every sleeve strictly causal;
 hyperparameters frozen on 2020-2025 => genuine OOS). NOT the IC worst-mark golden.
 
-NAMING RECONCILIATION (critical): the ext-feed v7 names its single index book "USA500"
-(the USTEC/Nasdaq book computed on a USA500 proxy, no Duka USTEC). The 2020-2025 v7
-model names that exact book "USTEC". So we RENAME v7 USA500 -> USTEC before the blend,
+NAMING RECONCILIATION (critical): the ext-feed Core names its single index book "USA500"
+(the USTEC/Nasdaq book computed on a USA500 proxy, no Duka USTEC). The 2020-2025 Core
+model names that exact book "USTEC". So we RENAME Core USA500 -> USTEC before the blend,
 else build_rows' SYMMAP (USA500->US500) would wrongly land the Nasdaq book on US500.
-v34 carries genuine USA500(->US500), DAX(->DE40), USTEC separately; those are untouched.
+Satellite carries genuine USA500(->US500), DAX(->DE40), USTEC separately; those are untouched.
 """
 import sys
 from pathlib import Path
@@ -38,11 +38,11 @@ SAT_EQ    = REPO / "research/oos/outputs/v34_native_curve_2017_2019.parquet"    
 
 
 def _to_ic_server(idx: pd.DatetimeIndex) -> pd.DatetimeIndex:
-    """v7 ext feed is tz-naive TRUE UTC; the v34 research_cache_ext (and the IC
+    """Core ext feed is tz-naive TRUE UTC; the Satellite research_cache_ext (and the IC
     tester) are tz-naive IC MT5 server time = UTC+2 (EET) / UTC+3 during US DST.
     Broker DST rule VERIFIED empirically against research_cache_ext XAUUSD prices
     (match err 0.0): +3h on 2017-03-15 AND 2017-10-31 — i.e. US DST (2nd Sun Mar ->
-    1st Sun Nov), NOT EU. Convert v7 -> server so v7 core + v34 sat align (else the
+    1st Sun Nov), NOT EU. Convert Core -> server so Core + Satellite align (else the
     DO_NOT_USE.md Duka-UTC/IC-server 2-3h misalignment). DST transitions create a
     duplicate hour (fall-back, dropped keep='last') and a gap (spring-forward,
     fillna'd by the blend) — ~4 hrs/yr, immaterial."""
@@ -60,10 +60,10 @@ def _shift_series(s: pd.Series) -> pd.Series:
 def load_inputs_2017():
     """Same contract as reproduce.load_inputs() (reproduce.py:49-57): native frac
     matrices + native equity curves normalised to 1.0 at each series' own t0 —
-    with v7 (UTC) converted to the IC server clock so it aligns with v34 (server)."""
+    with Core (UTC) converted to the IC server clock so it aligns with Satellite (server)."""
     core_frac = pd.read_parquet(CORE_FRAC)
-    # v7 'USA500' column is the USTEC/Nasdaq book on a proxy feed -> rename to match
-    # the 2020-2025 model + tester canonical (v34 keeps its genuine USA500/DAX).
+    # Core 'USA500' column is the USTEC/Nasdaq book on a proxy feed -> rename to match
+    # the 2020-2025 model + tester canonical (Satellite keeps its genuine USA500/DAX).
     if "USA500" in core_frac.columns:
         core_frac = core_frac.rename(columns={"USA500": "USTEC"})
     core_frac.index = _to_ic_server(core_frac.index)

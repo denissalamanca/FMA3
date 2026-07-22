@@ -1,10 +1,10 @@
-"""v7.0 band-book position extraction on the EXTENDED-HISTORY feed, 2017-2019.
+"""Core band-book position extraction on the EXTENDED-HISTORY feed, 2017-2019.
 
 Purpose (FMA3 fed_frac history extension)
 -----------------------------------------
-Generate the v7 (core band-book) hourly book-fractions + 1m core equity for
+Generate the Core (band-book) hourly book-fractions + 1m core equity for
 [2017-01-01, 2020-01-01) so the fed_frac blend can be extended backwards. The
-SAME frozen v7.0 band book as the verified IC anchor and the forward feed
+SAME frozen Core band book as the verified IC anchor and the forward feed
 (book('BTC_REP','USA500'), up=0.25, down=(1/7)/1.75, kmult=2.5, min_gap 5d,
 noliq stop_out=1e-9) is run on the NSF5 EXTENDED Duka cache
 (cache/bars_1m_ext/{inst}_2015_2025_1m.parquet, 10 insts, tz-naive TRUE UTC).
@@ -44,7 +44,7 @@ CAVEATS baked into this window (see findings; NOT bugs, frozen-signal facts)
     the mask has no dates before 2019-12. Its legs (USDJPY/AUDUSD/NZDUSD) take
     no S6 position pre-2019-12. AUDUSD & NZDUSD enter the book ONLY via S6, so
     they are ~0 in this window. NSF5 is READ-ONLY; not patched here.
-  Net: the faithful 2017-2019 v7 book is driven mainly by BOOK_XAU (XAUUSD),
+  Net: the faithful 2017-2019 Core book is driven mainly by BOOK_XAU (XAUUSD),
   S5_JPY (USDJPY), ZC_EG (EURGBP) and BOOK_USTEC (USA500-proxy), with crypto
   fading in from late-2018. Read the artifacts as resilience/OOS, not as an
   8-sleeve replica of 2020-2025.

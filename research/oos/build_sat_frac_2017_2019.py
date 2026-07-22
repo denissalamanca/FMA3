@@ -1,4 +1,4 @@
-"""FMA3 OOS — build the v34 (satellite) sat_frac for 2017-01-01..2019-12-31,
+"""FMA3 OOS — build the Satellite (Sat) sat_frac for 2017-01-01..2019-12-31,
 warm-started from 2015, on the FMA2 pre-2020 hourly research engine.
 
 WHY THIS EXISTS (and why it is NOT engine/books.build_sat_frac_1h)
@@ -13,7 +13,7 @@ for a pre-2020 OOS.
 The pre-2020 book must instead RECOMPUTE each sleeve live via
 `sleeves.<name>.make_positions()` over the extended cache (mirrors FMA2
 `research/run_oos_2015.py`), so every indicator warms from 2015 and is fully
-spun-up by 2017. We then apply the v3.4 construction (V2_CAPS + MAG@0.05 +
+spun-up by 2017. We then apply the Satellite construction (V2_CAPS + MAG@0.05 +
 SCALE 10 + structural gold cap + hard limits) exactly as build_c2 does — but
 on the LIVE sleeve matrices.
 
@@ -37,12 +37,12 @@ wrong data and contribute zero gold pre-2020. We patch BOTH.
 OUTPUTS (what the FMA3 fed_frac blend consumes)
 -----------------------------------------------
   research/oos/outputs/sat_frac_v34_2017_2019.parquet
-      frac34_h — the FINAL v3.4 fraction-of-equity position matrix (scale +
+      frac34_h — the FINAL Satellite fraction-of-equity position matrix (scale +
       hard limits baked in), hourly server-time index restricted to
       2017-01-01..2019-12-31, columns = the 34 ext-cache instruments. This is
       the `frac34_h` term of fed_frac_h.
   research/oos/outputs/v34_native_curve_2017_2019.parquet
-      B_h — v34 native hourly equity curve (core.simulate windowed), the `B`
+      B_h — Satellite native hourly equity curve (core.simulate windowed), the `B`
       term of J = w*A + (1-w)*B. Normalize to 1.0 at t0 before blending.
 """
 from __future__ import annotations
@@ -80,8 +80,8 @@ def _patch(mod):
     mod.swap_accrual_matrices = lambda symbols=AVAIL: _sw(AVAIL)
 
 
-def build_v34_book_ext() -> pd.DataFrame:
-    """v3.4 book recomputed LIVE over the ext cache (build_c2 recipe, live sleeves).
+def build_sat_book_ext() -> pd.DataFrame:
+    """Satellite book recomputed LIVE over the ext cache (build_c2 recipe, live sleeves).
 
     Returns the FINAL fraction matrix on the FULL 2015-2020 grid — DO NOT
     row-slice before simulate. Slice only the returned ARTIFACT afterwards.
@@ -109,7 +109,7 @@ def build_v34_book_ext() -> pd.DataFrame:
     # --- MAG_XAU overlay, warmed on the ext grid via patched research.core --
     sleeves["mag"] = mag_xau.make_positions().reindex(grid).fillna(0.0)
 
-    # --- v3.4 construction (identical to build_c2) -------------------------
+    # --- Satellite construction (identical to build_c2) -------------------------
     weights = {**PIN.V2_CAPS, "mag": PIN.MAG_W}
     pos = E.combine(sleeves, weights) * PIN.SCALE
     gcap = E.structural_gold_cap(PIN.V2_CAPS, PIN.SCALE)
@@ -120,7 +120,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     print(f"ext cache symbols: {len(AVAIL)}/34 | warm-start 2015 | window {LO}..{HI}")
 
-    book_full = build_v34_book_ext()          # full 2015-2020 grid
+    book_full = build_sat_book_ext()          # full 2015-2020 grid
 
     # ARTIFACT 1: sat_frac = frac34_h restricted to the OOS window.
     # Row-slicing the ARTIFACT is correct (the blend only consumes these
@@ -137,7 +137,7 @@ def main() -> None:
     sim = core.simulate(book_full, start=LO, end=HI)
     B = sim.equity
     B.to_frame("equity").to_parquet(OUT / "v34_native_curve_2017_2019.parquet")
-    print(f"v34 native curve B: {B.index.min()}..{B.index.max()} rows {len(B)} "
+    print(f"Satellite native curve B: {B.index.min()}..{B.index.max()} rows {len(B)} "
           f"final {float(B.iloc[-1]):.4f} | CAGR {sim.metrics['cagr']:+.3f} "
           f"maxDD {sim.metrics['maxdd']:.3f} Sharpe {sim.metrics['sharpe']:.2f}")
 
