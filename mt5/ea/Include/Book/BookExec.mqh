@@ -226,6 +226,10 @@ void FED_Reconcile()
       desired[k]=0.0; unsized[k]=false;
       double g=g_fedTgt[k]*InpScale;
       if(g==0.0) continue;
+      // [IDEA] cooldown-blocked cluster (IdeaGuard.mqh, PR #48): desired stays
+      // ZERO, so pass 2 reads it as cross-to-zero and closes any residual leg.
+      // Inert at pct<=0: the short-circuit never calls IG_Blocked.
+      if(InpIdeaStopPct>0.0 && IG_Blocked(k)) continue;
       string sym=g_fedTrade[k];
       int dir=(g>0)?1:-1;
       double px=(dir>0)?SymbolInfoDouble(sym,SYMBOL_ASK):SymbolInfoDouble(sym,SYMBOL_BID);

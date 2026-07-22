@@ -60,6 +60,9 @@ input group "=== 1. The dial (the ONLY knob that differs IC<->FTMO) ==="
 input double InpScale        = 1.60;      // s: global scale dial (IC 1.6 / FTMO 0.7)
 input double InpInitial      = 10000.0;   // Seed capital EUR (IC 10000 / FTMO 100000)
 input double InpDailyStopX   = 0.0;       // FTMO daily circuit breaker % (0=off)
+input double InpIdeaStopPct  = 0.0;       // FTMO 1%/idea cluster breaker % of balance (0=off)
+input int    InpIdeaCooldownMin = 60;     // idea breaker: cluster cooldown after a kill (min)
+input int    InpIdeaCheckSec = 5;         // idea breaker: min secs between full meter checks
 
 input group "=== 2. SAFETY (read the header) ==="
 input bool   InpAllowLiveTrading = false; // MASTER SWITCH: false = compute+log, ZERO orders on a live chart (tester auto-trades)
@@ -108,6 +111,7 @@ input string InpEURSEK = "EURSEK";
 #include <Book/BookReplay.mqh>       // 33-universe table + g_fedTgt (loader unused)
 #include <Book/BookExec.mqh>         // `trade`, primitives, FED_Reconcile (RECON-4)
 #include <Book/Guardian.mqh>         // FED_GuardianPass (FTMO breaker)
+#include <Book/IdeaGuard.mqh>        // IG_Pass (FTMO 1%/idea breaker, PR #48)
 #include <Book/BookOrchestrator.mqh> // CBookOrchestrator (S1 R1-proven, + live hooks)
 #include <Book/FeedAssembler.mqh>    // CFeedAssembler (mirror-gated)
 #include <Core/CoreSignal.mqh>       // CCoreSignal + CCoreTrigger (RECON-8g)
@@ -703,6 +707,15 @@ void Pump()
       return;
      }
 
+   // [SEAM I] FTMO 1%/idea cluster breaker AFTER the daily gate, BEFORE the
+   // FED_Reconcile below (validated ordering, PR #48). Inert at pct<=0: the
+   // short-circuit here is the only executed code when the feature is off.
+   // `synced` is passed THROUGH (not gated on): during warm-restart catch-up
+   // IG_Pass runs cooldown maintenance only - an already-decided kill's
+   // residual legs must not stay open for the whole catch-up window.
+   if(InpIdeaStopPct > 0.0 && g_canTrade)
+      IG_Pass(synced);
+
    if(!PollBars(now))
      {
       g_inPump = false;
@@ -794,6 +807,7 @@ int OnInit()
    SymbolSelect(_Symbol, true);
    for(int i = 0; i < FED_NSYM; i++)
       g_fedLegDefer[i] = false;
+   IG_Init();                          // idea breaker: cluster table + carried cooldowns (inert at pct<=0)
 
    // --- FEED broker names: apply InpV34SymbolMap to the FEED too -----------
    // MUST run after FED_ParseSymbolMap() (above) and BEFORE g_fa.Init() (below),
@@ -1032,15 +1046,19 @@ void OnDeinit(const int reason)
       FileClose(g_fedLogh);
    if(g_teleh != INVALID_HANDLE)
       FileClose(g_teleh);
+   // idea-breaker counters append ONLY when the feature is on; at pct<=0 the
+   // suffix is "" and the line is byte-identical to the pre-IdeaGuard binary.
    PrintFormat("FMA3 NATIVE deinit: hours=%I64d segs=%d fires=%I64d "
                "lead_hold=%I64d sc_mm=%I64d unready=%I64d skipped=%I64d "
-               "split=%d rejects=%d stops=%d final_eq=%.2f refuse=%s",
+               "split=%d rejects=%d stops=%d final_eq=%.2f refuse=%s%s",
                g_hours, g_drive.Segments(), g_drive.Fires(),
                g_drive.LeadHoldMinutes(), g_orc.LiveScMismatches(),
                g_unreadyRows, g_drive.SkippedBars(),
                (int)g_fedNSplit, (int)g_fedNReject, g_fedNStops,
                AccountInfoDouble(ACCOUNT_EQUITY),
-               g_refuse ? g_refuseWhy : "no");
+               g_refuse ? g_refuseWhy : "no",
+               (InpIdeaStopPct > 0.0)
+                  ? StringFormat(" ikills=%d iviol=%d", g_igKills, g_igViol) : "");
   }
 
 //====================================================================

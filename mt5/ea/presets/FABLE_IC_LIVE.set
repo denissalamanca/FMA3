@@ -20,6 +20,9 @@
 InpScale=1.6
 InpInitial=10000.0
 InpDailyStopX=0.0
+; IC: idea-breaker OFF — FTMO-only rule. 0 = the single short-circuit branch;
+; the EA path is bit-identical to the pre-IdeaGuard binary.
+InpIdeaStopPct=0.0
 ; --- 2. safety — Week-0 = false. Flip to true ONLY at Week 1, demo only. ---
 InpAllowLiveTrading=false
 ; --- 3. universe / magics / logs ---

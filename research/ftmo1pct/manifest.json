@@ -7,8 +7,10 @@
  "wrapper_copied": "run_record_ext (779-842) -> run_record_kill",
  "sha256": {
   "engine/record_engine_ext.py": "1097d81b660b4b8742dba3a49269469674f7ee97537fb7a51c8aaa808d050832",
-  "research/ftmo1pct/kill_engine.py": "d0ac05d6e7c544fb089e65db0f666ddacb9691c9790eda7167ac8eacd8660c2f",
-  "research/ftmo1pct/run_sweep.py": "0889ad0758a7a8bdebd477903edd805fda2f90e426dfbbd5cbf18c152aac4465",
-  "research/ftmo1pct/selftest_kill.py": "2be47b0cab36776510b4814664ed3c32d6edb6cadff283b66c25c6bc1a5dca6e"
- }
+  "research/ftmo1pct/kill_engine.py": "750733b0c082ec03b2cb912a99f988c478b0321fa9b0b193dc7c57b2ce77845c",
+  "research/ftmo1pct/run_sweep.py": "2d4d37f05346f2010c7b27068629b4beaeaf54e53e7673d942b74781edaddeb3",
+  "research/ftmo1pct/selftest_kill.py": "2be47b0cab36776510b4814664ed3c32d6edb6cadff283b66c25c6bc1a5dca6e",
+  "research/ftmo1pct/daily5_census.py": "f51cda57f911861cab4f6d7d502cb0f8d7ce6d3ca3a16a9826910cd2adb22a3e"
+ },
+ "note": "shas refreshed 2026-07-22 after the review-hardening (minute-alignment assert) + knee/grid sweep rows landed post-initial-manifest"
 }
